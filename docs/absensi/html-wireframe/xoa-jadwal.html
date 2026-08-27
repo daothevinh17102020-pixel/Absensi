@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>jadwal — Xóa lịch học | Wireframe HTML</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f4f4; color: #000; padding: 24px 16px; }
+    .wf-page { max-width: 1400px; margin: 0 auto; }
+    .wf-breadcrumb { max-width: 1400px; margin: 0 auto 16px; }
+    .wf-breadcrumb a { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #000; text-decoration: none; border: 1px solid #000; border-radius: 4px; padding: 6px 12px; background: #fff; }
+    .wf-breadcrumb a:hover { background: #f0f0f0; }
+    html.in-iframe .wf-breadcrumb { display: none; }
+
+    .wf-header { margin-bottom: 24px; border-bottom: 2px solid #000; padding-bottom: 12px; background: #fff; padding: 16px 20px; border-radius: 6px; }
+    .wf-feature-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #666; }
+    .wf-flow-title { font-size: 20px; font-weight: 700; margin-top: 4px; }
+    .wf-flow-meta { font-size: 12px; color: #666; margin-top: 4px; }
+    .wf-flow-desc { font-size: 13px; color: #333; margin-top: 6px; line-height: 1.4; }
+
+    .wf-rows { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px; }
+    .wf-screen { flex: 0 0 auto; width: 1024px; max-width: 100%; }
+
+    .wf-step-badge { font-size: 11px; font-weight: 700; color: #fff; background: #000; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px; }
+    .wf-device-tag { display: inline-block; font-size: 10px; color: #444; border: 1px solid #000; border-radius: 3px; padding: 1px 6px; margin-bottom: 6px; margin-left: 6px; background: #fff; }
+
+    .wf-screen-frame { border: 2px solid #000; border-radius: 8px; overflow: hidden; background: #fff; position: relative; }
+    .wf-screen-bar { background: #e0e0e0; border-bottom: 1px solid #000; padding: 8px 12px; display: flex; align-items: center; gap: 6px; }
+    .wf-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid #000; background: #fff; }
+    .wf-bar-title { font-size: 12px; font-weight: 700; flex: 1; text-align: center; }
+
+    /* BACKGROUND UNDER OVERLAY */
+    .bg-content { opacity: 0.25; filter: blur(1px); padding: 20px; min-height: 480px; }
+
+    /* MODAL OVERLAY & BOX */
+    .modal-backdrop { position: absolute; top: 32px; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.65); display: flex; align-items: center; justify-content: center; z-index: 999; }
+    .modal-box { width: 420px; background: #fff; border: 2px solid #000; border-radius: 8px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 14px; }
+    .modal-header { font-size: 16px; font-weight: 800; border-bottom: 1px solid #ccc; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { font-size: 13px; line-height: 1.5; color: #222; }
+    .modal-body strong { text-decoration: underline; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #ccc; padding-top: 12px; }
+    .btn-cancel { padding: 8px 14px; font-size: 12px; font-weight: 700; border: 1px solid #000; background: #fff; border-radius: 4px; cursor: pointer; }
+    .btn-delete { padding: 8px 14px; font-size: 12px; font-weight: 700; border: 1px solid #000; background: #000; color: #fff; border-radius: 4px; cursor: pointer; }
+
+    /* DESCRIPTION TABLE */
+    .wf-desc-section { margin-top: 36px; background: #fff; padding: 20px; border-radius: 6px; border: 1px solid #000; }
+    .wf-desc-title { font-size: 16px; font-weight: 800; margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 6px; }
+    .wf-desc-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .wf-desc-table th, .wf-desc-table td { border: 1px solid #000; padding: 8px 10px; text-align: left; }
+    .wf-desc-table th { background: #f0f0f0; font-weight: 700; }
+    .wf-desc-screen-header td { background: #000; color: #fff; font-weight: 700; }
+
+    .wf-footer { margin-top: 32px; font-size: 11px; color: #666; display: flex; justify-content: space-between; border-top: 1px solid #ccc; padding-top: 12px; }
+  </style>
+</head>
+<body>
+<script>if (window.self !== window.top) document.documentElement.classList.add('in-iframe');</script>
+
+<div class="wf-breadcrumb">
+  <a href="jadwal-wireframe.html">← Mục lục wireframe (tất cả flow)</a>
+</div>
+
+<div class="wf-page" data-device="desktop">
+  <div class="wf-header">
+    <div class="wf-feature-label">Feature: Quản lý lịch học (`/jadwal`)</div>
+    <div class="wf-flow-title">Flow 3: Xóa lịch học (Modal Confirmation Focus Trap)</div>
+    <div class="wf-flow-meta">1 màn hình demo · Device: Desktop / Mobile · Tạo: 2026-08-27</div>
+    <div class="wf-flow-desc">Mô tả luồng xác nhận xóa lịch học bằng Modal popup khóa nền có đầy đủ thông tin định danh môn học để tránh thao tác nhầm.</div>
+  </div>
+
+  <div class="wf-rows">
+
+    <!-- SCREEN 1: Delete Confirmation Modal -->
+    <div class="wf-screen" id="s1">
+      <div>
+        <span class="wf-step-badge">1</span>
+        <span class="wf-device-tag">Modal Confirmation Overlay</span>
+      </div>
+      <div class="wf-screen-frame">
+        <div class="wf-screen-bar">
+          <div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div>
+          <span class="wf-bar-title">Xác nhận xóa lịch học</span>
+        </div>
+        
+        <!-- FAKE BACKGROUND PAGE -->
+        <div class="bg-content">
+          <h2>Quản lý lịch học</h2>
+          <p>Danh sách lịch học theo từng môn...</p>
+          <div style="border: 1px solid #000; margin-top: 20px; padding: 15px;">
+            [Bảng lịch học đang bị khóa làm mờ phía sau]
+          </div>
+        </div>
+
+        <!-- MODAL BACKDROP & BOX -->
+        <div class="modal-backdrop">
+          <div class="modal-box">
+            <div class="modal-header">
+              <span>⚠️ XÁC NHẬN XÓA LỊCH HỌC</span>
+              <span style="cursor:pointer; font-size:16px;">✕</span>
+            </div>
+            <div class="modal-body">
+              Bạn có chắc chắn muốn xóa lịch học môn <strong>Machine Learning (MK101)</strong> - Lớp <strong>ML-01</strong> vào <strong>Thứ Năm</strong> (06:00 - 23:00) không?
+              <br><br>
+              <span style="font-size:11px; color:#666; font-style:italic;">* Hành động này sẽ xóa dữ liệu khỏi hệ thống và không thể khôi phục lại.</span>
+            </div>
+            <div class="modal-footer">
+              <button class="btn-cancel">Hủy bỏ (ESC)</button>
+              <button class="btn-delete">🗑️ Xác nhận xóa</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center; font-size:11px; margin-top:4px; color:#555;">delete-confirm-modal</div>
+    </div>
+
+  </div>
+
+  <!-- SCREEN DESCRIPTION TABLE -->
+  <div class="wf-desc-section">
+    <div class="wf-desc-title">Mô tả màn hình & Tương tác Modal</div>
+    <table class="wf-desc-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Items</th>
+          <th>Control type</th>
+          <th>Data type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="wf-desc-screen-header"><td colspan="5">Screen 1: Modal Cảnh báo Xóa lịch học</td></tr>
+        <tr>
+          <td>1</td>
+          <td>Modal Backdrop Overlay</td>
+          <td>Focus Trap Overlay</td>
+          <td>Modal Layer</td>
+          <td>Khóa phông nền, bấm ESC hoặc bấm Hủy để đóng modal an toàn.</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Thông tin môn xóa</td>
+          <td>Modal Content</td>
+          <td>Dynamic Readonly Text</td>
+          <td>Hiển thị tên môn, mã lớp, thứ và khung giờ chi tiết để người dùng kiểm tra lại trước khi bấm xóa.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="wf-footer">
+    <span>jadwal / xoa-jadwal</span>
+    <span>Tạo bởi /wireframe-html · 2026-08-27</span>
+  </div>
+</div>
+</body>
+</html>

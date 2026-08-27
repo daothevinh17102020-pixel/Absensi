@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>jadwal — Thêm & Chỉnh sửa lịch học | Wireframe HTML</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f4f4; color: #000; padding: 24px 16px; }
+    .wf-page { max-width: 1400px; margin: 0 auto; }
+    .wf-breadcrumb { max-width: 1400px; margin: 0 auto 16px; }
+    .wf-breadcrumb a { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #000; text-decoration: none; border: 1px solid #000; border-radius: 4px; padding: 6px 12px; background: #fff; }
+    .wf-breadcrumb a:hover { background: #f0f0f0; }
+    html.in-iframe .wf-breadcrumb { display: none; }
+
+    .wf-header { margin-bottom: 24px; border-bottom: 2px solid #000; padding-bottom: 12px; background: #fff; padding: 16px 20px; border-radius: 6px; }
+    .wf-feature-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #666; }
+    .wf-flow-title { font-size: 20px; font-weight: 700; margin-top: 4px; }
+    .wf-flow-meta { font-size: 12px; color: #666; margin-top: 4px; }
+    .wf-flow-desc { font-size: 13px; color: #333; margin-top: 6px; line-height: 1.4; }
+
+    .wf-rows { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px; }
+    .wf-screen { flex: 0 0 auto; width: 1024px; max-width: 100%; }
+
+    .wf-step-badge { font-size: 11px; font-weight: 700; color: #fff; background: #000; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px; }
+    .wf-device-tag { display: inline-block; font-size: 10px; color: #444; border: 1px solid #000; border-radius: 3px; padding: 1px 6px; margin-bottom: 6px; margin-left: 6px; background: #fff; }
+
+    .wf-screen-frame { border: 2px solid #000; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .wf-screen-bar { background: #e0e0e0; border-bottom: 1px solid #000; padding: 8px 12px; display: flex; align-items: center; gap: 6px; }
+    .wf-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid #000; background: #fff; }
+    .wf-bar-title { font-size: 12px; font-weight: 700; flex: 1; text-align: center; }
+
+    .app-container { display: flex; min-height: 520px; background: #fff; }
+    .app-sidebar { width: 220px; border-right: 1px solid #000; padding: 16px; background: #fafafa; }
+    .app-brand { font-size: 16px; font-weight: 900; letter-spacing: 0.5px; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 16px; }
+
+    .app-main { flex: 1; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+    .breadcrumb-nav { font-size: 12px; color: #666; }
+    .page-title { font-size: 20px; font-weight: 800; }
+    .page-sub { font-size: 12px; color: #666; margin-bottom: 12px; }
+
+    /* FORM GRID 2 COLUMN DESIGN */
+    .wf-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; background: #fafafa; border: 1.5px solid #000; border-radius: 6px; padding: 20px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-control { border: 1px solid #000; border-radius: 4px; padding: 8px 12px; font-size: 12px; background: #fff; outline: none; }
+    .form-control:disabled { background: #e0e0e0; color: #666; cursor: not-allowed; }
+    .form-hint { font-size: 10px; color: #666; font-style: italic; }
+    .form-actions { grid-column: span 2; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #ccc; padding-top: 16px; margin-top: 8px; }
+    .btn-submit { background: #000; color: #fff; padding: 9px 18px; font-size: 12px; font-weight: 700; border: 1px solid #000; border-radius: 4px; cursor: pointer; }
+    .btn-cancel { background: #fff; color: #000; padding: 9px 18px; font-size: 12px; font-weight: 700; border: 1px solid #000; border-radius: 4px; cursor: pointer; }
+
+    /* DESCRIPTION TABLE */
+    .wf-desc-section { margin-top: 36px; background: #fff; padding: 20px; border-radius: 6px; border: 1px solid #000; }
+    .wf-desc-title { font-size: 16px; font-weight: 800; margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 6px; }
+    .wf-desc-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .wf-desc-table th, .wf-desc-table td { border: 1px solid #000; padding: 8px 10px; text-align: left; }
+    .wf-desc-table th { background: #f0f0f0; font-weight: 700; }
+    .wf-desc-screen-header td { background: #000; color: #fff; font-weight: 700; }
+
+    .wf-footer { margin-top: 32px; font-size: 11px; color: #666; display: flex; justify-content: space-between; border-top: 1px solid #ccc; padding-top: 12px; }
+  </style>
+</head>
+<body>
+<script>if (window.self !== window.top) document.documentElement.classList.add('in-iframe');</script>
+
+<div class="wf-breadcrumb">
+  <a href="jadwal-wireframe.html">← Mục lục wireframe (tất cả flow)</a>
+</div>
+
+<div class="wf-page" data-device="desktop">
+  <div class="wf-header">
+    <div class="wf-feature-label">Feature: Quản lý lịch học (`/jadwal`)</div>
+    <div class="wf-flow-title">Flow 2: Form Thêm / Chỉnh sửa lịch học (Grid 2 cột)</div>
+    <div class="wf-flow-meta">2 màn hình demo · Device: Desktop (1024px) · Tạo: 2026-08-27</div>
+    <div class="wf-flow-desc">Mô tả giao diện Form nhập dữ liệu lịch học được tái cấu trúc thành Grid 2 cột giúp tiết kiệm khoảng trống và hiển thị tính toán Hạn đi muộn tức thì.</div>
+  </div>
+
+  <div class="wf-rows">
+
+    <!-- SCREEN 1: Grid Layout Initial -->
+    <div class="wf-screen" id="s1">
+      <div>
+        <span class="wf-step-badge">1</span>
+        <span class="wf-device-tag">Form Grid 2 Cột Initial</span>
+      </div>
+      <div class="wf-screen-frame">
+        <div class="wf-screen-bar">
+          <div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div>
+          <span class="wf-bar-title">Thêm / Chỉnh sửa lịch học (Grid 2 cột)</span>
+        </div>
+        <div class="app-container">
+          <aside class="app-sidebar">
+            <div class="app-brand">VNIH.AI</div>
+            <div style="font-size:12px; font-weight:700;">📅 Lịch học</div>
+          </aside>
+          <main class="app-main">
+            <div class="breadcrumb-nav">Lịch học › Thêm lịch học mới</div>
+            <div>
+              <h1 class="page-title">Thêm lịch học mới</h1>
+              <p class="page-sub">Trước tiên hãy chọn Lớp, sau đó hệ thống sẽ tải danh sách Môn học tương ứng.</p>
+            </div>
+
+            <form class="wf-form-grid">
+              <!-- Row 1 -->
+              <div class="form-group">
+                <label>1. LỚP HỌC</label>
+                <select class="form-control">
+                  <option>-- Chọn lớp học --</option>
+                  <option selected>ML-01 (Machine Learning K01)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>2. MÔN HỌC</label>
+                <select class="form-control">
+                  <option>-- Chọn môn học --</option>
+                  <option selected>Machine Learning (MK101)</option>
+                </select>
+              </div>
+
+              <!-- Row 2 -->
+              <div class="form-group">
+                <label>3. THỨ TRONG TUẦN</label>
+                <select class="form-control">
+                  <option>-- Chọn thứ --</option>
+                  <option selected>Thứ Năm</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>4. HẠN ĐI MUỘN (TỰ ĐỘNG TÍNH)</label>
+                <input type="text" class="form-control" value="--:--:--" disabled>
+                <span class="form-hint">* Tự động tính = Giờ bắt đầu + 15 phút</span>
+              </div>
+
+              <!-- Row 3 -->
+              <div class="form-group">
+                <label>5. GIỜ BẮT ĐẦU</label>
+                <input type="time" class="form-control" value="06:00">
+              </div>
+
+              <div class="form-group">
+                <label>6. GIỜ KẾT THÚC</label>
+                <input type="time" class="form-control" value="23:00">
+              </div>
+
+              <div class="form-actions">
+                <button type="button" class="btn-cancel">Hủy bỏ</button>
+                <button type="button" class="btn-submit">Lưu lịch học</button>
+              </div>
+            </form>
+          </main>
+        </div>
+      </div>
+      <div style="text-align:center; font-size:11px; margin-top:4px; color:#555;">form-grid-layout</div>
+    </div>
+
+    <!-- SCREEN 2: Auto Delay Preview Active -->
+    <div class="wf-screen" id="s2">
+      <div>
+        <span class="wf-step-badge">2</span>
+        <span class="wf-device-tag">Xem trước Hạn muộn tức thì</span>
+      </div>
+      <div class="wf-screen-frame">
+        <div class="wf-screen-bar">
+          <div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div>
+          <span class="wf-bar-title">Hạn đi muộn được gợi ý tự động ngay khi chọn giờ</span>
+        </div>
+        <div class="app-container">
+          <aside class="app-sidebar" style="opacity:0.5;">
+            <div class="app-brand">VNIH.AI</div>
+          </aside>
+          <main class="app-main">
+            <div class="breadcrumb-nav">Lịch học › Chỉnh sửa lịch học #MK101</div>
+            <div>
+              <h1 class="page-title">Chỉnh sửa lịch học</h1>
+              <p class="page-sub">Cập nhật thông tin ca học cho môn Machine Learning.</p>
+            </div>
+
+            <form class="wf-form-grid" style="border: 2px solid #000;">
+              <!-- Row 1 -->
+              <div class="form-group">
+                <label>LỚP HỌC</label>
+                <select class="form-control"><option>ML-01</option></select>
+              </div>
+              <div class="form-group">
+                <label>MÔN HỌC</label>
+                <select class="form-control"><option>Machine Learning (MK101)</option></select>
+              </div>
+
+              <!-- Row 2 -->
+              <div class="form-group">
+                <label>THỨ TRONG TUẦN</label>
+                <select class="form-control"><option>Thứ Năm</option></select>
+              </div>
+              <div class="form-group" style="background:#e0e0e0; padding:6px; border-radius:4px; border:1px solid #000;">
+                <label>HẠN ĐI MUỘN (TÍNH TỰ ĐỘNG)</label>
+                <input type="text" class="form-control" value="06:15:00" style="font-weight:bold; background:#fff;" readonly>
+                <span class="form-hint" style="color:#000; font-weight:bold;">✓ Hệ thống tự động tính = 06:00 + 15 phút</span>
+              </div>
+
+              <!-- Row 3 -->
+              <div class="form-group">
+                <label>GIỜ BẮT ĐẦU</label>
+                <input type="time" class="form-control" value="06:00" style="border:2px solid #000;">
+              </div>
+              <div class="form-group">
+                <label>GIỜ KẾT THÚC</label>
+                <input type="time" class="form-control" value="23:00">
+              </div>
+
+              <div class="form-actions">
+                <button type="button" class="btn-cancel">Hủy bỏ</button>
+                <button type="button" class="btn-submit">Cập nhật lịch học</button>
+              </div>
+            </form>
+          </main>
+        </div>
+      </div>
+      <div style="text-align:center; font-size:11px; margin-top:4px; color:#555;">form-auto-delay-preview</div>
+    </div>
+
+  </div>
+
+  <!-- SCREEN DESCRIPTION TABLE -->
+  <div class="wf-desc-section">
+    <div class="wf-desc-title">Mô tả màn hình & Trường dữ liệu Form</div>
+    <table class="wf-desc-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Items</th>
+          <th>Control type</th>
+          <th>Data type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="wf-desc-screen-header"><td colspan="5">Screen 1: Form Thêm/Sửa (Grid 2 Cột Layout)</td></tr>
+        <tr>
+          <td>1</td>
+          <td>Layout Grid 2 Cột</td>
+          <td>Layout Grid</td>
+          <td>Container</td>
+          <td>Tái sắp xếp Form từ 1 cột trải dài 100% thành 2 cột cân đối, giúp thị giác dễ theo dõi.</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Dropdown Môn Học phụ thuộc</td>
+          <td>Select Box</td>
+          <td>Dynamic Load</td>
+          <td>Môn học tự động cập nhật danh sách tương ứng dựa trên Lớp học đã được chọn ở bước 1.</td>
+        </tr>
+        <tr class="wf-desc-screen-header"><td colspan="5">Screen 2: Xem trước Hạn muộn tức thì (Auto Preview)</td></tr>
+        <tr>
+          <td>1</td>
+          <td>Hạn đi muộn (Calc)</td>
+          <td>Input Text (Readonly)</td>
+          <td>Calculated Time</td>
+          <td>Tự động lấy Giờ bắt đầu + 15 phút và hiển thị ngay trên UI mà không cần chờ submit server.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="wf-footer">
+    <span>jadwal / them-sua-jadwal</span>
+    <span>Tạo bởi /wireframe-html · 2026-08-27</span>
+  </div>
+</div>
+</body>
+</html>

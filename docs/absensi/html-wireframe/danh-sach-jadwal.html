@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>jadwal — Xem & Tìm kiếm lịch học | Wireframe HTML</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f4f4; color: #000; padding: 24px 16px; }
+    .wf-page { max-width: 1400px; margin: 0 auto; }
+    .wf-breadcrumb { max-width: 1400px; margin: 0 auto 16px; }
+    .wf-breadcrumb a { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #000; text-decoration: none; border: 1px solid #000; border-radius: 4px; padding: 6px 12px; background: #fff; }
+    .wf-breadcrumb a:hover { background: #f0f0f0; }
+    html.in-iframe .wf-breadcrumb { display: none; }
+
+    .wf-header { margin-bottom: 24px; border-bottom: 2px solid #000; padding-bottom: 12px; background: #fff; padding: 16px 20px; border-radius: 6px; }
+    .wf-feature-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #666; }
+    .wf-flow-title { font-size: 20px; font-weight: 700; margin-top: 4px; }
+    .wf-flow-meta { font-size: 12px; color: #666; margin-top: 4px; }
+    .wf-flow-desc { font-size: 13px; color: #333; margin-top: 6px; line-height: 1.4; }
+
+    .wf-rows { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px; }
+    .wf-screen { flex: 0 0 auto; }
+    .wf-screen.desktop-screen { width: 1024px; max-width: 100%; }
+    .wf-screen.mobile-screen { width: 375px; }
+
+    .wf-step-badge { font-size: 11px; font-weight: 700; color: #fff; background: #000; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px; }
+    .wf-device-tag { display: inline-block; font-size: 10px; color: #444; border: 1px solid #000; border-radius: 3px; padding: 1px 6px; margin-bottom: 6px; margin-left: 6px; background: #fff; }
+
+    .wf-screen-frame { border: 2px solid #000; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .wf-screen-bar { background: #e0e0e0; border-bottom: 1px solid #000; padding: 8px 12px; display: flex; align-items: center; gap: 6px; }
+    .wf-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid #000; background: #fff; }
+    .wf-bar-title { font-size: 12px; font-weight: 700; flex: 1; text-align: center; }
+
+    /* LAYOUT COMPONENTS */
+    .app-container { display: flex; min-height: 520px; background: #fff; }
+    .app-sidebar { width: 220px; border-right: 1px solid #000; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; background: #fafafa; }
+    .app-brand { font-size: 16px; font-weight: 900; letter-spacing: 0.5px; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 16px; }
+    .nav-list { display: flex; flex-direction: column; gap: 6px; list-style: none; }
+    .nav-item { padding: 8px 12px; font-size: 12px; font-weight: 600; border-radius: 4px; display: flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; color: #000; }
+    .nav-item.active { background: #000; color: #fff; }
+    .user-footer { border-top: 1px solid #ccc; padding-top: 12px; font-size: 11px; color: #444; }
+
+    .app-main { flex: 1; padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; }
+    .top-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: 12px; }
+    .search-box { display: flex; align-items: center; border: 1px solid #000; border-radius: 4px; padding: 6px 10px; width: 320px; background: #fff; position: relative; }
+    .search-box input { border: 0; outline: 0; font-size: 12px; width: 100%; margin-left: 6px; }
+    .header-icons { display: flex; gap: 12px; font-size: 14px; font-weight: bold; }
+
+    .page-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .page-title { font-size: 18px; font-weight: 800; }
+    .page-sub { font-size: 12px; color: #666; }
+    .btn-action { background: #000; color: #fff; padding: 8px 14px; font-size: 12px; font-weight: 700; border: 1px solid #000; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+    .btn-action:hover { background: #333; }
+
+    /* TABLE DESIGN */
+    .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #000; border-radius: 6px; }
+    .wf-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+    .wf-table th, .wf-table td { padding: 10px 12px; border-bottom: 1px solid #ccc; }
+    .wf-table th { background: #f0f0f0; font-weight: 700; border-bottom: 2px solid #000; }
+    .badge { display: inline-block; padding: 3px 8px; border: 1px solid #000; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap; background: #fff; }
+    .badge-sub { font-size: 10px; color: #666; margin-top: 2px; }
+    .action-btn-group { display: flex; gap: 6px; }
+    .btn-icon { border: 1px solid #000; background: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600; }
+    .btn-icon.delete { background: #000; color: #fff; }
+
+    /* MOBILE SPECIFIC */
+    .mobile-app { padding: 12px; background: #fff; min-height: 520px; display: flex; flex-direction: column; gap: 12px; position: relative; }
+    .mobile-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #000; padding-bottom: 8px; }
+    .card-list { display: flex; flex-direction: column; gap: 10px; }
+    .schedule-card { border: 1.5px solid #000; border-radius: 6px; padding: 12px; background: #fafafa; display: flex; flex-direction: column; gap: 8px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; }
+    .card-row { display: flex; justify-content: space-between; font-size: 11px; border-top: 1px dashed #ccc; padding-top: 6px; }
+    .card-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+    .fab-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: #000; color: #fff; border: 2px solid #000; font-size: 22px; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.3); cursor: pointer; }
+
+    /* SEARCH DROPDOWN ACTIVE */
+    .search-dropdown { position: absolute; top: 38px; left: 0; width: 340px; border: 2px solid #000; background: #fff; border-radius: 4px; box-shadow: 0 6px 16px rgba(0,0,0,0.2); z-index: 100; padding: 8px 0; }
+    .dropdown-header { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #666; padding: 4px 12px; border-bottom: 1px solid #eee; }
+    .dropdown-item { padding: 8px 12px; font-size: 12px; border-bottom: 1px solid #f0f0f0; display: flex; flex-direction: column; cursor: pointer; }
+    .dropdown-item:hover { background: #f0f0f0; }
+    .dropdown-item strong mark { background: #ddd; color: #000; font-weight: 800; }
+    .dropdown-footer { font-size: 10px; color: #666; font-style: italic; padding: 6px 12px; background: #fafafa; border-top: 1px solid #ccc; text-align: center; }
+
+    /* DESCRIPTION TABLE */
+    .wf-desc-section { margin-top: 36px; background: #fff; padding: 20px; border-radius: 6px; border: 1px solid #000; }
+    .wf-desc-title { font-size: 16px; font-weight: 800; margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 6px; }
+    .wf-desc-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .wf-desc-table th, .wf-desc-table td { border: 1px solid #000; padding: 8px 10px; text-align: left; }
+    .wf-desc-table th { background: #f0f0f0; font-weight: 700; }
+    .wf-desc-screen-header td { background: #000; color: #fff; font-weight: 700; }
+
+    .wf-footer { margin-top: 32px; font-size: 11px; color: #666; display: flex; justify-content: space-between; border-top: 1px solid #ccc; padding-top: 12px; }
+  </style>
+</head>
+<body>
+<script>if (window.self !== window.top) document.documentElement.classList.add('in-iframe');</script>
+
+<div class="wf-breadcrumb">
+  <a href="jadwal-wireframe.html">← Mục lục wireframe (tất cả flow)</a>
+</div>
+
+<div class="wf-page" data-device="desktop">
+  <div class="wf-header">
+    <div class="wf-feature-label">Feature: Quản lý lịch học (`/jadwal`)</div>
+    <div class="wf-flow-title">Flow 1: Xem & Tìm kiếm lịch học (Bảng Desktop & Card Mobile)</div>
+    <div class="wf-flow-meta">3 màn hình demo · Device: Desktop (1024px) & Mobile (375px) · Tạo: 2026-08-27</div>
+    <div class="wf-flow-desc">Mô tả chi tiết giao diện danh sách lịch học sau khi áp dụng đầy đủ cải tiến UI/UX: cột Thao tác cố định, Card view di động kèm nút FAB nổi, và thanh tìm kiếm tự đóng.</div>
+  </div>
+
+  <div class="wf-rows">
+
+    <!-- SCREEN 1: Desktop Table View -->
+    <div class="wf-screen desktop-screen" id="s1">
+      <div>
+        <span class="wf-step-badge">1</span>
+        <span class="wf-device-tag">Desktop · 1024px</span>
+      </div>
+      <div class="wf-screen-frame">
+        <div class="wf-screen-bar">
+          <div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div>
+          <span class="wf-bar-title">Màn hình Danh sách Lịch học (Desktop View)</span>
+        </div>
+        <div class="app-container">
+          <aside class="app-sidebar">
+            <div>
+              <div class="app-brand">VNIH.AI</div>
+              <ul class="nav-list">
+                <li class="nav-item">📊 Tổng quan</li>
+                <li class="nav-item">👥 Sinh viên</li>
+                <li class="nav-item">🎓 Lớp & Môn học</li>
+                <li class="nav-item active">📅 Lịch học</li>
+                <li class="nav-item">📋 Điểm danh</li>
+              </ul>
+            </div>
+            <div class="user-footer">
+              <strong>duyvinh1710@gmail.com</strong><br>
+              <small>Quản trị viên hệ thống</small>
+            </div>
+          </aside>
+          <main class="app-main">
+            <header class="top-header">
+              <div class="search-box">
+                🔍 <input type="text" placeholder="Tìm kiếm sinh viên, lịch học..." value="">
+              </div>
+              <div class="header-icons">🔔 ⚙️ 👤</div>
+            </header>
+            <div class="page-title-row">
+              <div>
+                <h1 class="page-title">Quản lý lịch học</h1>
+                <p class="page-sub">Quản lý danh sách lịch học theo từng môn và ca học.</p>
+              </div>
+              <a href="#" class="btn-action">+ Thêm lịch học</a>
+            </div>
+            <div class="table-responsive">
+              <table class="wf-table">
+                <thead>
+                  <tr>
+                    <th>THỨ</th>
+                    <th>MÔN HỌC</th>
+                    <th>LỚP</th>
+                    <th>GIỜ BẮT ĐẦU</th>
+                    <th>GIỜ KẾT THÚC</th>
+                    <th>HẠN ĐI MUỘN</th>
+                    <th>THAO TÁC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="badge">Thứ Năm</span></td>
+                    <td>
+                      <strong>Machine Learning</strong>
+                      <div class="badge-sub">MK101</div>
+                    </td>
+                    <td><strong>ML-01</strong></td>
+                    <td>06:00:00</td>
+                    <td>23:00:00</td>
+                    <td><strong>06:15:00</strong></td>
+                    <td>
+                      <div class="action-btn-group">
+                        <button class="btn-icon">✏️ Sửa</button>
+                        <button class="btn-icon delete">🗑️ Xóa</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </main>
+        </div>
+      </div>
+      <div style="text-align:center; font-size:11px; margin-top:4px; color:#555;">desktop-table-view</div>
+    </div>
+
+    <!-- SCREEN 2: Mobile Card View -->
+    <div class="wf-screen mobile-screen" id="s2">
+      <div>
+        <span class="wf-step-badge">2</span>
+        <span class="wf-device-tag">Mobile · 375px</span>
+      </div>
+      <div class="wf-screen-frame">
+        <div class="wf-screen-bar">
+          <div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div>
+          <span class="wf-bar-title">Danh sách (Mobile Card View)</span>
+        </div>
+        <div class="mobile-app">
+          <div class="mobile-header">
+            <span style="font-weight:900; font-size:14px;">VNIH.AI</span>
+            <div style="font-size:12px;">🔍 🔔 👤</div>
+          </div>
+          <div>
+            <h2 style="font-size:16px; font-weight:800;">Lịch học</h2>
+            <p style="font-size:11px; color:#666;">Danh sách hiển thị dạng thẻ card</p>
+          </div>
+          <div class="card-list">
+            <div class="schedule-card">
+              <div class="card-header">
+                <strong>Machine Learning (MK101)</strong>
+                <span class="badge">Thứ Năm</span>
+              </div>
+              <div class="card-row">
+                <span>Lớp học: <strong>ML-01</strong></span>
+                <span>Hạn muộn: <strong>06:15:00</strong></span>
+              </div>
+              <div class="card-row">
+                <span>Thời gian: <strong>06:00 - 23:00</strong></span>
+              </div>
+              <div class="card-actions">
+                <button class="btn-icon">✏️ Sửa</button>
+                <button class="btn-icon delete">🗑️ Xóa</button>
+              </div>
+            </div>
+          </div>
+          <button class="fab-btn" title="Thêm lịch mới">+</button>
+        </div>
+      </div>
+      <div style="text-align:center; font-size:11px; margin-top:4px; color:#555;">mobile-card-view</div>
+    </div>
+
+    <!-- SCREEN 3: Search Dropdown Active State -->
+    <div class="wf-screen desktop-screen" id="s3">
+      <div>
+        <span class="wf-step-badge">3</span>
+        <span class="wf-device-tag">Desktop Search Active · 1024px</span>
+      </div>
+      <div class="wf-screen-frame">
+        <div class="wf-screen-bar">
+          <div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div>
+          <span class="wf-bar-title">Search Dropdown Active State</span>
+        </div>
+        <div class="app-container">
+          <aside class="app-sidebar" style="opacity:0.5;">
+            <div class="app-brand">VNIH.AI</div>
+          </aside>
+          <main class="app-main">
+            <header class="top-header" style="position:relative;">
+              <div class="search-box" style="border: 2px solid #000;">
+                🔍 <input type="text" value="Machine">
+                <div class="search-dropdown">
+                  <div class="dropdown-header">KẾT QUẢ TÌM KIẾM (1)</div>
+                  <div class="dropdown-item">
+                    <strong><mark>Machine</mark> Learning (MK101)</strong>
+                    <span style="font-size:10px; color:#666;">Thứ Năm, 06:00 - 23:00 • Lớp ML-01</span>
+                  </div>
+                  <div class="dropdown-footer">Nhấn ESC hoặc click ra ngoài để đóng kết quả</div>
+                </div>
+              </div>
+              <div class="header-icons">🔔 ⚙️ 👤</div>
+            </header>
+          </main>
+        </div>
+      </div>
+      <div style="text-align:center; font-size:11px; margin-top:4px; color:#555;">search-dropdown-active</div>
+    </div>
+
+  </div>
+
+  <!-- SCREEN DESCRIPTION TABLE -->
+  <div class="wf-desc-section">
+    <div class="wf-desc-title">Mô tả màn hình & Các trường dữ liệu</div>
+    <table class="wf-desc-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Items</th>
+          <th>Control type</th>
+          <th>Data type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="wf-desc-screen-header"><td colspan="5">Screen 1: Màn hình Danh sách Lịch học (Desktop View)</td></tr>
+        <tr>
+          <td>1</td>
+          <td>Cột THAO TÁC</td>
+          <td>Button Group</td>
+          <td>Click Action</td>
+          <td>Hiển thị cố định 2 nút ✏️ Sửa và 🗑️ Xóa, loại bỏ hoàn toàn cơ chế ẩn opacity hover.</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Badge Thứ & Mã Lớp</td>
+          <td>Badge Tag</td>
+          <td>ReadOnly Text</td>
+          <td>Thêm thuộc tính white-space: nowrap để giữ nguyên từ trên 1 hàng, không bị vỡ dòng.</td>
+        </tr>
+        <tr class="wf-desc-screen-header"><td colspan="5">Screen 2: Danh sách (Mobile Card View)</td></tr>
+        <tr>
+          <td>1</td>
+          <td>Schedule Card List</td>
+          <td>Card Container</td>
+          <td>Structured View</td>
+          <td>Chuyển đổi từ table sang dạng thẻ xếp dọc giúp trải nghiệm mobile rõ ràng không bị đứt góc.</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>FAB Button (+)</td>
+          <td>Floating Action Button</td>
+          <td>Click Action</td>
+          <td>Nút tròn nổi cố định ở góc phải dưới màn hình thay thế cho nút Thêm bị lọt lề trên header mobile.</td>
+        </tr>
+        <tr class="wf-desc-screen-header"><td colspan="5">Screen 3: Search Dropdown Active State</td></tr>
+        <tr>
+          <td>1</td>
+          <td>Dismiss Event (ESC / Click Outside)</td>
+          <td>Event Handler</td>
+          <td>Keyboard / Click</td>
+          <td>Tự động ẩn dropdown kết quả khi người dùng nhấn ESC hoặc click ra ngoài ô tìm kiếm.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="wf-footer">
+    <span>jadwal / danh-sach-jadwal</span>
+    <span>Tạo bởi /wireframe-html · 2026-08-27</span>
+  </div>
+</div>
+</body>
+</html>

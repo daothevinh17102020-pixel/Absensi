@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
-{% block title %}Edit Mahasiswa: {{ mhs.nama }} - Sistem Absensi{% endblock %}
+{% block title %}Chỉnh sửa sinh viên: {{ mhs.nama }} - Hệ thống điểm danh{% endblock %}
 
 {% block content %}
 <nav class="flex text-on-surface-variant font-label-caps text-label-caps mb-6">
     <ol class="inline-flex items-center space-x-2">
-        <li><a class="hover:text-primary" href="{{ url_for('mahasiswa_index') }}">Mahasiswa</a></li>
+        <li><a class="hover:text-primary" href="{{ url_for('mahasiswa_index') }}">Sinh viên</a></li>
         <li><span class="material-symbols-outlined text-sm">chevron_right</span></li>
-        <li class="text-primary font-bold">Edit: {{ mhs.nama }}</li>
+        <li class="text-primary font-bold">Chỉnh sửa: {{ mhs.nama }}</li>
     </ol>
 </nav>
 
 <div class="max-w-lg">
-    <h2 class="font-headline-md text-headline-md text-on-surface mb-2">Edit Data Mahasiswa</h2>
-    <p class="font-body-sm text-body-sm text-on-surface-variant mb-8">Perbarui nama, NIM, atau kelas mahasiswa.</p>
+    <h2 class="font-headline-md text-headline-md text-on-surface mb-2">Chỉnh sửa thông tin sinh viên</h2>
+    <p class="font-body-sm text-body-sm text-on-surface-variant mb-8">Cập nhật họ tên, mã sinh viên hoặc lớp.</p>
 
     {% if error %}
     <div class="bg-error-container/20 border border-error/30 rounded-lg p-3 mb-6 flex items-center gap-2">
@@ -23,20 +23,20 @@
 
     <form method="POST" class="space-y-6">
         <div class="space-y-2">
-            <label class="font-label-caps text-label-caps text-on-surface-variant" for="nama">NAMA LENGKAP</label>
+            <label class="font-label-caps text-label-caps text-on-surface-variant" for="nama">HỌ VÀ TÊN</label>
             <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
                    id="nama" name="nama" value="{{ mhs.nama }}" required/>
         </div>
         <div class="space-y-2">
-            <label class="font-label-caps text-label-caps text-on-surface-variant" for="nim">NIM</label>
+            <label class="font-label-caps text-label-caps text-on-surface-variant" for="nim">MÃ SINH VIÊN</label>
             <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
                    id="nim" name="nim" value="{{ mhs.nim }}" required/>
         </div>
         <div class="space-y-2">
-            <label class="font-label-caps text-label-caps text-on-surface-variant" for="kelas_id">KELAS</label>
+            <label class="font-label-caps text-label-caps text-on-surface-variant" for="kelas_id">LỚP</label>
             <select class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
                     id="kelas_id" name="kelas_id" required>
-                <option value="">-- Pilih Kelas --</option>
+                <option value="">-- Chọn lớp --</option>
                 {% for k in daftar_kelas %}
                 <option value="{{ k.id }}" {% if mhs.kelas_id == k.id %}selected{% endif %}>{{ k.nama_kelas }} ({{ k.angkatan }})</option>
                 {% endfor %}
@@ -44,9 +44,9 @@
         </div>
         <div class="flex gap-3 pt-4">
             <button type="submit" class="bg-primary-container text-on-primary-container px-6 py-3 rounded-lg font-title-sm flex items-center gap-2 hover:brightness-110 transition-all">
-                <span class="material-symbols-outlined">save</span> Simpan Perubahan
+                <span class="material-symbols-outlined">save</span> Lưu thay đổi
             </button>
-            <a href="{{ url_for('mahasiswa_index') }}" class="px-6 py-3 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors font-title-sm">Batal</a>
+            <a href="{{ url_for('mahasiswa_index') }}" class="px-6 py-3 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors font-title-sm">Hủy</a>
         </div>
     </form>
 </div>

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Register Admin - Sistem Absensi{% endblock %}
+{% block title %}Đăng ký quản trị viên - Hệ thống điểm danh{% endblock %}
 
 {# Register tidak menampilkan sidebar dan navbar — override seluruh layout #}
 {% block body_class %}flex items-center justify-center min-h-screen p-gutter selection:bg-primary-container selection:text-on-primary-container{% endblock %}
@@ -20,15 +20,15 @@
             <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-container/10 border border-primary/20 mb-4">
                 <span class="material-symbols-outlined text-primary text-[32px]">admin_panel_settings</span>
             </div>
-            <h1 class="font-display-lg text-display-lg text-on-surface mb-2">Initial Setup</h1>
-            <p class="font-body-md text-body-md text-on-surface-variant">Konfigurasi akun administrator sistem pertama Anda.</p>
+            <h1 class="font-display-lg text-display-lg text-on-surface mb-2">Thiết lập ban đầu</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">Thiết lập tài khoản quản trị viên đầu tiên của hệ thống.</p>
         </div>
 
         <!-- Banner informasi -->
         <div class="bg-secondary-container/20 border border-secondary-container/30 rounded-lg p-4 mb-8 flex gap-3">
             <span class="material-symbols-outlined text-secondary shrink-0">info</span>
             <p class="font-body-sm text-body-sm text-on-secondary-container">
-                Pendaftaran ini hanya tersedia untuk akun admin pertama. Penambahan admin berikutnya dilakukan melalui panel kontrol.
+                Chức năng đăng ký này chỉ dành cho tài khoản quản trị viên đầu tiên. Các quản trị viên tiếp theo sẽ được thêm qua trang quản trị.
             </p>
         </div>
 
@@ -46,11 +46,11 @@
             <div class="space-y-2">
                 <label class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-2" for="username">
                     <span class="material-symbols-outlined text-[16px]">person</span>
-                    USERNAME
+                    TÊN ĐĂNG NHẬP
                 </label>
                 <div class="relative">
                     <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all outline-none font-body-md"
-                           id="username" name="username" placeholder="Masukkan username admin" type="text"
+                           id="username" name="username" placeholder="Nhập tên đăng nhập quản trị" type="text"
                            value="{{ request.form.get('username', '') }}" required/>
                 </div>
             </div>
@@ -59,11 +59,11 @@
             <div class="space-y-2">
                 <label class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-2" for="password">
                     <span class="material-symbols-outlined text-[16px]">lock</span>
-                    PASSWORD
+                    MẬT KHẨU
                 </label>
                 <div class="relative">
                     <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all outline-none font-body-md"
-                           id="password" name="password" placeholder="Minimal 8 karakter" type="password" required/>
+                           id="password" name="password" placeholder="Tối thiểu 8 ký tự" type="password" required/>
                     <button class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface" type="button" onclick="togglePassword('password', this)">
                         <span class="material-symbols-outlined">visibility</span>
                     </button>
@@ -74,18 +74,18 @@
             <div class="space-y-2">
                 <label class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-2" for="confirm_password">
                     <span class="material-symbols-outlined text-[16px]">verified_user</span>
-                    KONFIRMASI PASSWORD
+                    XÁC NHẬN MẬT KHẨU
                 </label>
                 <div class="relative">
                     <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all outline-none font-body-md"
-                           id="confirm_password" name="confirm_password" placeholder="Ulangi password" type="password" required/>
+                           id="confirm_password" name="confirm_password" placeholder="Nhập lại mật khẩu" type="password" required/>
                 </div>
             </div>
 
             <!-- Tombol Submit -->
             <div class="pt-4">
                 <button class="w-full bg-primary-container hover:bg-primary text-on-primary-container font-title-sm py-4 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary-container/20 group" type="submit">
-                    Buat Akun Admin
+                    Tạo tài khoản quản trị
                     <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
                 </button>
             </div>
@@ -95,9 +95,9 @@
         <div class="mt-12 text-center border-t border-outline-variant pt-6">
             <div class="flex items-center justify-center gap-2 mb-1">
                 <span class="material-symbols-outlined text-primary">fingerprint</span>
-                <span class="font-display-lg text-[20px] text-on-surface font-bold tracking-tight">Biometric System</span>
+                <span class="font-display-lg text-[20px] text-on-surface font-bold tracking-tight">Hệ thống sinh trắc học</span>
             </div>
-            <p class="font-label-caps text-[10px] text-outline tracking-widest">SECURE ATTENDANCE MANAGEMENT v1.0</p>
+            <p class="font-label-caps text-[10px] text-outline tracking-widest">QUẢN LÝ ĐIỂM DANH AN TOÀN v1.0</p>
         </div>
     </div>
 
@@ -105,11 +105,11 @@
     <div class="mt-8 flex justify-center gap-8 opacity-40">
         <div class="flex items-center gap-2 text-on-surface-variant">
             <span class="material-symbols-outlined text-[18px]">security</span>
-            <span class="font-label-caps text-[11px]">ENCRYPTED DATA</span>
+            <span class="font-label-caps text-[11px]">DỮ LIỆU ĐƯỢC MÃ HÓA</span>
         </div>
         <div class="flex items-center gap-2 text-on-surface-variant">
             <span class="material-symbols-outlined text-[18px]">cloud_done</span>
-            <span class="font-label-caps text-[11px]">AUTOMATIC BACKUP</span>
+            <span class="font-label-caps text-[11px]">SAO LƯU TỰ ĐỘNG</span>
         </div>
     </div>
 
@@ -117,7 +117,7 @@
     <div class="mt-6 text-center">
         <a href="{{ url_for('login') }}" class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors inline-flex items-center gap-1">
             <span class="material-symbols-outlined text-[16px]">arrow_back</span>
-            Kembali ke halaman login
+            Quay lại trang đăng nhập
         </a>
     </div>
 </main>

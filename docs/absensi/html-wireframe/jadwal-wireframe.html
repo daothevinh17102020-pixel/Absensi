@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>jadwal — Wireframe Điều hướng HTML Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bar:#000; --line:#ccc; --muted:#777; --bg:#f4f4f4; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #000; background: var(--bg); height: 100vh; display: flex; }
+
+    /* SIDEBAR TOC */
+    .toc { width: 290px; flex-shrink: 0; background: #fff; border-right: 2px solid #000; height: 100vh; overflow-y: auto; padding: 18px 0; }
+    .toc-brand { padding: 0 18px 14px; border-bottom: 1px solid var(--line); }
+    .toc-feature { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+    .toc-title { font-size: 17px; font-weight: 800; margin-top: 2px; }
+    .toc-meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .toc-section { padding: 14px 18px 4px; font-size: 10px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); font-weight: bold; }
+    .toc a { display: block; padding: 7px 18px; font-size: 13px; color: #000; text-decoration: none; border-left: 3px solid transparent; cursor: pointer; }
+    .toc a:hover { background: #f4f4f4; }
+    .toc a.active { border-left-color: #000; background: #e8e8e8; font-weight: 700; }
+    .toc a.screen { padding-left: 34px; font-size: 12px; color: #444; }
+    .toc a.screen::before { content: "› "; color: var(--muted); }
+    .toc .flow-count { float: right; font-size: 10px; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; padding: 0 6px; }
+
+    /* MAIN */
+    .main { flex: 1; height: 100vh; display: flex; flex-direction: column; }
+    .topbar { background: #fff; border-bottom: 1px solid var(--line); padding: 10px 18px; font-size: 13px; display: flex; align-items: center; gap: 12px; }
+    .topbar .crumb { font-weight: 700; }
+    .topbar .device { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 1px 6px; }
+    .topbar .open-raw { margin-left: auto; font-size: 12px; text-decoration: underline; color: #000; }
+    .frame-wrap { flex: 1; overflow: hidden; background: var(--bg); }
+    iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+
+    /* OVERVIEW */
+    .overview { height: 100%; overflow-y: auto; padding: 24px 28px; }
+    .overview h2 { font-size: 20px; margin-bottom: 4px; font-weight: 800; }
+    .overview .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+    .legend { display: flex; gap: 16px; font-size: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .chip { width: 14px; height: 14px; border-radius: 3px; border: 1px solid #000; display: inline-block; }
+    .chip.happy { background: #fff; } .chip.edge { background: repeating-linear-gradient(45deg,#fff,#fff 3px,#ddd 3px,#ddd 6px); } .chip.error { background: #000; }
+    
+    .flowmap { display: flex; flex-direction: column; gap: 22px; }
+    .flowgroup { border: 1.5px solid #000; border-radius: 8px; padding: 16px; background: #fff; }
+    .flowgroup h3 { font-size: 15px; margin-bottom: 4px; font-weight: 700; }
+    .flowgroup .cover { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+    .chain { display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
+    .node { border: 1.5px solid #000; border-radius: 6px; padding: 8px 12px; font-size: 12px; background: #fff; cursor: pointer; text-decoration: none; color: #000; }
+    .node:hover { background: #f0f0f0; }
+    .node.edge { background: repeating-linear-gradient(45deg,#fff,#fff 4px,#f0f0f0 4px,#f0f0f0 8px); }
+    .node.error { background: #000; color: #fff; }
+    .node .n { font-weight: 800; margin-right: 4px; }
+    .arrow { color: var(--muted); padding: 0 8px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <nav class="toc">
+    <div class="toc-brand">
+      <div class="toc-feature">Absensi System</div>
+      <div class="toc-title">Quản lý lịch học</div>
+      <div class="toc-meta">3 Luồng · 6 Màn hình Demo · Desktop & Mobile</div>
+    </div>
+
+    <a class="active" data-view="overview">▤ Tổng quan User Flow</a>
+
+    <div class="toc-section">Flow 1 · Xem & Tìm kiếm <span class="flow-count">3 màn</span></div>
+    <a data-view="flow" data-src="danh-sach-jadwal.html">Bảng Desktop & Card Mobile</a>
+    <a class="screen" data-view="flow" data-src="danh-sach-jadwal.html" data-scroll="1">Desktop Table View</a>
+    <a class="screen" data-view="flow" data-src="danh-sach-jadwal.html" data-scroll="2">Mobile Card View</a>
+    <a class="screen" data-view="flow" data-src="danh-sach-jadwal.html" data-scroll="3">Search Dropdown Active</a>
+
+    <div class="toc-section">Flow 2 · Thêm / Sửa Lịch <span class="flow-count">2 màn</span></div>
+    <a data-view="flow" data-src="them-sua-jadwal.html">Form Grid 2 Cột Cân Đối</a>
+    <a class="screen" data-view="flow" data-src="them-sua-jadwal.html" data-scroll="1">Form Grid Initial</a>
+    <a class="screen" data-view="flow" data-src="them-sua-jadwal.html" data-scroll="2">Auto Delay Preview</a>
+
+    <div class="toc-section">Flow 3 · Xóa lịch học <span class="flow-count">1 màn</span></div>
+    <a data-view="flow" data-src="xoa-jadwal.html">Modal Confirm Overlay</a>
+    <a class="screen" data-view="flow" data-src="xoa-jadwal.html" data-scroll="1">Modal Delete Confirm</a>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <span class="crumb" id="crumb">Tổng quan User Flow</span>
+      <span class="device" id="device">Desktop & Mobile</span>
+      <a class="open-raw" id="openRaw" href="#" target="_blank" style="display:none">Mở file HTML gốc ↗</a>
+    </div>
+    <div class="frame-wrap">
+      <!-- OVERVIEW FLOWMAP -->
+      <div class="overview" id="overview">
+        <h2>Sơ đồ luồng giao diện sau cải tiến (UI/UX Refactored)</h2>
+        <div class="sub">Click vào từng ô bước màn hình bên dưới để xem giao diện Wireframe HTML trực quan. Nguồn đặc tả: <code>docs/absensi/jadwal-uiux-review-spec.md</code></div>
+        <div class="legend">
+          <span><i class="chip happy"></i> Màn hình chính (Happy Path)</span>
+          <span><i class="chip edge"></i> Trạng thái tương tác / Di động</span>
+          <span><i class="chip error"></i> Hộp thoại xác nhận (Modal)</span>
+        </div>
+        <div class="flowmap">
+
+          <div class="flowgroup">
+            <h3>Flow 1 — Xem & Tìm kiếm lịch học</h3>
+            <div class="cover">Hiển thị cố định cột Thao tác Sửa/Xóa + Card View di động kèm nút FAB nổi + Search dropdown tự đóng.</div>
+            <div class="chain">
+              <a class="node" data-view="flow" data-src="danh-sach-jadwal.html" data-scroll="1"><span class="n">1</span>Desktop Table View</a>
+              <span class="arrow">→</span>
+              <a class="node edge" data-view="flow" data-src="danh-sach-jadwal.html" data-scroll="2"><span class="n">2</span>Mobile Card View</a>
+              <span class="arrow">→</span>
+              <a class="node edge" data-view="flow" data-src="danh-sach-jadwal.html" data-scroll="3"><span class="n">3</span>Search Dropdown Active</a>
+            </div>
+          </div>
+
+          <div class="flowgroup">
+            <h3>Flow 2 — Thêm & Chỉnh sửa lịch học</h3>
+            <div class="cover">Form Grid 2 cột cân đối + Tự động gợi ý tính toán Hạn đi muộn tức thì.</div>
+            <div class="chain">
+              <a class="node" data-view="flow" data-src="them-sua-jadwal.html" data-scroll="1"><span class="n">1</span>Form Grid Initial</a>
+              <span class="arrow">→</span>
+              <a class="node happy" data-view="flow" data-src="them-sua-jadwal.html" data-scroll="2"><span class="n">2</span>Auto Delay Preview</a>
+            </div>
+          </div>
+
+          <div class="flowgroup">
+            <h3>Flow 3 — Xóa lịch học</h3>
+            <div class="cover">Modal popup khóa nền xác nhận thông tin môn học trước khi xóa.</div>
+            <div class="chain">
+              <a class="node error" data-view="flow" data-src="xoa-jadwal.html" data-scroll="1"><span class="n">1</span>Delete Confirm Modal</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- FLOW IFRAME -->
+      <iframe id="frame" style="display:none"></iframe>
+    </div>
+  </div>
+
+  <script>
+    const overview = document.getElementById('overview');
+    const frame = document.getElementById('frame');
+    const crumb = document.getElementById('crumb');
+    const openRaw = document.getElementById('openRaw');
+
+    function show(el){
+      if(el.dataset.view==='overview'){
+        overview.style.display='block'; frame.style.display='none';
+        crumb.textContent='Tổng quan User Flow'; openRaw.style.display='none';
+        document.querySelectorAll('.toc a').forEach(a=>a.classList.remove('active'));
+        document.querySelector('.toc a[data-view="overview"]').classList.add('active');
+        return;
+      }
+      const src = el.dataset.src, scroll = el.dataset.scroll;
+      overview.style.display='none'; frame.style.display='block';
+      frame.src = scroll ? src + '#s' + scroll : src;
+      crumb.textContent = src.replace('.html','');
+      openRaw.style.display='inline'; openRaw.href = src;
+      
+      document.querySelectorAll('.toc a').forEach(a=>a.classList.remove('active'));
+      const tocMatch=[...document.querySelectorAll('.toc a')].find(a=>a.dataset.src===src && (a.dataset.scroll||'')===(scroll||''))
+                    || [...document.querySelectorAll('.toc a')].find(a=>a.dataset.src===src && !a.classList.contains('screen'));
+      if(tocMatch) tocMatch.classList.add('active');
+    }
+
+    document.querySelectorAll('[data-view]').forEach(el => el.addEventListener('click', e=>{ e.preventDefault(); show(el); }));
+  </script>
+</body>
+</html>

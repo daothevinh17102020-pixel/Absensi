@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html class="light" lang="id">
+<html class="dark" lang="vi">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>{% block title %}Sistem Absensi{% endblock %}</title>
+    <title>{% block title %}Hệ thống điểm danh{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script id="tailwind-config">
         tailwind.config = {
@@ -16,50 +16,50 @@
                         "on-tertiary": "#ffffff",
                         "on-primary-fixed": "#001e2c",
                         "error": "#dc2626",
-                        "on-surface": "#0f172a",
-                        "surface-tint": "#0284c7",
-                        "on-secondary-container": "#334155",
+                        "on-surface": "#f3f4f6",
+                        "surface-tint": "#ff5500",
+                        "on-secondary-container": "#dee3e8",
                         "secondary-fixed": "#cbd5e1",
-                        "background": "#f8fafc",
-                        "outline": "#cbd5e1",
+                        "background": "#0a0a0a",
+                        "outline": "#8b95a7",
                         "on-secondary-fixed-variant": "#475569",
-                        "secondary": "#475569",
-                        "inverse-on-surface": "#f8fafc",
+                        "secondary": "#c6cfdd",
+                        "inverse-on-surface": "#0a0a0a",
                         "tertiary-fixed": "#ffedd5",
-                        "surface-container-highest": "#e2e8f0",
+                        "surface-container-highest": "#242424",
                         "on-error": "#ffffff",
                         "primary-fixed": "#e0f2fe",
-                        "on-primary-container": "#0369a1",
+                        "on-primary-container": "#ffffff",
                         "tertiary-container": "#ffedd5",
-                        "surface-dim": "#f1f5f9",
-                        "on-primary-fixed-variant": "#0284c7",
-                        "surface-container-lowest": "#ffffff",
+                        "surface-dim": "#101010",
+                        "on-primary-fixed-variant": "#ff7a3d",
+                        "surface-container-lowest": "#0a0a0a",
                         "on-secondary": "#ffffff",
-                        "secondary-container": "#f1f5f9",
+                        "secondary-container": "#27272a",
                         "on-tertiary-fixed": "#78350f",
-                        "surface-variant": "#f1f5f9",
-                        "inverse-surface": "#1e293b",
+                        "surface-variant": "#1f1f1f",
+                        "inverse-surface": "#f3f4f6",
                         "on-tertiary-container": "#c2410c",
                         "on-tertiary-fixed-variant": "#ea580c",
-                        "error-container": "#fee2e2",
-                        "primary-container": "#e0f2fe",
-                        "on-surface-variant": "#475569",
-                        "inverse-primary": "#0284c7",
-                        "surface-container-low": "#fafafa",
-                        "surface-bright": "#ffffff",
+                        "error-container": "#451a1a",
+                        "primary-container": "#ff5500",
+                        "on-surface-variant": "#c7ccd6",
+                        "inverse-primary": "#ff7a3d",
+                        "surface-container-low": "#141414",
+                        "surface-bright": "#1a1a1a",
                         "on-primary": "#ffffff",
                         "tertiary-fixed-dim": "#fcd34d",
-                        "tertiary": "#ea580c",
-                        "on-background": "#0f172a",
-                        "surface-container-high": "#f1f5f9",
-                        "primary": "#0284c7",
-                        "surface": "#ffffff",
-                        "surface-container": "#ffffff",
+                        "tertiary": "#f59e0b",
+                        "on-background": "#f3f4f6",
+                        "surface-container-high": "#1a1a1a",
+                        "primary": "#ff6a20",
+                        "surface": "#0a0a0a",
+                        "surface-container": "#141414",
                         "secondary-fixed-dim": "#94a3b8",
                         "primary-fixed-dim": "#38bdf8",
                         "on-secondary-fixed": "#0f172a",
-                        "outline-variant": "#e2e8f0",
-                        "on-error-container": "#b91c1c"
+                        "outline-variant": "#343434",
+                        "on-error-container": "#fca5a5"
                     },
                     "borderRadius": {
                         "DEFAULT": "0.25rem",
@@ -75,20 +75,20 @@
                         "gutter": "16px"
                     },
                     "fontFamily": {
-                        "title-sm": ["Inter"],
-                        "headline-md": ["Inter"],
-                        "label-caps": ["Inter"],
-                        "body-md": ["Inter"],
-                        "display-lg": ["Inter"],
-                        "body-sm": ["Inter"],
-                        "display-lg-mobile": ["Inter"]
+                        "title-sm": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "label-caps": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "body-sm": ["Plus Jakarta Sans"],
+                        "display-lg-mobile": ["Plus Jakarta Sans"]
                     },
                     "fontSize": {
                         "title-sm": ["18px", {"lineHeight": "28px", "fontWeight": "600"}],
-                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
-                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "0", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
                         "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
-                        "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "0", "fontWeight": "700"}],
                         "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
                         "display-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}]
                     }
@@ -98,8 +98,10 @@
     </script>
     <style>
         body {
-            background-color: #f8fafc;
-            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+            background-size: 40px 40px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -123,9 +125,93 @@
         section[class*="bg-surface-container"],
         aside,
         header {
-            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 
-                        0 2px 8px -1px rgba(15, 23, 42, 0.04) !important;
-            border-color: rgba(203, 213, 225, 0.8) !important;
+            box-shadow: 0 16px 32px -24px rgba(0, 0, 0, .9);
+            border-color: #292929;
+        }
+
+        .app-sidebar { background: rgba(18,18,18,.98); }
+        #sidebar-backdrop { touch-action: pan-y; }
+        .app-header { background: rgba(10,10,10,.92); }
+        .app-sidebar nav a {
+            color: #c7ccd6;
+            font-weight: 650;
+            min-height: 56px;
+        }
+        .app-sidebar nav a:hover {
+            background: rgba(255, 85, 0, .10);
+            color: #ffffff;
+        }
+        .app-sidebar nav a.text-primary {
+            background: rgba(255, 85, 0, .14);
+            color: #ff6a20;
+            box-shadow: inset 0 0 0 1px rgba(255, 85, 0, .08);
+        }
+        .app-sidebar .material-symbols-outlined {
+            color: currentColor;
+        }
+        .text-on-surface-variant {
+            color: #c7ccd6;
+        }
+        .text-outline {
+            color: #9aa4b5;
+        }
+        label.text-on-surface-variant,
+        th.text-on-surface-variant,
+        p.text-on-surface-variant,
+        span.text-on-surface-variant {
+            color: #c7ccd6;
+        }
+        input,
+        select,
+        textarea {
+            color: #ffffff;
+            background-color: #0f0f0f;
+            border-color: #343434;
+        }
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #ff6a20;
+            box-shadow: 0 0 0 2px rgba(255, 85, 0, .20);
+        }
+        input::placeholder,
+        textarea::placeholder {
+            color: #9aa4b5;
+            opacity: 1;
+        }
+        select option {
+            background: #101010;
+            color: #ffffff;
+        }
+        table tbody td {
+            color: #d8dde7;
+        }
+        table thead th {
+            color: #d8dde7;
+            font-size: 12px;
+        }
+        section[class*="bg-surface-container"],
+        div[class*="bg-surface-container"] {
+            background-color: rgba(20, 20, 20, .96);
+        }
+        .app-page h2,
+        .app-page h3,
+        .app-page h4 {
+            color: #ffffff;
+        }
+        .app-card, div[class*="bg-surface-container-low"][class*="border-outline-variant"] { transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+        .app-card:hover, div[class*="bg-surface-container-low"][class*="border-outline-variant"]:hover { border-color: rgba(255,85,0,.45) !important; box-shadow: 0 18px 36px -28px rgba(255,85,0,.7) !important; transform: translateY(-2px); }
+        .focus-ring:focus-visible { outline: 2px solid #ff5500; outline-offset: 2px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #363636; }
+        ::-webkit-scrollbar-thumb:hover { background: #ff5500; }
+        @media (max-width: 1023px) {
+            .app-sidebar { transform: translateX(-100%); box-shadow: 20px 0 50px rgba(0,0,0,.45) !important; }
+            .app-sidebar.is-open { transform: translateX(0); }
+            .app-header { width: 100% !important; }
+            .app-main { margin-left: 0 !important; }
+            .app-page { padding: 5.5rem 1rem 1.5rem !important; }
+            .desktop-only { display: none; }
         }
 
         /* Animasi notifikasi flash */
@@ -148,7 +234,7 @@
 {# ============================================================ #}
 {# FLASH MESSAGES — tampil di semua halaman (auto-dismiss 4 dtk) #}
 {# ============================================================ #}
-<div id="flash-container" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+<div id="flash-container" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm w-full pointer-events-none" aria-live="polite">
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
     {% for category, message in messages %}
@@ -242,56 +328,57 @@
 {# ============================================================ #}
 {% block layout %}
 <!-- Sidebar Navigasi -->
-<aside class="fixed left-0 top-0 h-screen w-[260px] bg-surface-container dark:bg-surface-container-low backdrop-blur-md bg-opacity-80 border-r border-outline-variant dark:border-outline-variant flex flex-col gap-4 py-8 px-4 z-50 transition-all duration-200 ease-in-out">
+<div id="sidebar-backdrop" class="hidden fixed inset-0 bg-black/70 z-40 lg:hidden" aria-hidden="true"></div>
+<aside id="app-sidebar" class="app-sidebar fixed left-0 top-0 h-screen w-[260px] bg-surface-container dark:bg-surface-container-low backdrop-blur-md bg-opacity-80 border-r border-outline-variant dark:border-outline-variant flex flex-col gap-4 py-8 px-4 z-50 transition-all duration-200 ease-in-out">
     <!-- Brand Header -->
     <div class="px-2 mb-6">
-        <h1 class="font-display-lg text-display-lg text-primary dark:text-primary font-bold tracking-tight">Absensi Face Recognition</h1>
-        <p class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mt-1">Biometric System</p>
+        <h1 class="font-display-lg text-[26px] leading-tight text-primary dark:text-primary font-extrabold tracking-tight">VNIH<span class="text-on-surface">.AI</span></h1>
+        <p class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-[.18em] mt-2">Hệ thống sinh trắc học</p>
     </div>
     <!-- Menu Navigasi -->
     <nav class="flex-1 space-y-1">
         {# Variabel active_page diset di setiap route Flask untuk highlight menu #}
         <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out
-            {% if active_page == 'dashboard' %}text-primary font-bold border-l-4 border-primary bg-primary-container/5
+            {% if active_page == 'dashboard' %}text-primary font-bold border-l-4 border-primary bg-primary-container/15
             {% else %}text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface{% endif %}"
            href="{{ url_for('dashboard') }}">
             <span class="material-symbols-outlined" {% if active_page == 'dashboard' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>dashboard</span>
-            <span class="font-body-md text-body-md">Dashboard</span>
+            <span class="font-body-md text-body-md">Tổng quan</span>
         </a>
         <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out
-            {% if active_page == 'mahasiswa' %}text-primary font-bold border-l-4 border-primary bg-primary-container/5
+            {% if active_page == 'mahasiswa' %}text-primary font-bold border-l-4 border-primary bg-primary-container/15
             {% else %}text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface{% endif %}"
            href="{{ url_for('mahasiswa_index') }}">
             <span class="material-symbols-outlined" {% if active_page == 'mahasiswa' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>group</span>
-            <span class="font-body-md text-body-md">Mahasiswa</span>
+            <span class="font-body-md text-body-md">Sinh viên</span>
         </a>
         <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out
-            {% if active_page == 'kelas' %}text-primary font-bold border-l-4 border-primary bg-primary-container/5
+            {% if active_page == 'kelas' %}text-primary font-bold border-l-4 border-primary bg-primary-container/15
             {% else %}text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface{% endif %}"
            href="{{ url_for('kelas_index') }}">
             <span class="material-symbols-outlined" {% if active_page == 'kelas' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>school</span>
-            <span class="font-body-md text-body-md">Kelas &amp; MK</span>
+            <span class="font-body-md text-body-md">Lớp &amp; Môn học</span>
         </a>
         <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out
-            {% if active_page == 'jadwal' %}text-primary font-bold border-l-4 border-primary bg-primary-container/5
+            {% if active_page == 'jadwal' %}text-primary font-bold border-l-4 border-primary bg-primary-container/15
             {% else %}text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface{% endif %}"
            href="{{ url_for('jadwal_index') }}">
             <span class="material-symbols-outlined" {% if active_page == 'jadwal' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>calendar_month</span>
-            <span class="font-body-md text-body-md">Jadwal</span>
+            <span class="font-body-md text-body-md">Lịch học</span>
         </a>
         <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out
-            {% if active_page == 'rekap' %}text-primary font-bold border-l-4 border-primary bg-primary-container/5
+            {% if active_page == 'rekap' %}text-primary font-bold border-l-4 border-primary bg-primary-container/15
             {% else %}text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface{% endif %}"
            href="{{ url_for('absensi_rekap') }}">
             <span class="material-symbols-outlined" {% if active_page == 'rekap' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>assignment</span>
-            <span class="font-body-md text-body-md">Rekap Absensi</span>
+            <span class="font-body-md text-body-md">Tổng hợp điểm danh</span>
         </a>
         <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out
-            {% if active_page == 'laporan' %}text-primary font-bold border-l-4 border-primary bg-primary-container/5
+            {% if active_page == 'laporan' %}text-primary font-bold border-l-4 border-primary bg-primary-container/15
             {% else %}text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface{% endif %}"
            href="{{ url_for('laporan_index') }}">
             <span class="material-symbols-outlined" {% if active_page == 'laporan' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>assessment</span>
-            <span class="font-body-md text-body-md">Laporan</span>
+            <span class="font-body-md text-body-md">Báo cáo</span>
         </a>
     </nav>
     <!-- Profil Admin di bawah sidebar -->
@@ -302,9 +389,9 @@
             </div>
             <div class="flex flex-col">
                 <span class="font-label-caps text-label-caps text-on-surface font-bold">{{ session.get('username', 'Admin') }}</span>
-                <span class="font-body-sm text-[10px] text-on-surface-variant">System Admin</span>
+                <span class="font-body-sm text-[11px] text-on-surface-variant">Quản trị viên hệ thống</span>
             </div>
-            <a href="{{ url_for('logout') }}" class="ml-auto text-on-surface-variant hover:text-primary transition-colors" title="Logout">
+            <a href="{{ url_for('logout') }}" class="ml-auto text-on-surface-variant hover:text-primary transition-colors" title="Đăng xuất">
                 <span class="material-symbols-outlined">logout</span>
             </a>
         </div>
@@ -312,17 +399,18 @@
 </aside>
 
 <!-- Top Navbar -->
-<header class="fixed top-0 right-0 w-[calc(100%-260px)] z-40 bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-outline-variant dark:border-outline-variant flex justify-between items-center h-16 px-gutter ml-auto">
+<header class="app-header fixed top-0 right-0 w-[calc(100%-260px)] z-40 bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-outline-variant dark:border-outline-variant flex justify-between items-center h-16 px-gutter ml-auto">
     <div class="flex items-center gap-4 flex-1">
+        <button id="sidebar-toggle" type="button" class="lg:hidden p-2 -ml-2 text-on-surface-variant hover:text-primary focus-ring rounded-lg" aria-label="Mở điều hướng" aria-controls="app-sidebar" aria-expanded="false"><span class="material-symbols-outlined">menu</span></button>
         <div class="relative w-full max-w-md focus-within:ring-2 focus-within:ring-primary rounded-lg transition-all">
             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-            <input id="global-search-input" class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-10 pr-4 py-2 text-body-sm focus:outline-none focus:border-primary transition-colors" placeholder="Search data mahasiswa, jadwal..." type="text" autocomplete="off"/>
+            <input id="global-search-input" class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-10 pr-4 py-2 text-body-sm focus:outline-none focus:border-primary transition-colors" placeholder="Tìm kiếm sinh viên, lịch học..." type="text" autocomplete="off" role="combobox" aria-controls="search-dropdown" aria-expanded="false"/>
             
             <!-- Dropdown Hasil Pencarian -->
             <div id="search-dropdown" class="hidden absolute left-0 right-0 mt-2 bg-surface border border-outline-variant rounded-xl shadow-2xl z-[9999] overflow-hidden max-h-[420px] flex flex-col backdrop-blur-md bg-opacity-95">
                 <div class="p-3 text-xs font-semibold text-on-surface-variant border-b border-outline-variant bg-surface-dim flex justify-between items-center">
-                    <span>HASIL PENCARIAN</span>
-                    <span id="search-status" class="text-[10px] text-primary italic font-normal hidden">Mencari...</span>
+                    <span>KẾT QUẢ TÌM KIẾM</span>
+                    <span id="search-status" class="text-[10px] text-primary italic font-normal hidden">Đang tìm...</span>
                 </div>
                 <div id="search-dropdown-content" class="overflow-y-auto py-1 divide-y divide-outline-variant/30">
                     <!-- Terisi dinamis oleh JavaScript -->
@@ -331,7 +419,7 @@
         </div>
     </div>
     <div class="flex items-center gap-2">
-        <span class="font-title-sm text-title-sm font-bold text-on-surface mr-6">Attendance Management</span>
+        <span class="desktop-only font-title-sm text-title-sm font-bold text-on-surface mr-6">Quản lý điểm danh</span>
         <div class="flex items-center gap-1">
             <button class="p-2 text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors">
                 <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
@@ -347,8 +435,8 @@
 </header>
 
 <!-- Area Konten Utama -->
-<main class="ml-[260px] pt-16 min-h-screen">
-    <div class="p-8 max-w-[1600px] mx-auto">
+<main class="app-main ml-[260px] pt-16 min-h-screen">
+    <div class="app-page p-8 max-w-[1600px] mx-auto">
         {% block content %}{% endblock %}
     </div>
 </main>
@@ -357,6 +445,20 @@
 <!-- Global Search Scripts & Micro-interactions -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('app-sidebar');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+    function setSidebar(open) {
+        if (!sidebar || !sidebarToggle || !sidebarBackdrop) return;
+        sidebar.classList.toggle('is-open', open);
+        sidebarBackdrop.classList.toggle('hidden', !open);
+        sidebarBackdrop.setAttribute('aria-hidden', String(!open));
+        sidebarToggle.setAttribute('aria-expanded', String(open));
+    }
+    if (sidebarToggle) sidebarToggle.addEventListener('click', function() { setSidebar(!sidebar.classList.contains('is-open')); });
+    if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', function() { setSidebar(false); });
+    document.querySelectorAll('#app-sidebar a').forEach(function(link) { link.addEventListener('click', function() { setSidebar(false); }); });
+
     const searchInput = document.getElementById('global-search-input');
     const searchDropdown = document.getElementById('search-dropdown');
     const searchDropdownContent = document.getElementById('search-dropdown-content');
@@ -389,6 +491,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Tutup dropdown
     function closeDropdown() {
         searchDropdown.classList.add('hidden');
+        searchInput.setAttribute('aria-expanded', 'false');
         activeIndex = -1;
         focusableItems = [];
     }
@@ -402,6 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         searchStatus.classList.remove('hidden');
         searchDropdown.classList.remove('hidden');
+        searchInput.setAttribute('aria-expanded', 'true');
 
         fetch(`/api/search?q=${encodeURIComponent(query)}`)
             .then(response => response.json())
@@ -417,7 +521,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         searchDropdownContent.innerHTML = `
                             <div class="p-6 text-center text-on-surface-variant flex flex-col items-center justify-center gap-2">
                                 <span class="material-symbols-outlined text-outline text-3xl">search_off</span>
-                                <span class="text-body-sm">Tidak ada hasil untuk "<strong class="text-on-surface font-semibold">${escapeHtml(query)}</strong>"</span>
+                                <span class="text-body-sm">Không có kết quả cho “<strong class="text-on-surface font-semibold">${escapeHtml(query)}</strong>”</span>
                             </div>
                         `;
                         focusableItems = [];
@@ -432,8 +536,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (mhs.length > 0) {
                         html += `
                             <div class="px-4 py-2 text-[11px] font-bold text-primary dark:text-primary uppercase tracking-wider bg-surface-container-low/50 border-b border-outline-variant/30 flex items-center justify-between">
-                                <span>Mahasiswa</span>
-                                <span class="text-[10px] font-normal lowercase text-on-surface-variant">${mhs.length} ditemukan</span>
+                                <span>Sinh viên</span>
+                                <span class="text-[10px] font-normal lowercase text-on-surface-variant">Đã tìm thấy ${mhs.length}</span>
                             </div>
                             <div class="flex flex-col">
                         `;
@@ -446,7 +550,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </div>
                                     <div class="flex flex-col flex-1 min-w-0">
                                         <span class="font-semibold text-body-sm text-on-surface group-hover:text-primary transition-colors truncate">${highlightMatch(item.nama, query)}</span>
-                                        <span class="text-[11px] text-on-surface-variant truncate">NIM: ${highlightMatch(item.nim, query)} • Kelas ${escapeHtml(item.nama_kelas)}</span>
+                                        <span class="text-[11px] text-on-surface-variant truncate">Mã sinh viên: ${highlightMatch(item.nim, query)} • Lớp ${escapeHtml(item.nama_kelas)}</span>
                                     </div>
                                     <span class="material-symbols-outlined text-outline group-hover:text-primary group-hover:translate-x-0.5 transition-all text-sm shrink-0">chevron_right</span>
                                 </a>
@@ -460,8 +564,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (jdw.length > 0) {
                         html += `
                             <div class="px-4 py-2 text-[11px] font-bold text-tertiary dark:text-tertiary uppercase tracking-wider bg-surface-container-low/50 border-b border-outline-variant/30 border-t border-outline-variant/30 mt-1 flex items-center justify-between">
-                                <span>Jadwal Perkuliahan</span>
-                                <span class="text-[10px] font-normal lowercase text-on-surface-variant">${jdw.length} ditemukan</span>
+                                <span>Lịch học</span>
+                                <span class="text-[10px] font-normal lowercase text-on-surface-variant">Đã tìm thấy ${jdw.length}</span>
                             </div>
                             <div class="flex flex-col">
                         `;
@@ -474,7 +578,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </div>
                                     <div class="flex flex-col flex-1 min-w-0">
                                         <span class="font-semibold text-body-sm text-on-surface group-hover:text-primary transition-colors truncate">${highlightMatch(item.nama_mk, query)} (${highlightMatch(item.kode_mk, query)})</span>
-                                        <span class="text-[11px] text-on-surface-variant truncate">${highlightMatch(item.hari, query)}, ${escapeHtml(item.jam_mulai)} - ${escapeHtml(item.jam_selesai)} • Kelas ${highlightMatch(item.nama_kelas, query)}</span>
+                                        <span class="text-[11px] text-on-surface-variant truncate">${highlightMatch(({Senin: 'Thứ Hai', Selasa: 'Thứ Ba', Rabu: 'Thứ Tư', Kamis: 'Thứ Năm', Jumat: 'Thứ Sáu', Sabtu: 'Thứ Bảy', Minggu: 'Chủ Nhật'})[item.hari] || item.hari, query)}, ${escapeHtml(item.jam_mulai)} - ${escapeHtml(item.jam_selesai)} • Lớp ${highlightMatch(item.nama_kelas, query)}</span>
                                     </div>
                                     <span class="material-symbols-outlined text-outline group-hover:text-primary group-hover:translate-x-0.5 transition-all text-sm shrink-0">chevron_right</span>
                                 </a>
@@ -503,7 +607,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 searchDropdownContent.innerHTML = `
                     <div class="p-4 text-center text-error flex items-center justify-center gap-2">
                         <span class="material-symbols-outlined text-sm">error</span>
-                        <span class="text-body-sm">Gagal memuat hasil pencarian.</span>
+                        <span class="text-body-sm">Không thể tải kết quả tìm kiếm.</span>
                     </div>
                 `;
                 focusableItems = [];

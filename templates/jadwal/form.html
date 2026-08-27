@@ -1,20 +1,21 @@
 {% extends 'base.html' %}
-{% block title %}Tambah Jadwal - Sistem Absensi{% endblock %}
+{% set is_edit_mode = is_edit|default(false) or (jadwal is defined and jadwal) %}
+{% block title %}{% if is_edit_mode %}Sửa lịch học{% else %}Thêm lịch học{% endif %} - Hệ thống điểm danh{% endblock %}
 
 {% block content %}
 <nav class="flex text-on-surface-variant font-label-caps text-label-caps mb-6">
     <ol class="inline-flex items-center space-x-2">
-        <li><a class="hover:text-primary" href="{{ url_for('jadwal_index') }}">Jadwal</a></li>
+        <li><a class="hover:text-primary" href="{{ url_for('jadwal_index') }}">Lịch học</a></li>
         <li><span class="material-symbols-outlined text-sm">chevron_right</span></li>
-        <li class="text-primary font-bold">Tambah Jadwal</li>
+        <li class="text-primary font-bold">{% if is_edit_mode %}Sửa lịch học{% else %}Thêm lịch học{% endif %}</li>
     </ol>
 </nav>
 
-<div class="max-w-lg">
-    <h2 class="font-headline-md text-headline-md text-on-surface mb-2">Tambah Jadwal Baru</h2>
+<div class="max-w-4xl">
+    <h2 class="font-headline-md text-headline-md text-on-surface mb-2">{% if is_edit_mode %}Sửa lịch học{% else %}Thêm lịch học mới{% endif %}</h2>
     <p class="font-body-sm text-body-sm text-on-surface-variant mb-8">
-        Pilih kelas terlebih dahulu, kemudian pilih mata kuliah untuk kelas tersebut.
-        Batas terlambat otomatis: jam_mulai + 15 menit.
+        Trước tiên hãy chọn lớp, sau đó chọn môn học của lớp đó.
+        Hạn đi muộn được tính tự động: giờ bắt đầu + 15 phút.
     </p>
 
     {% if error %}
@@ -24,31 +25,37 @@
     </div>
     {% endif %}
 
-    <form method="POST" class="space-y-6" id="formJadwal">
+    {% set selected_kelas_id = request.form.get('kelas_id') if request.form.get('kelas_id') is not none and request.form.get('kelas_id') != '' else (jadwal.kelas_id if (jadwal is defined and jadwal and jadwal.kelas_id) else '') %}
+    {% set selected_mk_id = request.form.get('matakuliah_id') if request.form.get('matakuliah_id') is not none and request.form.get('matakuliah_id') != '' else (jadwal.matakuliah_id if (jadwal is defined and jadwal and jadwal.matakuliah_id) else '') %}
+    {% set selected_hari = request.form.get('hari') if request.form.get('hari') is not none and request.form.get('hari') != '' else (jadwal.hari if (jadwal is defined and jadwal and jadwal.hari) else '') %}
+    {% set selected_jam_mulai = request.form.get('jam_mulai') if request.form.get('jam_mulai') is not none and request.form.get('jam_mulai') != '' else (jadwal.jam_mulai if (jadwal is defined and jadwal and jadwal.jam_mulai) else '') %}
+    {% set selected_jam_selesai = request.form.get('jam_selesai') if request.form.get('jam_selesai') is not none and request.form.get('jam_selesai') != '' else (jadwal.jam_selesai if (jadwal is defined and jadwal and jadwal.jam_selesai) else '') %}
+
+    <form method="POST" class="grid grid-cols-1 gap-6 md:grid-cols-2" id="formJadwal">
         <!-- Pilih Kelas -->
         <div class="space-y-2">
-            <label class="font-label-caps text-label-caps text-on-surface-variant" for="kelas_id">KELAS</label>
+            <label class="font-label-caps text-label-caps text-on-surface-variant" for="kelas_id">LỚP</label>
             <select class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
                     id="kelas_id" name="kelas_id" required>
-                <option value="">-- Pilih Kelas --</option>
+                <option value="">-- Chọn lớp --</option>
                 {% for k in daftar_kelas %}
-                <option value="{{ k.id }}" {% if request.form.get('kelas_id')|int == k.id %}selected{% endif %}>
+                <option value="{{ k.id }}" {% if selected_kelas_id|string == k.id|string %}selected{% endif %}>
                     {{ k.nama_kelas }} ({{ k.angkatan }})
                 </option>
                 {% endfor %}
             </select>
         </div>
 
-        <!-- Pilih MK (difilter berdasarkan kelas via JS) -->
+        <!-- Pilih MK (difilter dựa trên kelas qua JS) -->
         <div class="space-y-2">
-            <label class="font-label-caps text-label-caps text-on-surface-variant" for="matakuliah_id">MATA KULIAH</label>
+            <label class="font-label-caps text-label-caps text-on-surface-variant" for="matakuliah_id">MÔN HỌC</label>
             <select class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
                     id="matakuliah_id" name="matakuliah_id" required>
-                <option value="">-- Pilih Kelas dulu --</option>
+                <option value="">-- Vui lòng chọn lớp trước --</option>
                 {% for mk in daftar_mk %}
                 <option value="{{ mk.id }}"
                         data-kelas="{{ mk.kelas_id }}"
-                        {% if request.form.get('matakuliah_id')|int == mk.id %}selected{% endif %}
+                        {% if selected_mk_id|string == mk.id|string %}selected{% endif %}
                         class="mk-option">
                     {{ mk.nama_mk }} ({{ mk.kode_mk }})
                 </option>
@@ -58,67 +65,108 @@
 
         <!-- Hari -->
         <div class="space-y-2">
-            <label class="font-label-caps text-label-caps text-on-surface-variant" for="hari">HARI</label>
+            <label class="font-label-caps text-label-caps text-on-surface-variant" for="hari">THỨ</label>
             <select class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
                     id="hari" name="hari" required>
-                <option value="">-- Pilih Hari --</option>
+                <option value="">-- Chọn thứ --</option>
                 {% for h in ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] %}
-                <option value="{{ h }}" {% if request.form.get('hari') == h %}selected{% endif %}>{{ h }}</option>
+                <option value="{{ h }}" {% if selected_hari == h %}selected{% endif %}>{{ {'Senin': 'Thứ Hai', 'Selasa': 'Thứ Ba', 'Rabu': 'Thứ Tư', 'Kamis': 'Thứ Năm', 'Jumat': 'Thứ Sáu', 'Sabtu': 'Thứ Bảy', 'Minggu': 'Chủ Nhật'}[h] }}</option>
                 {% endfor %}
             </select>
         </div>
 
-        <!-- Jam Mulai & Selesai -->
-        <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-2">
-                <label class="font-label-caps text-label-caps text-on-surface-variant" for="jam_mulai">JAM MULAI</label>
-                <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
-                       id="jam_mulai" name="jam_mulai" type="time" value="{{ request.form.get('jam_mulai', '') }}" required/>
+        <div class="space-y-2">
+            <p id="batas_terlambat_label" class="font-label-caps text-label-caps text-on-surface-variant">HẠN ĐI MUỘN</p>
+            <div id="batas_terlambat_preview" role="status" aria-live="polite" aria-labelledby="batas_terlambat_label" class="flex min-h-[48px] items-center justify-between rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 font-mono text-sm text-on-surface">
+                <span id="batas_terlambat_value">--:--</span>
+                <span class="font-label-caps text-label-caps text-primary">+15 phút</span>
             </div>
-            <div class="space-y-2">
-                <label class="font-label-caps text-label-caps text-on-surface-variant" for="jam_selesai">JAM SELESAI</label>
-                <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
-                       id="jam_selesai" name="jam_selesai" type="time" value="{{ request.form.get('jam_selesai', '') }}" required/>
-            </div>
+            <p class="font-body-sm text-[12px] text-on-surface-variant">Tự động tính từ giờ bắt đầu.</p>
         </div>
 
-        <div class="flex gap-3 pt-4">
+        <div class="space-y-2">
+            <label class="font-label-caps text-label-caps text-on-surface-variant" for="jam_mulai">GIỜ BẮT ĐẦU</label>
+            <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
+                   id="jam_mulai" name="jam_mulai" type="time" value="{{ (selected_jam_mulai|string)[:5] }}" required/>
+        </div>
+        <div class="space-y-2">
+            <label class="font-label-caps text-label-caps text-on-surface-variant" for="jam_selesai">GIỜ KẾT THÚC</label>
+            <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
+                   id="jam_selesai" name="jam_selesai" type="time" value="{{ (selected_jam_selesai|string)[:5] }}" required/>
+        </div>
+
+        <div class="flex flex-col gap-3 pt-2 sm:flex-row md:col-span-2">
             <button type="submit" class="bg-primary-container text-on-primary-container px-6 py-3 rounded-lg font-title-sm flex items-center gap-2 hover:brightness-110 transition-all">
-                <span class="material-symbols-outlined">save</span> Tambah Jadwal
+                <span class="material-symbols-outlined">{% if is_edit_mode %}save{% else %}add{% endif %}</span>
+                {% if is_edit_mode %}Cập nhật lịch học{% else %}Lưu lịch học{% endif %}
             </button>
-            <a href="{{ url_for('jadwal_index') }}" class="px-6 py-3 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors font-title-sm">Batal</a>
+            <a href="{{ url_for('jadwal_index') }}" class="px-6 py-3 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors font-title-sm">Hủy</a>
         </div>
     </form>
 </div>
 
 <script>
-// Filter MK berdasarkan kelas yang dipilih
+// Filter MK dựa trên lớp được chọn
 (function() {
     var kelasSelect = document.getElementById('kelas_id');
     var mkSelect    = document.getElementById('matakuliah_id');
+    var jamMulai    = document.getElementById('jam_mulai');
+    var batasValue  = document.getElementById('batas_terlambat_value');
     var allOptions  = Array.from(mkSelect.querySelectorAll('.mk-option'));
 
-    function filterMK() {
+    function filterMK(preserveSelected) {
         var selectedKelas = kelasSelect.value;
+        var currentMK = mkSelect.value;
         // Reset MK
-        mkSelect.innerHTML = '<option value="">-- Pilih Mata Kuliah --</option>';
+        mkSelect.innerHTML = '<option value="">-- Chọn môn học --</option>';
         if (!selectedKelas) return;
         var found = false;
         allOptions.forEach(function(opt) {
             if (opt.dataset.kelas === selectedKelas) {
-                mkSelect.appendChild(opt.cloneNode(true));
+                var clone = opt.cloneNode(true);
+                if (preserveSelected && clone.value === currentMK) {
+                    clone.selected = true;
+                }
+                mkSelect.appendChild(clone);
                 found = true;
             }
         });
         if (!found) {
-            mkSelect.innerHTML = '<option value="">-- Belum ada MK untuk kelas ini --</option>';
+            mkSelect.innerHTML = '<option value="">-- Lớp này chưa có môn học --</option>';
+        } else if (preserveSelected && currentMK) {
+            mkSelect.value = currentMK;
         }
     }
 
-    kelasSelect.addEventListener('change', filterMK);
+    kelasSelect.addEventListener('change', function() {
+        filterMK(false);
+    });
 
-    // Jalankan saat load jika kelas sudah dipilih (POST error restore)
-    if (kelasSelect.value) filterMK();
+    // Run on load if class is selected (edit mode or POST error restore)
+    if (kelasSelect.value) {
+        filterMK(true);
+    }
+
+    function updateBatasTerlambat() {
+        if (!jamMulai.value) {
+            batasValue.textContent = '--:--';
+            return;
+        }
+
+        var timeParts = jamMulai.value.split(':');
+        if (timeParts.length < 2) {
+            batasValue.textContent = '--:--';
+            return;
+        }
+        var totalMinutes = (Number(timeParts[0]) * 60 + Number(timeParts[1]) + 15) % (24 * 60);
+        var hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+        var minutes = String(totalMinutes % 60).padStart(2, '0');
+        batasValue.textContent = hours + ':' + minutes;
+    }
+
+    jamMulai.addEventListener('input', updateBatasTerlambat);
+    jamMulai.addEventListener('change', updateBatasTerlambat);
+    updateBatasTerlambat();
 })();
 </script>
 {% endblock %}

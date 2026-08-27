@@ -1,23 +1,23 @@
 {% extends 'base.html' %}
-{% block title %}Rekap Absensi - Sistem Absensi{% endblock %}
+{% block title %}Tổng hợp điểm danh - Hệ thống điểm danh{% endblock %}
 
 {% block content %}
 <!-- Header -->
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
     <div>
-        <h2 class="font-headline-md text-headline-md text-on-surface">Rekap Absensi</h2>
-        <p class="font-body-sm text-body-sm text-on-surface-variant">Monitoring dan analisis data kehadiran mahasiswa.</p>
+        <h2 class="font-headline-md text-headline-md text-on-surface">Tổng hợp điểm danh</h2>
+        <p class="font-body-sm text-body-sm text-on-surface-variant">Theo dõi và phân tích dữ liệu điểm danh của sinh viên.</p>
     </div>
     <div class="flex gap-3">
         <a href="{{ url_for('absensi_export', format='csv') }}{{ filter_query }}"
            class="bg-surface-container border border-outline-variant text-on-surface px-5 py-2.5 rounded-lg flex items-center gap-2 font-title-sm hover:bg-surface-variant transition-all">
             <span class="material-symbols-outlined text-[20px]">download</span>
-            Export CSV
+            Xuất CSV
         </a>
         <a href="{{ url_for('absensi_export', format='xlsx') }}{{ filter_query }}"
            class="bg-primary-container text-on-primary-container px-5 py-2.5 rounded-lg flex items-center gap-2 font-title-sm hover:brightness-110 transition-all shadow-lg shadow-primary-container/20">
             <span class="material-symbols-outlined text-[20px]">download</span>
-            Unduh Laporan
+            Xuất Excel
         </a>
     </div>
 </div>
@@ -25,24 +25,24 @@
 <section class="bg-surface-container-low border border-outline-variant rounded-xl p-card-padding mb-8">
     <div class="flex items-center gap-2 mb-5">
         <span class="material-symbols-outlined text-primary">filter_list</span>
-        <h3 class="font-title-sm text-title-sm text-on-surface">Filter Data</h3>
+        <h3 class="font-title-sm text-title-sm text-on-surface">Lọc dữ liệu</h3>
     </div>
     <form method="GET" class="space-y-4">
         <!-- Baris 1: Kelas & MK -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="space-y-2">
-                <label class="font-label-caps text-label-caps text-on-surface-variant">Kelas</label>
+                <label class="font-label-caps text-label-caps text-on-surface-variant">Lớp</label>
                 <select name="kelas_id" class="w-full bg-surface-dim border border-outline-variant rounded-lg px-4 py-2 text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none">
-                    <option value="">Semua Kelas</option>
+                    <option value="">Tất cả lớp</option>
                     {% for k in daftar_kelas %}
                     <option value="{{ k.id }}" {% if filter_kelas == k.id %}selected{% endif %}>{{ k.nama_kelas }} ({{ k.angkatan }})</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="space-y-2">
-                <label class="font-label-caps text-label-caps text-on-surface-variant">Mata Kuliah</label>
+                <label class="font-label-caps text-label-caps text-on-surface-variant">Môn học</label>
                 <select name="matakuliah_id" class="w-full bg-surface-dim border border-outline-variant rounded-lg px-4 py-2 text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none">
-                    <option value="">Semua MK</option>
+                    <option value="">Tất cả môn học</option>
                     {% for mk in daftar_mk %}
                     <option value="{{ mk.id }}" {% if filter_mk == mk.id %}selected{% endif %}>{{ mk.nama_mk }}</option>
                     {% endfor %}
@@ -52,20 +52,20 @@
         <!-- Baris 2: Tanggal + Tombol -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
             <div class="space-y-2">
-                <label class="font-label-caps text-label-caps text-on-surface-variant">Tanggal Dari</label>
+                <label class="font-label-caps text-label-caps text-on-surface-variant">Từ ngày</label>
                 <input type="date" name="dari" value="{{ filter_dari or '' }}"
                        class="w-full bg-surface-dim border border-outline-variant rounded-lg px-4 py-2 text-body-sm focus:border-primary outline-none"/>
             </div>
             <div class="space-y-2">
-                <label class="font-label-caps text-label-caps text-on-surface-variant">Tanggal Sampai</label>
+                <label class="font-label-caps text-label-caps text-on-surface-variant">Đến ngày</label>
                 <input type="date" name="sampai" value="{{ filter_sampai or '' }}"
                        class="w-full bg-surface-dim border border-outline-variant rounded-lg px-4 py-2 text-body-sm focus:border-primary outline-none"/>
             </div>
             <div class="flex gap-2">
                 <button type="submit" class="bg-primary-container text-on-primary-container px-5 py-2 rounded-lg font-title-sm hover:brightness-110 transition-all flex-1 flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined text-[18px]">filter_alt</span> Filter
+                    <span class="material-symbols-outlined text-[18px]">filter_alt</span> Lọc
                 </button>
-                <a href="{{ url_for('absensi_rekap') }}" class="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors flex items-center" title="Reset filter">
+                <a href="{{ url_for('absensi_rekap') }}" class="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors flex items-center" title="Đặt lại bộ lọc">
                     <span class="material-symbols-outlined text-[18px]">refresh</span>
                 </a>
             </div>
@@ -84,7 +84,7 @@
             </div>
             <span class="text-primary font-bold text-headline-md">{{ ringkasan.hadir }}</span>
         </div>
-        <h4 class="font-label-caps text-label-caps text-on-surface-variant">Hadir</h4>
+        <h4 class="font-label-caps text-label-caps text-on-surface-variant">Có mặt</h4>
     </div>
     <div class="bg-surface-container border border-outline-variant p-card-padding rounded-xl group hover:border-tertiary/50 transition-colors">
         <div class="flex justify-between items-start mb-4">
@@ -93,7 +93,7 @@
             </div>
             <span class="text-tertiary font-bold text-headline-md">{{ ringkasan.terlambat }}</span>
         </div>
-        <h4 class="font-label-caps text-label-caps text-on-surface-variant">Terlambat</h4>
+        <h4 class="font-label-caps text-label-caps text-on-surface-variant">Đi muộn</h4>
     </div>
     <div class="bg-surface-container border border-outline-variant p-card-padding rounded-xl group hover:border-secondary/50 transition-colors">
         <div class="flex justify-between items-start mb-4">
@@ -102,7 +102,7 @@
             </div>
             <span class="text-secondary font-bold text-headline-md">{{ ringkasan.izin }}</span>
         </div>
-        <h4 class="font-label-caps text-label-caps text-on-surface-variant">Izin</h4>
+        <h4 class="font-label-caps text-label-caps text-on-surface-variant">Vắng có phép</h4>
     </div>
     <div class="bg-surface-container border border-outline-variant p-card-padding rounded-xl group hover:border-error/50 transition-colors">
         <div class="flex justify-between items-start mb-4">
@@ -111,28 +111,28 @@
             </div>
             <span class="text-error font-bold text-headline-md">{{ ringkasan.alpha }}</span>
         </div>
-        <h4 class="font-label-caps text-label-caps text-on-surface-variant">Alpha</h4>
+        <h4 class="font-label-caps text-label-caps text-on-surface-variant">Vắng không phép</h4>
     </div>
 </section>
 
 <!-- Tabel Rekap Detail -->
 <section class="bg-surface-container rounded-xl border border-outline-variant overflow-hidden shadow-2xl">
     <div class="px-6 py-4 border-b border-outline-variant bg-surface-container-high/30 flex justify-between items-center">
-        <h3 class="font-title-sm text-title-sm">Attendance Records</h3>
+        <h3 class="font-title-sm text-title-sm">Bản ghi điểm danh</h3>
         <span class="text-body-sm text-on-surface-variant">
-            Menampilkan <span class="text-on-surface font-semibold">{{ rekap|length }}</span> record
+            Hiển thị <span class="text-on-surface font-semibold">{{ rekap|length }}</span> bản ghi
         </span>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-surface-container-high/50">
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Mahasiswa</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">NIM</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Mata Kuliah</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Waktu</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Status</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Snapshot</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Sinh viên</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Mã sinh viên</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Môn học</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Thời gian</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Trạng thái</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Ảnh chụp</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant">
@@ -150,24 +150,25 @@
                         </div>
                     </td>
                     <td class="px-6 py-4 text-body-sm text-on-surface-variant font-mono">{{ a.nim }}</td>
-                    <td class="px-6 py-4 text-body-sm text-on-surface-variant">{{ a.nama_mk }}<br/><span class="text-[10px] text-outline">{{ a.hari }} · {{ a.tanggal }}</span></td>
+                    {% set hari_vi = {'Senin': 'Thứ Hai', 'Selasa': 'Thứ Ba', 'Rabu': 'Thứ Tư', 'Kamis': 'Thứ Năm', 'Jumat': 'Thứ Sáu', 'Sabtu': 'Thứ Bảy', 'Minggu': 'Chủ Nhật'} %}
+                    <td class="px-6 py-4 text-body-sm text-on-surface-variant">{{ a.nama_mk }}<br/><span class="text-[10px] text-outline">{{ hari_vi.get(a.hari, a.hari) }} · {{ a.tanggal }}</span></td>
                     <td class="px-6 py-4 text-body-sm text-on-surface">{{ a.waktu_absen or '-' }}</td>
                     <td class="px-6 py-4">
                         {% if a.status == 'hadir' %}
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">Hadir</span>
+                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">Có mặt</span>
                         {% elif a.status == 'terlambat' %}
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-tertiary/10 text-tertiary border border-tertiary/20">Terlambat</span>
+                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-tertiary/10 text-tertiary border border-tertiary/20">Đi muộn</span>
                         {% elif a.status == 'izin' %}
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-secondary/10 text-secondary border border-secondary/20" {% if a.alasan %}title="Alasan: {{ a.alasan }}"{% endif %}>Izin</span>
+                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-secondary/10 text-secondary border border-secondary/20" {% if a.alasan %}title="Lý do: {{ a.alasan }}"{% endif %}>Vắng có phép</span>
                         {% elif a.status == 'sakit' %}
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-amber-500/15 text-amber-400 border border-amber-500/30" {% if a.alasan %}title="Alasan: {{ a.alasan }}"{% endif %}>Sakit</span>
+                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-amber-500/15 text-amber-400 border border-amber-500/30" {% if a.alasan %}title="Lý do: {{ a.alasan }}"{% endif %}>Nghỉ ốm</span>
                         {% elif a.status == 'alpha' %}
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-error/10 text-error border border-error/20">Alpha</span>
+                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-error/10 text-error border border-error/20">Vắng không phép</span>
                         {% else %}
                         <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-outline/10 text-outline border border-outline/20">{{ a.status|capitalize }}</span>
                         {% endif %}
                         {% if a.alasan %}
-                        <p class="text-[11px] text-on-surface-variant/80 mt-1 italic font-sans" title="Alasan: {{ a.alasan }}">Ket: {{ a.alasan }}</p>
+                        <p class="text-[11px] text-on-surface-variant/80 mt-1 italic font-sans" title="Lý do: {{ a.alasan }}">Ghi chú: {{ a.alasan }}</p>
                         {% endif %}
                     </td>
                     <td class="px-6 py-4">
@@ -176,10 +177,10 @@
                         <button onclick="openSnapshotModal('{{ url_for('serve_snapshot', filename=snap_filename) }}', '{{ a.nama }}', '{{ a.waktu_absen }}', '{{ a.status }}')"
                                 class="flex items-center gap-1 text-primary hover:underline text-body-sm cursor-pointer">
                             <span class="material-symbols-outlined text-[16px]">visibility</span>
-                            <span>Preview</span>
+                            <span>Xem trước</span>
                         </button>
                         {% else %}
-                        <span class="text-outline italic text-[11px]">No Snapshot</span>
+                        <span class="text-outline italic text-[11px]">Không có ảnh chụp</span>
                         {% endif %}
                     </td>
                 </tr>
@@ -187,8 +188,8 @@
                 <tr>
                     <td colspan="6" class="px-6 py-16 text-center">
                         <span class="material-symbols-outlined text-4xl text-on-surface-variant/20 mb-2">event_busy</span>
-                        <p class="text-body-sm text-on-surface-variant">Tidak ada data absensi sesuai filter.</p>
-                        <p class="text-[11px] text-outline mt-1">Coba ubah filter atau rentang tanggal.</p>
+                        <p class="text-body-sm text-on-surface-variant">Không có dữ liệu điểm danh phù hợp với bộ lọc.</p>
+                        <p class="text-[11px] text-outline mt-1">Hãy thử thay đổi bộ lọc hoặc khoảng ngày.</p>
                     </td>
                 </tr>
                 {% endfor %}
@@ -197,7 +198,7 @@
     </div>
     {% if rekap|length > 0 %}
     <div class="px-6 py-4 bg-surface-container-high/20 border-t border-outline-variant flex items-center justify-between">
-        <span class="text-body-sm text-on-surface-variant">Total: {{ rekap|length }} record</span>
+        <span class="text-body-sm text-on-surface-variant">Tổng cộng: {{ rekap|length }} bản ghi</span>
     </div>
     {% endif %}
 </section>
@@ -220,14 +221,14 @@
         </div>
         <!-- Gambar Snapshot -->
         <div class="p-4 flex items-center justify-center bg-surface-container-lowest" style="min-height: 300px;">
-            <img id="modal-snapshot-img" src="" alt="Snapshot Absensi"
+            <img id="modal-snapshot-img" src="" alt="Ảnh chụp điểm danh"
                  class="max-w-full max-h-[60vh] rounded-lg object-contain shadow-lg" />
         </div>
         <!-- Footer Modal -->
         <div class="px-5 py-3 border-t border-outline-variant bg-surface-container-high/20 flex justify-end">
             <button onclick="closeSnapshotModal()"
                     class="px-4 py-2 rounded-lg bg-surface-variant text-on-surface-variant text-body-sm font-semibold hover:brightness-110 transition-all">
-                Tutup
+                Đóng
             </button>
         </div>
     </div>
@@ -243,10 +244,17 @@
 <script>
     // Buka modal preview snapshot
     function openSnapshotModal(imgSrc, nama, waktu, status) {
+        var statusLabels = {
+            hadir: 'Có mặt',
+            terlambat: 'Đi muộn',
+            izin: 'Vắng có phép',
+            sakit: 'Nghỉ ốm',
+            alpha: 'Vắng không phép'
+        };
         document.getElementById('modal-snapshot-img').src = imgSrc;
         document.getElementById('modal-nama').textContent = nama;
         document.getElementById('modal-waktu').textContent = waktu || '-';
-        document.getElementById('modal-status-text').textContent = status ? status.charAt(0).toUpperCase() + status.slice(1) : '-';
+        document.getElementById('modal-status-text').textContent = status ? (statusLabels[status] || status) : '-';
         document.getElementById('snapshot-modal').classList.remove('hidden');
     }
 

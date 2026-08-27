@@ -5,6 +5,7 @@
 import cv2
 import numpy as np
 from config import ANTI_SPOOFING_THRESHOLD, ANTI_SPOOFING_ENABLED
+from face.cascade import create_frontal_face_cascade
 
 
 def _compute_lbp(image, radius=1, neighbors=8):
@@ -119,6 +120,77 @@ def _analyze_texture(lbp_image):
     return round(combined_score, 4)
 
 
+def _disabled_result():
+    return {
+        'is_real': True,
+        'score': 1.0,
+        'threshold': ANTI_SPOOFING_THRESHOLD,
+        'label': 'REAL (bypass)'
+    }
+
+
+def _no_face_result():
+    return {
+        'is_real': False,
+        'score': 0.0,
+        'threshold': ANTI_SPOOFING_THRESHOLD,
+        'label': 'NO_FACE'
+    }
+
+
+def _analyze_face_roi(face_roi):
+    """Chấm anti-spoofing cho đúng một vùng khuôn mặt đã được phát hiện."""
+    if face_roi is None or face_roi.size == 0:
+        return _no_face_result()
+    if len(face_roi.shape) == 3:
+        face_roi = cv2.cvtColor(face_roi, cv2.COLOR_BGR2GRAY)
+    face_roi = cv2.resize(face_roi, (200, 200))
+
+    lbp_full = _compute_lbp_fast(face_roi)
+    score_full = _analyze_texture(lbp_full)
+
+    blurred = cv2.GaussianBlur(face_roi, (3, 3), 0)
+    lbp_blur = _compute_lbp_fast(blurred)
+    score_blur = _analyze_texture(lbp_blur)
+
+    laplacian_var = cv2.Laplacian(face_roi, cv2.CV_64F).var()
+    sharpness_score = min(laplacian_var / 500.0, 1.0)
+    final_score = (
+        0.40 * score_full +
+        0.30 * score_blur +
+        0.30 * sharpness_score
+    )
+
+    is_real = final_score > ANTI_SPOOFING_THRESHOLD
+    return {
+        'is_real': is_real,
+        'score': round(final_score, 4),
+        'threshold': ANTI_SPOOFING_THRESHOLD,
+        'label': 'REAL' if is_real else 'SPOOFING',
+        'detail': {
+            'texture_score': score_full,
+            'blur_texture_score': score_blur,
+            'sharpness_score': round(sharpness_score, 4),
+        }
+    }
+
+
+def check_face(frame, bbox):
+    """Cek anti-spoofing riêng cho một bbox `(x, y, w, h)` trong frame."""
+    if not ANTI_SPOOFING_ENABLED:
+        return _disabled_result()
+    if frame is None or bbox is None or len(bbox) != 4:
+        return _no_face_result()
+
+    x, y, w, h = (int(value) for value in bbox)
+    frame_height, frame_width = frame.shape[:2]
+    x0, y0 = max(0, x), max(0, y)
+    x1, y1 = min(frame_width, x + w), min(frame_height, y + h)
+    if x1 <= x0 or y1 <= y0:
+        return _no_face_result()
+    return _analyze_face_roi(frame[y0:y1, x0:x1])
+
+
 def check(frame):
     """Cek apakah wajah dalam frame adalah wajah asli atau foto/spoofing.
     
@@ -149,9 +221,7 @@ def check(frame):
         }
 
     # Deteksi wajah terlebih dahulu
-    cascade = cv2.CascadeClassifier(
-        cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
-    )
+    cascade = create_frontal_face_cascade()
     faces = cascade.detectMultiScale(gray, 1.3, 5, minSize=(80, 80))
 
     if len(faces) == 0:

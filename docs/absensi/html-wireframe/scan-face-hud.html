@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>enrollment — Đăng ký khuôn mặt Popup Căn giữa Webcam | Wireframe HTML</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f4f4; color: #000; padding: 24px 16px; }
+    .wf-page { max-width: 1400px; margin: 0 auto; }
+    .wf-breadcrumb { max-width: 1400px; margin: 0 auto 16px; }
+    .wf-breadcrumb a { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #000; text-decoration: none; border: 1px solid #000; border-radius: 4px; padding: 6px 12px; background: #fff; }
+    .wf-breadcrumb a:hover { background: #f0f0f0; }
+    html.in-iframe .wf-breadcrumb { display: none; }
+
+    .wf-header { margin-bottom: 24px; border-bottom: 2px solid #000; padding-bottom: 12px; background: #fff; padding: 16px 20px; border-radius: 6px; }
+    .wf-feature-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #666; }
+    .wf-flow-title { font-size: 20px; font-weight: 700; margin-top: 4px; }
+    .wf-flow-meta { font-size: 12px; color: #666; margin-top: 4px; }
+    .wf-flow-desc { font-size: 13px; color: #333; margin-top: 6px; line-height: 1.4; }
+
+    .wf-rows { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px; }
+    .wf-screen { flex: 0 0 auto; width: 1024px; max-width: 100%; }
+
+    .wf-step-badge { font-size: 11px; font-weight: 700; color: #fff; background: #000; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px; }
+    .wf-device-tag { display: inline-block; font-size: 10px; color: #444; border: 1px solid #000; border-radius: 3px; padding: 1px 6px; margin-bottom: 6px; margin-left: 6px; background: #fff; }
+
+    .wf-screen-frame { border: 2px solid #000; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; }
+    .wf-screen-bar { background: #e0e0e0; border-bottom: 1px solid #000; padding: 8px 12px; display: flex; align-items: center; gap: 6px; }
+    .wf-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid #000; background: #fff; }
+    .wf-bar-title { font-size: 12px; font-weight: 700; flex: 1; text-align: center; }
+
+    /* LAYOUT COMPONENTS */
+    .app-container { display: flex; min-height: 540px; background: #fff; }
+    .app-sidebar { width: 200px; border-right: 1px solid #000; padding: 16px; background: #fafafa; }
+    .app-brand { font-size: 16px; font-weight: 900; letter-spacing: 0.5px; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 16px; }
+    .app-main { flex: 1; padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* POPUP OVERLAY STYLES (CĂN GIỮA MÀN HÌNH THẲNG HÀNG WEBCAM) */
+    .modal-backdrop { position: absolute; top: 32px; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 999; }
+    .modal-camera-center { width: 560px; background: #fff; border: 2px solid #000; border-radius: 10px; overflow: hidden; box-shadow: 0 12px 32px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
+    .modal-cam-header { background: #000; color: #fff; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 700; }
+    
+    .cam-viewport-center { position: relative; width: 100%; height: 380px; background: #111; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .face-guide-oval { width: 210px; height: 270px; border: 3px dashed #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 700; text-align: center; background: rgba(255,255,255,0.05); }
+    
+    .hud-top-hint { position: absolute; top: 16px; background: rgba(0,0,0,0.85); color: #fff; border: 1px solid #fff; padding: 6px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; z-index: 10; letter-spacing: 0.3px; }
+    .hud-bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.9)); padding: 12px 16px 8px; z-index: 10; display: flex; flex-direction: column; gap: 6px; }
+    .hud-counter { display: flex; justify-content: space-between; align-items: center; color: #fff; font-size: 11px; font-weight: 700; }
+    .hud-progress-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; overflow: hidden; border: 1px solid #fff; }
+    .hud-progress-fill { width: 33%; height: 100%; background: #000; outline: 1px solid #fff; }
+
+    .modal-cam-footer { padding: 12px 16px; background: #fafafa; border-top: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
+    .btn-stop { background: #000; color: #fff; padding: 8px 16px; border-radius: 4px; font-size: 12px; font-weight: 700; border: 1px solid #000; cursor: pointer; }
+
+    /* DESCRIPTION TABLE */
+    .wf-desc-section { margin-top: 36px; background: #fff; padding: 20px; border-radius: 6px; border: 1px solid #000; }
+    .wf-desc-title { font-size: 16px; font-weight: 800; margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 6px; }
+    .wf-desc-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .wf-desc-table th, .wf-desc-table td { border: 1px solid #000; padding: 8px 10px; text-align: left; }
+    .wf-desc-table th { background: #f0f0f0; font-weight: 700; }
+    .wf-desc-screen-header td { background: #000; color: #fff; font-weight: 700; }
+
+    .wf-footer { margin-top: 32px; font-size: 11px; color: #666; display: flex; justify-content: space-between; border-top: 1px solid #ccc; padding-top: 12px; }
+  </style>
+</head>
+<body>
+<script>if (window.self !== window.top) document.documentElement.classList.add('in-iframe');</script>
+
+<div class="wf-breadcrumb">
+  <a href="enrollment-wireframe.html">← Mục lục wireframe (tất cả flow)</a>
+</div>
+
+<div class="wf-page" data-device="desktop">
+  <div class="wf-header">
+    <div class="wf-feature-label">Feature: Đăng ký khuôn mặt (`/enrollment`)</div>
+    <div class="wf-flow-title">Popup Căn giữa Màn hình Thẳng hàng Webcam Laptop</div>
+    <div class="wf-flow-meta">3 giải pháp bố cục · Device: Desktop (1024px) · Cập nhật: 2026-08-27</div>
+    <div class="wf-flow-desc">Bong bóng hướng dẫn phía trên khung Oval chỉ hiển thị câu lệnh hướng dẫn tư thế (vd: <strong>"Quay nhẹ mặt sang trái"</strong>), loại bỏ chữ rườm rà thừa.</div>
+  </div>
+
+  <div class="wf-rows">
+
+    <!-- SCREEN 1: Center Popup Scan Mode -->
+    <div class="wf-screen" id="s1">
+      <div>
+        <span class="wf-step-badge">1</span>
+        <span class="wf-device-tag">Popup Modal Căn Giữa Màn Hình (Chỉ giữ câu hướng dẫn tư thế)</span>
+      </div>
+      <div class="wf-screen-frame">
+        <div class="wf-screen-bar">
+          <div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div>
+          <span class="wf-bar-title">Chế độ Quét tập trung căn giữa màn hình (Aligned with Laptop Camera)</span>
+        </div>
+        <div class="app-container">
+          <aside class="app-sidebar" style="opacity:0.3;">
+            <div class="app-brand">VNIH.AI</div>
+          </aside>
+          <main class="app-main" style="opacity:0.3;">
+            <h2>Đăng ký sinh viên: PHƯƠNG (MSV: 2006)</h2>
+            <p>Form thông tin phía dưới đang được làm mờ khi mở Camera...</p>
+          </main>
+
+          <!-- CENTER POPUP MODAL OVERLAY -->
+          <div class="modal-backdrop">
+            <div class="modal-camera-center">
+              <div class="modal-cam-header">
+                <span>📷 ĐĂNG KÝ KHUÔN MẶT — PHƯƠNG (2006)</span>
+                <span style="font-size:10px; background:#fff; color:#000; padding:2px 6px; border-radius:3px;">● CAMERA CĂN GIỮA</span>
+              </div>
+              
+              <!-- CENTERED CAMERA VIEWPORT -->
+              <div class="cam-viewport-center">
+                <!-- TOP PROMPT - CHỈ GIỮ CÂU HƯỚNG DẪN TƯ THẾ -->
+                <div class="hud-prompt" style="position:absolute; top:16px; background:rgba(0,0,0,0.85); color:#fff; border:1px solid #fff; padding:6px 18px; border-radius:20px; font-size:13px; font-weight:700; z-index:10;">
+                  💬 Quay nhẹ mặt sang trái
+                </div>
+
+                <!-- CENTERED OVAL (DIRECTLY BELOW LAPTOP CAMERA) -->
+                <div class="face-guide-oval">
+                  Khung viền Oval Căn Giữa<br>(Thẳng hàng tuyệt đối với Webcam Laptop)
+                </div>
+
+                <!-- HUD PROGRESS BAR FLOATING AT BOTTOM OF VIDEO -->
+                <div class="hud-bottom-bar">
+                  <div class="hud-counter">
+                    <span>ẢNH ĐÃ CHỤP: 8 / 24</span>
+                    <span>TIẾN ĐỘ: 33%</span>
+                  </div>
+                  <div class="hud-progress-bg">
+                    <div class="hud-progress-fill"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="modal-cam-footer">
+                <span style="font-size:11px; color:#555;">* Nhìn thẳng trực diện vào mắt camera máy tính</span>
+                <button class="btn-stop">⏹ Tạm dừng / Đóng Popup</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center; font-size:11px; margin-top:4px; color:#555;">center-popup-scan-mode</div>
+    </div>
+
+    <!-- SCREEN 2: Centered 1-Column Layout Alternative -->
+    <div class="wf-screen" id="s2">
+      <div>
+        <span class="wf-step-badge">2</span>
+        <span class="wf-device-tag">Bố cục 1 Cột Dọc Căn Giữa Trang</span>
+      </div>
+      <div class="wf-screen-frame">
+        <div class="wf-screen-bar">
+          <div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div>
+          <span class="wf-bar-title">Bố cục 1 cột căn giữa khung Camera ở trên cùng</span>
+        </div>
+        <div class="app-container">
+          <aside class="app-sidebar">
+            <div class="app-brand">VNIH.AI</div>
+          </aside>
+          <main class="app-main" style="align-items:center;">
+            <!-- TOP STUDENT INFO STRIP -->
+            <div style="width:100%; max-width:600px; border:1px solid #000; padding:10px 16px; border-radius:6px; background:#fafafa; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <strong style="font-size:13px;">Sinh viên: PHƯƠNG (2006)</strong>
+                <div style="font-size:11px; color:#666;">Lớp: ML-01(2026)</div>
+              </div>
+              <button class="btn-stop" style="padding:6px 12px; font-size:11px;">⏹ Dừng chụp</button>
+            </div>
+
+            <!-- CENTERED CAMERA VIEWPORT IN PAGE -->
+            <div style="width:100%; max-width:600px; border:2px solid #000; border-radius:8px; overflow:hidden; background:#111; position:relative; height:360px; display:flex; align-items:center; justify-content:center;">
+              <div class="hud-prompt" style="position:absolute; top:16px; background:rgba(0,0,0,0.85); color:#fff; border:1px solid #fff; padding:6px 18px; border-radius:20px; font-size:13px; font-weight:700; z-index:10;">💬 Quay nhẹ mặt sang trái</div>
+              <div class="face-guide-oval">Khung Oval Căn Giữa Trang</div>
+              <div class="hud-bottom-bar">
+                <div class="hud-counter">
+                  <span>ẢNH ĐÃ CHỤP: 12 / 24</span>
+                  <span>50%</span>
+                </div>
+                <div class="hud-progress-bg">
+                  <div class="hud-progress-fill" style="width:50%;"></div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+      <div style="text-align:center; font-size:11px; margin-top:4px; color:#555;">centered-1col-layout</div>
+    </div>
+
+  </div>
+
+  <!-- SCREEN DESCRIPTION TABLE -->
+  <div class="wf-desc-section">
+    <div class="wf-desc-title">Mô tả Cải tiến Tối ưu Dòng Hướng dẫn (Clean Text Prompt)</div>
+    <table class="wf-desc-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Items</th>
+          <th>Control type</th>
+          <th>Data type</th>
+          <th>Mô tả tinh chỉnh UI</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="wf-desc-screen-header"><td colspan="5">Screen 1: Bong bóng hướng dẫn phía trên khung Oval</td></tr>
+        <tr>
+          <td>1</td>
+          <td>Clean Hint Bubble</td>
+          <td>Prompt Overlay</td>
+          <td>Dynamic Instruction</td>
+          <td><strong>Bỏ cụm chữ "Nhìn thẳng vào webcam &"</strong>. Chỉ hiển thị ngắn gọn duy nhất câu hướng dẫn tư thế cần thực hiện tại bước đó (ví dụ: <em>"💬 Quay nhẹ mặt sang trái"</em>, <em>"💬 Giữ thẳng mặt trong khung oval"</em>, <em>"💬 Quay nhẹ mặt sang phải"</em>). Giúp bong bóng ngắn gọn, hiện đại và không làm rối mắt.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="wf-footer">
+    <span>enrollment / scan-face-hud</span>
+    <span>Tạo bởi /wireframe-html · 2026-08-27</span>
+  </div>
+</div>
+</body>
+</html>

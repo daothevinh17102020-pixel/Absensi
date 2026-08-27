@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}Manajemen Kelas - Sistem Absensi{% endblock %}
+{% block title %}Quản lý lớp - Hệ thống điểm danh{% endblock %}
 
 {% block content %}
 <!-- Header halaman -->
 <div class="flex justify-between items-end mb-section-gap">
     <div>
-        <h2 class="font-headline-md text-headline-md text-on-surface">Manajemen Kelas</h2>
-        <p class="text-on-surface-variant font-body-md mt-1">Atur data kelas, angkatan, dan distribusi mahasiswa.</p>
+        <h2 class="font-headline-md text-headline-md text-on-surface">Quản lý lớp</h2>
+        <p class="text-on-surface-variant font-body-md mt-1">Quản lý thông tin lớp, khóa học và danh sách sinh viên.</p>
     </div>
     <a href="{{ url_for('kelas_tambah') }}" class="bg-primary-container text-on-primary-container px-6 py-3 rounded-lg font-title-sm flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary-container/20">
         <span class="material-symbols-outlined">add</span>
-        Tambah Kelas
+        Thêm lớp
     </a>
 </div>
 
@@ -21,12 +21,12 @@
             <span class="material-symbols-outlined text-primary">group_work</span>
         </div>
         <div class="font-display-lg text-display-lg text-on-surface">{{ daftar_kelas|length }}</div>
-        <p class="text-on-surface-variant font-body-sm">Total Kelas Aktif</p>
+        <p class="text-on-surface-variant font-body-sm">Tổng số lớp đang hoạt động</p>
     </div>
 
     <!-- Judul section -->
     <div class="col-span-12 mt-4">
-        <h3 class="font-title-sm text-title-sm text-on-surface">Daftar Kelas</h3>
+        <h3 class="font-title-sm text-title-sm text-on-surface">Danh sách lớp</h3>
     </div>
 
     <!-- Card kelas dari database -->
@@ -40,7 +40,7 @@
                 <a href="{{ url_for('kelas_edit', id=kelas.id) }}" class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-lg hover:bg-surface-variant">
                     <span class="material-symbols-outlined">edit</span>
                 </a>
-                <button onclick="konfirmasiHapus({{ kelas.id }}, '{{ kelas.nama_kelas }}')" class="p-2 text-on-surface-variant hover:text-error transition-colors rounded-lg hover:bg-error-container/10">
+                <button onclick='konfirmasiHapus({{ kelas.id }}, {{ kelas.nama_kelas|tojson }})' class="p-2 text-on-surface-variant hover:text-error transition-colors rounded-lg hover:bg-error-container/10">
                     <span class="material-symbols-outlined">delete</span>
                 </button>
             </div>
@@ -48,15 +48,15 @@
         <div>
             <h4 class="font-headline-md text-headline-md text-on-surface mb-1">{{ kelas.nama_kelas }}</h4>
             <div class="flex items-center gap-3 mb-6">
-                <span class="px-2 py-1 bg-surface-variant rounded text-on-surface-variant font-label-caps">Angkatan {{ kelas.angkatan }}</span>
+                <span class="px-2 py-1 bg-surface-variant rounded text-on-surface-variant font-label-caps">Khóa {{ kelas.angkatan }}</span>
                 <div class="flex items-center gap-1 text-on-surface-variant">
                     <span class="material-symbols-outlined text-[16px]">group</span>
-                    <span class="font-body-sm">{{ kelas.jumlah_mhs }} Mahasiswa</span>
+                    <span class="font-body-sm">{{ kelas.jumlah_mhs }} sinh viên</span>
                 </div>
             </div>
             <div class="flex items-center justify-between pt-4 border-t border-outline-variant">
                 <a class="text-primary font-title-sm text-[14px] flex items-center gap-1 group-hover:gap-2 transition-all" href="{{ url_for('kelas_detail', id=kelas.id) }}">
-                    Lihat Matakuliah
+                    Xem môn học
                     <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                 </a>
             </div>
@@ -70,10 +70,10 @@
         <div class="h-12 w-12 rounded-full bg-surface-variant flex items-center justify-center mb-4">
             <span class="material-symbols-outlined text-on-surface-variant">school</span>
         </div>
-        <p class="font-title-sm text-on-surface mb-1">Belum ada kelas</p>
-        <p class="font-body-sm text-on-surface-variant mb-4">Mulai dengan menambahkan kelas pertama.</p>
+        <p class="font-title-sm text-on-surface mb-1">Chưa có lớp nào</p>
+        <p class="font-body-sm text-on-surface-variant mb-4">Hãy bắt đầu bằng cách thêm lớp đầu tiên.</p>
         <a href="{{ url_for('kelas_tambah') }}" class="bg-primary-container text-on-primary-container px-4 py-2 rounded-lg font-body-sm flex items-center gap-1 hover:brightness-110 transition-all">
-            <span class="material-symbols-outlined text-[18px]">add</span> Tambah Kelas
+            <span class="material-symbols-outlined text-[18px]">add</span> Thêm lớp
         </a>
     </div>
     {% else %}
@@ -81,8 +81,8 @@
         <div class="h-12 w-12 rounded-full bg-surface-variant flex items-center justify-center mb-4">
             <span class="material-symbols-outlined text-on-surface-variant">add</span>
         </div>
-        <p class="font-title-sm text-on-surface mb-1">Tambah Kelas Baru</p>
-        <p class="font-body-sm text-on-surface-variant">Klik untuk membuat kelas baru.</p>
+        <p class="font-title-sm text-on-surface mb-1">Thêm lớp mới</p>
+        <p class="font-body-sm text-on-surface-variant">Nhấp để tạo lớp mới.</p>
     </a>
     {% endif %}
 </div>
@@ -90,15 +90,15 @@
 <!-- Modal konfirmasi hapus -->
 <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden flex items-center justify-center" id="modalHapus">
     <div class="bg-surface-container border border-outline-variant rounded-xl p-6 w-[400px] max-w-[90vw]">
-        <h3 class="font-title-sm text-title-sm text-on-surface mb-2">Konfirmasi Hapus</h3>
+        <h3 class="font-title-sm text-title-sm text-on-surface mb-2">Xác nhận xóa</h3>
         <p class="font-body-sm text-body-sm text-on-surface-variant mb-6">
-            Apakah Anda yakin ingin menghapus kelas <strong id="namaKelasHapus" class="text-on-surface"></strong>?
-            Semua matakuliah dan jadwal di kelas ini juga akan terhapus.
+            Bạn có chắc chắn muốn xóa lớp <strong id="namaKelasHapus" class="text-on-surface"></strong> không?
+            Tất cả môn học và lịch học của lớp này cũng sẽ bị xóa.
         </p>
         <div class="flex justify-end gap-3">
-            <button onclick="tutupModal()" class="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors font-body-sm">Batal</button>
+            <button onclick="tutupModal()" class="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors font-body-sm">Hủy</button>
             <form id="formHapus" method="POST">
-                <button type="submit" class="px-4 py-2 rounded-lg bg-error-container text-on-error-container hover:brightness-110 transition-all font-body-sm">Ya, Hapus</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-error-container text-on-error-container hover:brightness-110 transition-all font-body-sm">Có, xóa</button>
             </form>
         </div>
     </div>

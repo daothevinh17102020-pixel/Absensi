@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}Absensi Manual - Sistem Absensi{% endblock %}
+{% block title %}Điểm danh thủ công - Hệ thống điểm danh{% endblock %}
 
 {% block content %}
 <!-- Header -->
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
     <div>
-        <h2 class="font-headline-md text-headline-md text-on-surface">Absensi Manual</h2>
-        <p class="font-body-sm text-body-sm text-on-surface-variant">Override atau koreksi status absensi mahasiswa oleh admin.</p>
+        <h2 class="font-headline-md text-headline-md text-on-surface">Điểm danh thủ công</h2>
+        <p class="font-body-sm text-body-sm text-on-surface-variant">Quản trị viên ghi đè hoặc điều chỉnh trạng thái điểm danh của sinh viên.</p>
     </div>
     <a href="{{ url_for('absensi_rekap') }}" class="bg-surface-container border border-outline-variant text-on-surface px-5 py-2.5 rounded-lg flex items-center gap-2 font-title-sm hover:bg-surface-variant transition-all w-fit">
         <span class="material-symbols-outlined text-[20px]">assignment</span>
-        Lihat Rekap
+        Xem tổng hợp
     </a>
 </div>
 
@@ -18,26 +18,26 @@
 <div class="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6 flex items-start gap-3">
     <span class="material-symbols-outlined text-primary mt-0.5">info</span>
     <div>
-        <p class="font-body-md font-semibold text-primary">Absensi Manual Hari Ini</p>
-        <p class="text-body-sm text-on-surface-variant mt-1">Pilih status baru lalu klik Simpan. Perubahan akan dicatat sebagai input manual.</p>
+        <p class="font-body-md font-semibold text-primary">Điểm danh thủ công hôm nay</p>
+        <p class="text-body-sm text-on-surface-variant mt-1">Chọn trạng thái mới rồi nhấn Lưu. Thay đổi sẽ được ghi nhận là dữ liệu nhập thủ công.</p>
     </div>
 </div>
 
 <!-- Tabel Override -->
 <div class="bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden shadow-2xl">
     <div class="px-6 py-4 border-b border-outline-variant bg-surface-container-high/30">
-        <h4 class="font-title-sm text-title-sm text-on-surface">Daftar Absensi Hari Ini</h4>
+        <h4 class="font-title-sm text-title-sm text-on-surface">Danh sách điểm danh hôm nay</h4>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-surface-container-high/50">
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Mahasiswa</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">NIM</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Mata Kuliah</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Waktu</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Status Saat Ini</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Ubah Status</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Sinh viên</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Mã sinh viên</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Môn học</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Thời gian</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Trạng thái hiện tại</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Đổi trạng thái</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant">
@@ -59,29 +59,32 @@
                     <td class="px-6 py-4 text-body-sm text-on-surface-variant">{{ a.waktu_absen or '-' }}</td>
                     <td class="px-6 py-4">
                         {% if a.status == 'hadir' %}
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">Hadir</span>
+                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">Có mặt</span>
                         {% elif a.status == 'terlambat' %}
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-tertiary/10 text-tertiary border border-tertiary/20">Terlambat</span>
+                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-tertiary/10 text-tertiary border border-tertiary/20">Đi muộn</span>
                         {% elif a.status == 'izin' %}
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-secondary/10 text-secondary border border-secondary/20">Izin</span>
+                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-secondary/10 text-secondary border border-secondary/20">Vắng có phép</span>
+                        {% elif a.status == 'sakit' %}
+                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-tertiary/10 text-tertiary border border-tertiary/20">Nghỉ ốm</span>
                         {% elif a.status == 'alpha' %}
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-error/10 text-error border border-error/20">Alpha</span>
+                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-error/10 text-error border border-error/20">Vắng không phép</span>
                         {% endif %}
                         {% if a.dibuat_manual %}
-                        <span class="ml-1 text-[9px] text-outline italic">manual</span>
+                        <span class="ml-1 text-[9px] text-outline italic">thủ công</span>
                         {% endif %}
                     </td>
                     <td class="px-6 py-4">
                         <form method="POST" class="flex items-center gap-2">
                             <input type="hidden" name="absensi_id" value="{{ a.id }}">
                             <select name="status" class="bg-surface-dim border border-outline-variant text-on-surface rounded-lg px-3 py-1.5 text-xs focus:border-primary outline-none">
-                                <option value="hadir"     {% if a.status=='hadir' %}selected{% endif %}>Hadir</option>
-                                <option value="terlambat" {% if a.status=='terlambat' %}selected{% endif %}>Terlambat</option>
-                                <option value="izin"      {% if a.status=='izin' %}selected{% endif %}>Izin</option>
-                                <option value="alpha"     {% if a.status=='alpha' %}selected{% endif %}>Alpha</option>
+                                <option value="hadir"     {% if a.status=='hadir' %}selected{% endif %}>Có mặt</option>
+                                <option value="terlambat" {% if a.status=='terlambat' %}selected{% endif %}>Đi muộn</option>
+                                <option value="izin"      {% if a.status=='izin' %}selected{% endif %}>Vắng có phép</option>
+                                <option value="sakit"     {% if a.status=='sakit' %}selected{% endif %}>Nghỉ ốm</option>
+                                <option value="alpha"     {% if a.status=='alpha' %}selected{% endif %}>Vắng không phép</option>
                             </select>
                             <button type="submit" class="bg-primary-container text-on-primary-container px-3 py-1.5 rounded-lg text-xs font-bold hover:brightness-110 transition-all">
-                                Simpan
+                                Lưu
                             </button>
                         </form>
                     </td>
@@ -90,7 +93,7 @@
                 <tr>
                     <td colspan="6" class="px-6 py-16 text-center">
                         <span class="material-symbols-outlined text-4xl text-on-surface-variant/20 mb-2">event_busy</span>
-                        <p class="text-body-sm text-on-surface-variant">Belum ada absensi hari ini yang bisa diubah.</p>
+                        <p class="text-body-sm text-on-surface-variant">Chưa có dữ liệu điểm danh hôm nay để thay đổi.</p>
                     </td>
                 </tr>
                 {% endfor %}

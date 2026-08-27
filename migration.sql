@@ -13,6 +13,7 @@
 -- 1. admin
 CREATE TABLE IF NOT EXISTS admin (
     id            INT AUTO_INCREMENT PRIMARY KEY,
+    singleton_key TINYINT NOT NULL DEFAULT 1 UNIQUE,
     username      VARCHAR(50)  UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -67,7 +68,8 @@ CREATE TABLE IF NOT EXISTS absensi (
     jadwal_id     INT  NOT NULL,
     tanggal       DATE NOT NULL,
     waktu_absen   TIME,
-    status        ENUM('hadir','terlambat','izin','alpha') NOT NULL,
+    status        ENUM('hadir','terlambat','izin','sakit','alpha') NOT NULL,
+    alasan        TEXT,
     snapshot_path VARCHAR(255),
     dibuat_manual BOOLEAN  DEFAULT FALSE,
     timestamp     DATETIME DEFAULT CURRENT_TIMESTAMP,

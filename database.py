@@ -2,13 +2,26 @@
 # Tidak boleh ada query langsung di app.py (lihat context.md bagian 12)
 
 import mysql.connector
-from config import DB_CONFIG
+from config import (ABSENSI_GRACE_MINUTES, APP_TIMEZONE, DB_CONFIG,
+                    TOLERANSI_MENIT)
 from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
+
+
+APP_TZ = ZoneInfo(APP_TIMEZONE)
+
+
+def _now_app():
+    return datetime.now(APP_TZ)
 
 
 def get_connection():
     """Buat koneksi baru ke MySQL."""
     return mysql.connector.connect(**DB_CONFIG)
+
+
+class DatabaseQueryError(RuntimeError):
+    """Raised by strict scanner queries when the database is unavailable."""
 
 
 # ══════════════════════════════════════════════════════════════
@@ -32,7 +45,32 @@ def tambah_admin(username, password_hash):
     """Simpan admin baru. Return id admin atau None."""
     try:
         conn = get_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT kelas_id FROM matakuliah WHERE id = %s",
+            (matakuliah_id,)
+        )
+        matakuliah = cursor.fetchone()
+        if not matakuliah:
+            return None
+
+        cursor.execute("""
+            SELECT j.id
+            FROM jadwal j
+            JOIN matakuliah m ON j.matakuliah_id = m.id
+            WHERE m.kelas_id = %s
+              AND j.hari = %s
+              AND %s < ADDTIME(j.jam_selesai, SEC_TO_TIME(%s * 60))
+              AND ADDTIME(%s, SEC_TO_TIME(%s * 60)) > j.jam_mulai
+            LIMIT 1
+        """, (
+            matakuliah['kelas_id'], hari,
+            jam_mulai, ABSENSI_GRACE_MINUTES,
+            jam_selesai, ABSENSI_GRACE_MINUTES
+        ))
+        if cursor.fetchone():
+            return None
+
         cursor.execute(
             "INSERT INTO admin (username, password_hash) VALUES (%s, %s)",
             (username, password_hash)
@@ -287,14 +325,69 @@ def get_jadwal_by_id(jadwal_id):
         return None
 
 
-def tambah_jadwal(matakuliah_id, hari, jam_mulai, jam_selesai, batas_terlambat=None):
-    """Simpan jadwal baru. batas_terlambat otomatis jika None."""
+def get_jadwal_hari(hari):
+    """Ambil semua jadwal pada satu hari untuk dropdown/API."""
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT j.id, j.hari, j.jam_mulai, j.jam_selesai,
+                   m.nama_mk, m.kelas_id, k.nama_kelas
+            FROM jadwal j
+            JOIN matakuliah m ON j.matakuliah_id = m.id
+            JOIN kelas k ON m.kelas_id = k.id
+            WHERE j.hari = %s
+            ORDER BY j.jam_mulai
+        """, (hari,))
+        return cursor.fetchall()
+    except Exception:
+        return []
+
+def update_jadwal(jadwal_id, matakuliah_id, hari, jam_mulai, jam_selesai, batas_terlambat=None):
+    """Update jadwal. Return True/False."""
+    conn = None
+    cursor = None
     try:
         if batas_terlambat is None:
-            # Hitung otomatis: jam_mulai + 15 menit
             fmt = "%H:%M:%S" if len(str(jam_mulai)) > 5 else "%H:%M"
             mulai_dt = datetime.strptime(str(jam_mulai), fmt)
-            batas_dt = mulai_dt + timedelta(minutes=15)
+            batas_dt = mulai_dt + timedelta(minutes=TOLERANSI_MENIT)
+            batas_terlambat = batas_dt.strftime("%H:%M:%S")
+
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """UPDATE jadwal
+               SET matakuliah_id=%s, hari=%s, jam_mulai=%s, jam_selesai=%s, batas_terlambat=%s
+               WHERE id=%s""",
+            (matakuliah_id, hari, jam_mulai, jam_selesai, batas_terlambat, jadwal_id)
+        )
+        conn.commit()
+        return True
+    except Exception:
+        if conn:
+            conn.rollback()
+        return False
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
+
+
+def tambah_jadwal(matakuliah_id, hari, jam_mulai, jam_selesai, batas_terlambat=None):
+    """Simpan jadwal baru. batas_terlambat otomatis jika None."""
+    conn = None
+    cursor = None
+    try:
+        if batas_terlambat is None:
+            # Hitung otomatis dari konfigurasi sistem.
+            fmt = "%H:%M:%S" if len(str(jam_mulai)) > 5 else "%H:%M"
+            mulai_dt = datetime.strptime(str(jam_mulai), fmt)
+            batas_dt = mulai_dt + timedelta(minutes=TOLERANSI_MENIT)
             batas_terlambat = batas_dt.strftime("%H:%M:%S")
 
         conn = get_connection()
@@ -306,10 +399,16 @@ def tambah_jadwal(matakuliah_id, hari, jam_mulai, jam_selesai, batas_terlambat=N
         )
         conn.commit()
         jadwal_id = cursor.lastrowid
-        cursor.close(); conn.close()
         return jadwal_id
     except Exception:
+        if conn:
+            conn.rollback()
         return None
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 def hapus_jadwal(jadwal_id):
@@ -325,8 +424,10 @@ def hapus_jadwal(jadwal_id):
         return False
 
 
-def get_jadwal_aktif(hari, waktu_sekarang):
-    """Cari jadwal yang sedang berlangsung (jam_mulai <= now <= jam_selesai + 30 menit)."""
+def get_jadwal_aktif(hari, waktu_sekarang, raise_on_error=False):
+    """Cari jadwal aktif sampai batas grace period setelah kelas selesai."""
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -336,13 +437,20 @@ def get_jadwal_aktif(hari, waktu_sekarang):
             JOIN matakuliah m ON j.matakuliah_id = m.id
             WHERE j.hari = %s
               AND %s >= j.jam_mulai
-              AND %s <= ADDTIME(j.jam_selesai, '00:30:00')
-        """, (hari, waktu_sekarang, waktu_sekarang))
+              AND %s <= ADDTIME(j.jam_selesai, SEC_TO_TIME(%s * 60))
+            ORDER BY j.jam_mulai DESC, j.id DESC
+        """, (hari, waktu_sekarang, waktu_sekarang, ABSENSI_GRACE_MINUTES))
         hasil = cursor.fetchall()
-        cursor.close(); conn.close()
         return hasil
-    except Exception:
+    except Exception as exc:
+        if raise_on_error:
+            raise DatabaseQueryError('get_jadwal_aktif failed') from exc
         return []
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 # ══════════════════════════════════════════════════════════════
@@ -367,8 +475,10 @@ def get_semua_user():
         return []
 
 
-def get_user_by_id(user_id):
+def get_user_by_id(user_id, raise_on_error=False):
     """Ambil satu mahasiswa."""
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -379,10 +489,16 @@ def get_user_by_id(user_id):
             WHERE u.id = %s
         """, (user_id,))
         hasil = cursor.fetchone()
-        cursor.close(); conn.close()
         return hasil
-    except Exception:
+    except Exception as exc:
+        if raise_on_error:
+            raise DatabaseQueryError('get_user_by_id failed') from exc
         return None
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 def get_user_by_nim(nim):
@@ -484,8 +600,11 @@ def nim_sudah_ada(nim):
 # ══════════════════════════════════════════════════════════════
 
 def catat_absensi(user_id, jadwal_id, tanggal, waktu_absen, status,
-                  snapshot_path=None, dibuat_manual=False, alasan=None):
+                  snapshot_path=None, dibuat_manual=False, alasan=None,
+                  raise_on_error=False):
     """Simpan record absensi. Return id atau None (duplikat/gagal)."""
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -498,11 +617,19 @@ def catat_absensi(user_id, jadwal_id, tanggal, waktu_absen, status,
         )
         conn.commit()
         absensi_id = cursor.lastrowid
-        cursor.close(); conn.close()
         return absensi_id
-    except Exception:
-        # Kemungkinan UNIQUE constraint violation (sudah absen)
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f'[DB] Error catat_absensi: {e}')
+        if raise_on_error:
+            raise DatabaseQueryError('catat_absensi failed') from e
         return None
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 def catat_absensi_manual(user_id, jadwal_id, tanggal, status, alasan=None):
@@ -510,6 +637,8 @@ def catat_absensi_manual(user_id, jadwal_id, tanggal, status, alasan=None):
     Berguna untuk izin/sakit atau koreksi status.
     Return dict {'aksi': 'insert'/'update', 'id': absensi_id} atau None.
     """
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -521,7 +650,7 @@ def catat_absensi_manual(user_id, jadwal_id, tanggal, status, alasan=None):
         )
         existing = cursor.fetchone()
 
-        waktu_now = datetime.now().strftime('%H:%M:%S')
+        waktu_now = _now_app().strftime('%H:%M:%S')
 
         if existing:
             # Update record yang sudah ada
@@ -531,7 +660,6 @@ def catat_absensi_manual(user_id, jadwal_id, tanggal, status, alasan=None):
                 (status, alasan, waktu_now, existing['id'])
             )
             conn.commit()
-            cursor.close(); conn.close()
             return {'aksi': 'update', 'id': existing['id'], 'status_lama': existing['status']}
         else:
             # Insert baru
@@ -543,15 +671,23 @@ def catat_absensi_manual(user_id, jadwal_id, tanggal, status, alasan=None):
             )
             conn.commit()
             absensi_id = cursor.lastrowid
-            cursor.close(); conn.close()
             return {'aksi': 'insert', 'id': absensi_id}
     except Exception as e:
+        if conn:
+            conn.rollback()
         print(f'[DB] Error catat_absensi_manual: {e}')
         return None
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
-def cek_sudah_absen(user_id, jadwal_id, tanggal):
+def cek_sudah_absen(user_id, jadwal_id, tanggal, raise_on_error=False):
     """Cek apakah mahasiswa sudah absen di jadwal ini hari ini."""
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -560,14 +696,23 @@ def cek_sudah_absen(user_id, jadwal_id, tanggal):
             (user_id, jadwal_id, tanggal)
         )
         hasil = cursor.fetchone()
-        cursor.close(); conn.close()
         return hasil
-    except Exception:
+    except Exception as exc:
+        if raise_on_error:
+            raise DatabaseQueryError('cek_sudah_absen failed') from exc
         return None
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
-def get_absensi_hari_ini():
+def get_absensi_hari_ini(tanggal=None):
     """Ambil semua absensi hari ini lengkap dengan data mahasiswa."""
+    tanggal = tanggal or _now_app().date()
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -576,22 +721,28 @@ def get_absensi_hari_ini():
                    m.nama_mk, j.jam_mulai, j.jam_selesai
             FROM absensi a
             JOIN users u ON a.user_id = u.id
-            JOIN kelas k ON u.kelas_id = k.id
             JOIN jadwal j ON a.jadwal_id = j.id
             JOIN matakuliah m ON j.matakuliah_id = m.id
+            JOIN kelas k ON m.kelas_id = k.id
             WHERE a.tanggal = %s
             ORDER BY a.waktu_absen DESC
-        """, (date.today(),))
+        """, (tanggal,))
         hasil = cursor.fetchall()
-        cursor.close(); conn.close()
         return hasil
     except Exception:
         return []
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 def get_rekap_absensi(kelas_id=None, tanggal_dari=None, tanggal_sampai=None,
                       matakuliah_id=None):
     """Ambil rekap absensi dengan filter opsional."""
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -601,15 +752,15 @@ def get_rekap_absensi(kelas_id=None, tanggal_dari=None, tanggal_sampai=None,
                    m.nama_mk, m.kode_mk, j.hari, j.jam_mulai
             FROM absensi a
             JOIN users u ON a.user_id = u.id
-            JOIN kelas k ON u.kelas_id = k.id
             JOIN jadwal j ON a.jadwal_id = j.id
             JOIN matakuliah m ON j.matakuliah_id = m.id
+            JOIN kelas k ON m.kelas_id = k.id
             WHERE 1=1
         """
         params = []
 
         if kelas_id:
-            query += " AND u.kelas_id = %s"
+            query += " AND m.kelas_id = %s"
             params.append(kelas_id)
         if tanggal_dari:
             query += " AND a.tanggal >= %s"
@@ -625,10 +776,14 @@ def get_rekap_absensi(kelas_id=None, tanggal_dari=None, tanggal_sampai=None,
 
         cursor.execute(query, params)
         hasil = cursor.fetchall()
-        cursor.close(); conn.close()
         return hasil
     except Exception:
         return []
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 def update_status_absensi(absensi_id, status_baru):
@@ -649,6 +804,8 @@ def update_status_absensi(absensi_id, status_baru):
 
 def get_persentase_kehadiran(kelas_id=None, tanggal_dari=None, tanggal_sampai=None):
     """Hitung persentase kehadiran per status. Return dict."""
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -656,12 +813,13 @@ def get_persentase_kehadiran(kelas_id=None, tanggal_dari=None, tanggal_sampai=No
         query = """
             SELECT status, COUNT(*) as jumlah
             FROM absensi a
-            JOIN users u ON a.user_id = u.id
+            JOIN jadwal j ON a.jadwal_id = j.id
+            JOIN matakuliah m ON j.matakuliah_id = m.id
             WHERE 1=1
         """
         params = []
         if kelas_id:
-            query += " AND u.kelas_id = %s"
+            query += " AND m.kelas_id = %s"
             params.append(kelas_id)
         if tanggal_dari:
             query += " AND a.tanggal >= %s"
@@ -673,16 +831,20 @@ def get_persentase_kehadiran(kelas_id=None, tanggal_dari=None, tanggal_sampai=No
 
         cursor.execute(query, params)
         rows = cursor.fetchall()
-        cursor.close(); conn.close()
-
-        total = sum(r['jumlah'] for r in rows) or 1
-        hasil = {s: 0 for s in ['hadir', 'terlambat', 'izin', 'alpha']}
+        total = sum(r['jumlah'] for r in rows)
+        divisor = total or 1
+        hasil = {s: 0 for s in ['hadir', 'terlambat', 'izin', 'sakit', 'alpha']}
         for r in rows:
-            hasil[r['status']] = round(r['jumlah'] / total * 100, 1)
+            hasil[r['status']] = round(r['jumlah'] / divisor * 100, 1)
         hasil['total'] = total
         return hasil
     except Exception:
-        return {'hadir': 0, 'terlambat': 0, 'izin': 0, 'alpha': 0, 'total': 0}
+        return {'hadir': 0, 'terlambat': 0, 'izin': 0, 'sakit': 0, 'alpha': 0, 'total': 0}
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 # ══════════════════════════════════════════════════════════════
@@ -691,19 +853,21 @@ def get_persentase_kehadiran(kelas_id=None, tanggal_dari=None, tanggal_sampai=No
 
 def get_ringkasan_rekap(kelas_id=None, tanggal_dari=None, tanggal_sampai=None, matakuliah_id=None):
     """Hitung jumlah record per status untuk kartu ringkasan rekap. Return dict."""
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         query = """
             SELECT status, COUNT(*) as jumlah
             FROM absensi a
-            JOIN users u ON a.user_id = u.id
             JOIN jadwal j ON a.jadwal_id = j.id
+            JOIN matakuliah m ON j.matakuliah_id = m.id
             WHERE 1=1
         """
         params = []
         if kelas_id:
-            query += " AND u.kelas_id = %s"
+            query += " AND m.kelas_id = %s"
             params.append(kelas_id)
         if tanggal_dari:
             query += " AND a.tanggal >= %s"
@@ -717,18 +881,24 @@ def get_ringkasan_rekap(kelas_id=None, tanggal_dari=None, tanggal_sampai=None, m
         query += " GROUP BY status"
         cursor.execute(query, params)
         rows = cursor.fetchall()
-        cursor.close(); conn.close()
-        hasil = {'hadir': 0, 'terlambat': 0, 'izin': 0, 'alpha': 0}
+        hasil = {'hadir': 0, 'terlambat': 0, 'izin': 0, 'sakit': 0, 'alpha': 0}
         for r in rows:
             if r['status'] in hasil:
                 hasil[r['status']] = r['jumlah']
         return hasil
     except Exception:
-        return {'hadir': 0, 'terlambat': 0, 'izin': 0, 'alpha': 0}
+        return {'hadir': 0, 'terlambat': 0, 'izin': 0, 'sakit': 0, 'alpha': 0}
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 def get_ranking_kelas(tanggal_dari=None, tanggal_sampai=None):
     """Hitung persentase kehadiran per kelas untuk laporan ranking. Return list dict."""
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -742,8 +912,9 @@ def get_ranking_kelas(tanggal_dari=None, tanggal_sampai=None):
                     COUNT(*) as total,
                     SUM(CASE WHEN a.status = 'hadir' THEN 1 ELSE 0 END) as hadir
                 FROM absensi a
-                JOIN users u ON a.user_id = u.id
-                WHERE u.kelas_id = %s
+                JOIN jadwal j ON a.jadwal_id = j.id
+                JOIN matakuliah m ON j.matakuliah_id = m.id
+                WHERE m.kelas_id = %s
             """
             params = [k['id']]
             if tanggal_dari:
@@ -765,7 +936,6 @@ def get_ranking_kelas(tanggal_dari=None, tanggal_sampai=None):
                 'hadir': hadir,
                 'persen': persen
             })
-        cursor.close(); conn.close()
         # Urutkan dari persen tertinggi
         ranking.sort(key=lambda x: x['persen'], reverse=True)
         return ranking
@@ -775,6 +945,8 @@ def get_ranking_kelas(tanggal_dari=None, tanggal_sampai=None):
 
 def get_top_mahasiswa(tanggal_dari=None, tanggal_sampai=None):
     """Cari mahasiswa dengan kehadiran tertinggi. Return dict atau None."""
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -784,7 +956,9 @@ def get_top_mahasiswa(tanggal_dari=None, tanggal_sampai=None):
                    SUM(CASE WHEN a.status = 'hadir' THEN 1 ELSE 0 END) as hadir
             FROM absensi a
             JOIN users u ON a.user_id = u.id
-            JOIN kelas k ON u.kelas_id = k.id
+            JOIN jadwal j ON a.jadwal_id = j.id
+            JOIN matakuliah m ON j.matakuliah_id = m.id
+            JOIN kelas k ON m.kelas_id = k.id
             WHERE 1=1
         """
         params = []
@@ -797,12 +971,16 @@ def get_top_mahasiswa(tanggal_dari=None, tanggal_sampai=None):
         q += " GROUP BY u.id, u.nama, k.nama_kelas HAVING total > 0 ORDER BY (hadir/total) DESC LIMIT 1"
         cursor.execute(q, params)
         row = cursor.fetchone()
-        cursor.close(); conn.close()
         if row and row['total'] > 0:
             row['persen'] = round(row['hadir'] / row['total'] * 100, 1)
         return row
     except Exception:
         return None
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 def catat_spoofing(snapshot_path, confidence_score):
@@ -826,8 +1004,9 @@ def catat_spoofing(snapshot_path, confidence_score):
 # STATISTIK DASHBOARD
 # ══════════════════════════════════════════════════════════════
 
-def get_statistik_dashboard():
+def get_statistik_dashboard(tanggal=None):
     """Ambil statistik ringkas untuk dashboard. Return dict."""
+    tanggal = tanggal or _now_app().date()
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -840,12 +1019,12 @@ def get_statistik_dashboard():
         cursor.execute("""
             SELECT status, COUNT(*) as jumlah
             FROM absensi WHERE tanggal = %s GROUP BY status
-        """, (date.today(),))
+        """, (tanggal,))
         status_hari_ini = {r['status']: r['jumlah'] for r in cursor.fetchall()}
 
         # Kelas aktif hari ini (kelas yang punya jadwal hari ini)
         hari_map = {0:'Senin',1:'Selasa',2:'Rabu',3:'Kamis',4:'Jumat',5:'Sabtu',6:'Minggu'}
-        hari_ini = hari_map.get(datetime.now().weekday(), '')
+        hari_ini = hari_map.get(tanggal.weekday(), '')
         cursor.execute("""
             SELECT COUNT(DISTINCT m.kelas_id) as total
             FROM jadwal j
@@ -871,7 +1050,9 @@ def get_statistik_dashboard():
 
 
 def get_jadwal_selesai_hari_ini(hari, waktu_sekarang):
-    """Ambil jadwal yang sudah selesai hari ini (jam_selesai < waktu_sekarang)."""
+    """Ambil jadwal setelah grace period titik absensi berakhir."""
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -879,17 +1060,22 @@ def get_jadwal_selesai_hari_ini(hari, waktu_sekarang):
             SELECT j.*, m.nama_mk, m.kelas_id
             FROM jadwal j
             JOIN matakuliah m ON j.matakuliah_id = m.id
-            WHERE j.hari = %s AND j.jam_selesai < %s
-        """, (hari, waktu_sekarang))
+            WHERE j.hari = %s
+              AND ADDTIME(j.jam_selesai, SEC_TO_TIME(%s * 60)) < %s
+        """, (hari, ABSENSI_GRACE_MINUTES, waktu_sekarang))
         hasil = cursor.fetchall()
-        cursor.close(); conn.close()
         return hasil
     except Exception:
         return []
-
-
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 def get_mahasiswa_belum_absen(jadwal_id, kelas_id, tanggal):
     """Ambil daftar user_id yang belum absen untuk jadwal tertentu hari ini."""
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -903,35 +1089,44 @@ def get_mahasiswa_belum_absen(jadwal_id, kelas_id, tanggal):
               )
         """, (kelas_id, jadwal_id, tanggal))
         hasil = cursor.fetchall()
-        cursor.close(); conn.close()
         return hasil
     except Exception:
         return []
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 def bulk_catat_alpha(jadwal_id, user_ids, tanggal):
     """Insert batch record alpha untuk mahasiswa yang tidak hadir."""
     if not user_ids:
         return 0
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor()
         count = 0
         for uid in user_ids:
-            try:
-                cursor.execute("""
-                    INSERT INTO absensi (user_id, jadwal_id, tanggal, waktu_absen, status)
-                    VALUES (%s, %s, %s, '00:00:00', 'alpha')
-                """, (uid, jadwal_id, tanggal))
-                count += 1
-            except Exception:
-                # Skip jika sudah ada (UNIQUE constraint)
-                pass
+            cursor.execute("""
+                INSERT IGNORE INTO absensi
+                    (user_id, jadwal_id, tanggal, waktu_absen, status)
+                VALUES (%s, %s, %s, '00:00:00', 'alpha')
+            """, (uid, jadwal_id, tanggal))
+            count += cursor.rowcount
         conn.commit()
-        cursor.close(); conn.close()
         return count
     except Exception:
+        if conn:
+            conn.rollback()
         return 0
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 
@@ -941,6 +1136,8 @@ def bulk_catat_alpha(jadwal_id, user_ids, tanggal):
 
 def cari_mahasiswa(query_str):
     """Cari mahasiswa berdasarkan nama atau NIM. Return list dict atau []."""
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -955,14 +1152,18 @@ def cari_mahasiswa(query_str):
         like_query = f"%{query_str}%"
         cursor.execute(sql, (like_query, like_query))
         hasil = cursor.fetchall()
-        cursor.close(); conn.close()
         return hasil
-    except Exception:
-        return []
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 def cari_jadwal(query_str):
     """Cari jadwal berdasarkan nama MK, kode MK, hari, atau nama kelas. Return list dict atau []."""
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -979,7 +1180,9 @@ def cari_jadwal(query_str):
         like_query = f"%{query_str}%"
         cursor.execute(sql, (like_query, like_query, like_query, like_query))
         hasil = cursor.fetchall()
-        cursor.close(); conn.close()
         return hasil
-    except Exception:
-        return []
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()

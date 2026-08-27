@@ -4,6 +4,18 @@
  */
 
 const DashboardUI = {
+    _faceSuccessHoldMs: 2500,
+    _faceSuccessByTrack: new Map(),
+
+    _escapeHtml: function (value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
     /**
      * Inisialisasi event listener dan UI dashboard
      */
@@ -49,11 +61,11 @@ const DashboardUI = {
         if (!indicator) return;
 
         if (connected) {
-            indicator.textContent = 'Terhubung';
+            indicator.textContent = 'Đã kết nối';
             indicator.classList.remove('text-error');
             indicator.classList.add('text-emerald-500');
         } else {
-            indicator.textContent = 'Terputus';
+            indicator.textContent = 'Mất kết nối';
             indicator.classList.remove('text-emerald-500');
             indicator.classList.add('text-error');
         }
@@ -69,11 +81,11 @@ const DashboardUI = {
         if (spoofData.is_real) {
             indicator.className = 'active';
             indicator.querySelector('.dot').style.background = '#34d399';
-            indicator.querySelector('.label').textContent = 'Anti-Spoofing: OK';
+            indicator.querySelector('.label').textContent = 'Chống giả mạo: Bình thường';
         } else {
             indicator.className = 'warning';
             indicator.querySelector('.dot').style.background = '#f87171';
-            indicator.querySelector('.label').textContent = 'SPOOFING!';
+            indicator.querySelector('.label').textContent = 'PHÁT HIỆN GIẢ MẠO!';
         }
     },
 
@@ -88,8 +100,8 @@ const DashboardUI = {
             <div class="flex items-center gap-3">
                 <span class="material-symbols-outlined text-3xl text-error">gpp_bad</span>
                 <div>
-                    <p class="recognition-name text-error">⚠️ Spoofing Terdeteksi!</p>
-                    <p class="recognition-detail">Score: ${data.score || '-'} — Wajah tidak asli</p>
+                    <p class="recognition-name text-error">⚠️ Phát hiện giả mạo!</p>
+                    <p class="recognition-detail">Điểm: ${data.score || '-'} — Khuôn mặt không phải người thật</p>
                 </div>
             </div>
         `;
@@ -98,8 +110,8 @@ const DashboardUI = {
         // Sembunyikan setelah 3 detik
         setTimeout(() => overlay.classList.remove('active'), 3000);
 
-        this.showToast('error', 'Spoofing Terdeteksi',
-            'Sistem mendeteksi percobaan spoofing. Gunakan wajah asli.');
+        this.showToast('error', 'Phát hiện giả mạo',
+            'Hệ thống phát hiện hành vi giả mạo. Vui lòng sử dụng khuôn mặt thật.');
     },
 
     /**
@@ -110,7 +122,14 @@ const DashboardUI = {
         if (!overlay) return;
 
         const statusClass = data.status_absensi === 'hadir' ? 'hadir' : 'terlambat';
-        const statusLabel = data.status_absensi === 'hadir' ? 'HADIR' : 'TERLAMBAT';
+        const statusLabels = {
+            hadir: 'Có mặt',
+            terlambat: 'Đi muộn',
+            izin: 'Vắng có phép',
+            sakit: 'Nghỉ ốm',
+            alpha: 'Vắng không phép'
+        };
+        const statusLabel = statusLabels[data.status_absensi] || data.status_absensi;
         const statusIcon = data.status_absensi === 'hadir' ? 'check_circle' : 'schedule';
 
         overlay.innerHTML = `
@@ -118,13 +137,13 @@ const DashboardUI = {
                 <div class="flex items-center gap-3">
                     <span class="material-symbols-outlined text-3xl text-emerald-400">face</span>
                     <div>
-                        <p class="recognition-name">${data.nama}</p>
-                        <p class="recognition-detail">${data.nim} — ${data.nama_kelas || ''} — ${data.nama_mk || ''}</p>
+                        <p class="recognition-name">${this._escapeHtml(data.nama)}</p>
+                        <p class="recognition-detail">${this._escapeHtml(data.nim)} — ${this._escapeHtml(data.nama_kelas)} — ${this._escapeHtml(data.nama_mk)}</p>
                     </div>
                 </div>
                 <span class="status-badge ${statusClass}">
                     <span class="material-symbols-outlined" style="font-size:14px">${statusIcon}</span>
-                    ${statusLabel}
+                    ${this._escapeHtml(statusLabel)}
                 </span>
             </div>
         `;
@@ -140,6 +159,102 @@ const DashboardUI = {
     hideRecognitionOverlay: function () {
         const overlay = document.getElementById('recognition-overlay');
         if (overlay) overlay.classList.remove('active');
+    },
+
+    /**
+     * Convert a server bbox to the visible, mirrored video position. The camera
+     * uses object-fit: cover, so simply scaling x/y would drift on a crop.
+     */
+    mapFaceBoxToVideo: function (bbox, frameWidth, frameHeight, videoRect, layerRect) {
+        if (!bbox || bbox.length !== 4 || !frameWidth || !frameHeight) return null;
+        const [x, y, width, height] = bbox.map(Number);
+        if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return null;
+
+        const scale = Math.max(videoRect.width / frameWidth, videoRect.height / frameHeight);
+        const renderedWidth = frameWidth * scale;
+        const renderedHeight = frameHeight * scale;
+        const offsetX = (videoRect.width - renderedWidth) / 2;
+        const offsetY = (videoRect.height - renderedHeight) / 2;
+
+        // The CSS video is scaleX(-1), hence use the mirrored source x but keep
+        // label text itself unmirrored in the HTML overlay.
+        return {
+            left: (videoRect.left - layerRect.left) + offsetX + (frameWidth - x - width) * scale,
+            top: (videoRect.top - layerRect.top) + offsetY + y * scale,
+            width: width * scale,
+            height: height * scale
+        };
+    },
+
+    renderFaceResults: function (results, frameWidth, frameHeight) {
+        const layer = document.getElementById('face-box-layer');
+        const video = document.getElementById('camera-feed');
+        if (!layer || !video) return;
+
+        layer.replaceChildren();
+        if (!Array.isArray(results) || results.length === 0 || !video.videoWidth) return;
+
+        const now = Date.now();
+        this._faceSuccessByTrack.forEach((cached, key) => {
+            if (cached.expiresAt <= now) this._faceSuccessByTrack.delete(key);
+        });
+        const visibleResults = results.map(result => {
+            const hasIdentityKey = result.track_id !== null && result.track_id !== undefined &&
+                result.user_id !== null && result.user_id !== undefined;
+            const identityKey = hasIdentityKey ? `${result.track_id}:${result.user_id}` : null;
+            if (identityKey && result.display_status === 'recognized' && result.data) {
+                this._faceSuccessByTrack.set(identityKey, {
+                    displayLabel: result.display_label,
+                    data: result.data,
+                    expiresAt: now + this._faceSuccessHoldMs
+                });
+                return result;
+            }
+            const cached = identityKey ? this._faceSuccessByTrack.get(identityKey) : null;
+            if (cached && cached.expiresAt > now && result.tipe === 'verifying') {
+                return {
+                    ...result,
+                    display_status: 'recognized',
+                    display_label: cached.displayLabel,
+                    data: cached.data
+                };
+            }
+            return result;
+        });
+
+        const layerRect = layer.getBoundingClientRect();
+        const videoRect = video.getBoundingClientRect();
+        visibleResults.forEach(result => {
+            const position = this.mapFaceBoxToVideo(
+                result.bbox, frameWidth, frameHeight, videoRect, layerRect
+            );
+            if (!position) return;
+
+            const box = document.createElement('div');
+            const status = ['recognized', 'warning', 'error'].includes(result.display_status)
+                ? result.display_status : 'warning';
+            box.className = `face-box ${status}`;
+            box.style.left = `${position.left}px`;
+            box.style.top = `${position.top}px`;
+            box.style.width = `${position.width}px`;
+            box.style.height = `${position.height}px`;
+
+            const label = document.createElement('span');
+            label.className = 'face-box-label';
+            const recognitionLabels = {
+                spoofing: 'Giả mạo',
+                identity_conflict: 'Xung đột danh tính',
+                unknown: 'Không khớp',
+                verifying: 'Đang xác minh',
+                no_jadwal: 'Đã nhận diện — không có lịch học',
+                needs_calibration: 'Cần hiệu chuẩn',
+                duplikat: 'Đã điểm danh'
+            };
+            label.textContent = result.display_label ||
+                recognitionLabels[result.tipe] || 'Đang phân tích';
+            box.appendChild(label);
+            layer.appendChild(box);
+        });
     },
 
     /**
@@ -162,15 +277,23 @@ const DashboardUI = {
         switch (data.status) {
             case 'hadir':
                 badgeClass = 'bg-emerald-500/15 text-emerald-500';
-                badgeLabel = 'Hadir';
+                badgeLabel = 'Có mặt';
                 break;
             case 'terlambat':
                 badgeClass = 'bg-tertiary/15 text-tertiary';
-                badgeLabel = 'Terlambat';
+                badgeLabel = 'Đi muộn';
+                break;
+            case 'izin':
+                badgeClass = 'bg-secondary/15 text-secondary';
+                badgeLabel = 'Vắng có phép';
+                break;
+            case 'sakit':
+                badgeClass = 'bg-secondary/15 text-secondary';
+                badgeLabel = 'Nghỉ ốm';
                 break;
             case 'alpha':
                 badgeClass = 'bg-error/15 text-error';
-                badgeLabel = 'Alpha';
+                badgeLabel = 'Vắng không phép';
                 break;
             default:
                 badgeClass = 'bg-secondary/15 text-secondary';
@@ -184,14 +307,14 @@ const DashboardUI = {
                         <span class="material-symbols-outlined text-secondary text-[20px]">person</span>
                     </div>
                     <div>
-                        <p class="font-body-md text-on-surface font-semibold">${data.nama}</p>
-                        <p class="text-[12px] text-on-surface-variant">${data.nim} — ${data.nama_kelas || ''}</p>
+                        <p class="font-body-md text-on-surface font-semibold">${this._escapeHtml(data.nama)}</p>
+                        <p class="text-[12px] text-on-surface-variant">${this._escapeHtml(data.nim)} — ${this._escapeHtml(data.nama_kelas)}</p>
                     </div>
                 </div>
             </td>
-            <td class="px-6 py-4 text-body-sm text-on-surface-variant">${data.waktu_absen || '-'}</td>
+            <td class="px-6 py-4 text-body-sm text-on-surface-variant">${this._escapeHtml(data.waktu_absen || '-')}</td>
             <td class="px-6 py-4">
-                <span class="px-3 py-1 rounded-full ${badgeClass} text-[12px] font-bold">${badgeLabel}</span>
+                <span class="px-3 py-1 rounded-full ${badgeClass} text-[12px] font-bold">${this._escapeHtml(badgeLabel)}</span>
             </td>
         `;
 
@@ -226,22 +349,18 @@ const DashboardUI = {
                 const tbody = document.getElementById('absensi-tbody');
                 if (!tbody) return;
 
-                // Rebuild tabel hanya jika ada perubahan
-                const currentCount = tbody.querySelectorAll('tr:not(.empty-row)').length;
-                if (result.data.length !== currentCount) {
-                    tbody.innerHTML = '';
-                    if (result.data.length === 0) {
-                        tbody.innerHTML = `
-                            <tr class="empty-row">
-                                <td colspan="3" class="px-6 py-12 text-center">
-                                    <span class="material-symbols-outlined text-3xl text-on-surface-variant/20 mb-2">event_busy</span>
-                                    <p class="text-body-sm text-on-surface-variant">Belum ada absensi hari ini</p>
-                                </td>
-                            </tr>
-                        `;
-                    } else {
-                        result.data.forEach(a => this.addAbsensiRow(a));
-                    }
+                tbody.innerHTML = '';
+                if (result.data.length === 0) {
+                    tbody.innerHTML = `
+                        <tr class="empty-row">
+                            <td colspan="3" class="px-6 py-12 text-center">
+                                <span class="material-symbols-outlined text-3xl text-on-surface-variant/20 mb-2">event_busy</span>
+                                <p class="text-body-sm text-on-surface-variant">Hôm nay chưa có dữ liệu điểm danh</p>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    result.data.slice().reverse().forEach(a => this.addAbsensiRow(a));
                 }
             }
         } catch (err) {
@@ -273,8 +392,8 @@ const DashboardUI = {
         toast.innerHTML = `
             <span class="material-symbols-outlined toast-icon">${icons[type] || 'info'}</span>
             <div class="toast-body">
-                <div class="toast-title">${title}</div>
-                <div class="toast-message">${message}</div>
+                <div class="toast-title">${this._escapeHtml(title)}</div>
+                <div class="toast-message">${this._escapeHtml(message)}</div>
             </div>
         `;
 

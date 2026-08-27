@@ -1,19 +1,19 @@
 {% extends 'base.html' %}
-{% block title %}{{ 'Edit' if kelas else 'Tambah' }} Kelas - Sistem Absensi{% endblock %}
+{% block title %}{{ 'Chỉnh sửa' if kelas else 'Thêm' }} lớp - Hệ thống điểm danh{% endblock %}
 
 {% block content %}
 <!-- Breadcrumb -->
 <nav class="flex text-on-surface-variant font-label-caps text-label-caps mb-6">
     <ol class="inline-flex items-center space-x-2">
-        <li><a class="hover:text-primary" href="{{ url_for('kelas_index') }}">Kelas &amp; MK</a></li>
+        <li><a class="hover:text-primary" href="{{ url_for('kelas_index') }}">Lớp &amp; môn học</a></li>
         <li><span class="material-symbols-outlined text-sm">chevron_right</span></li>
-        <li class="text-primary font-bold">{{ 'Edit Kelas' if kelas else 'Tambah Kelas Baru' }}</li>
+        <li class="text-primary font-bold">{{ 'Chỉnh sửa lớp' if kelas else 'Thêm lớp mới' }}</li>
     </ol>
 </nav>
 
 <div class="max-w-lg">
-    <h2 class="font-headline-md text-headline-md text-on-surface mb-2">{{ 'Edit Kelas' if kelas else 'Tambah Kelas Baru' }}</h2>
-    <p class="font-body-sm text-body-sm text-on-surface-variant mb-8">{{ 'Perbarui data kelas.' if kelas else 'Isi form berikut untuk membuat kelas baru.' }}</p>
+    <h2 class="font-headline-md text-headline-md text-on-surface mb-2">{{ 'Chỉnh sửa lớp' if kelas else 'Thêm lớp mới' }}</h2>
+    <p class="font-body-sm text-body-sm text-on-surface-variant mb-8">{{ 'Cập nhật thông tin lớp.' if kelas else 'Điền biểu mẫu dưới đây để tạo lớp mới.' }}</p>
 
     {% if error %}
     <div class="bg-error-container/20 border border-error/30 rounded-lg p-3 mb-6 flex items-center gap-2">
@@ -26,28 +26,28 @@
         <!-- Nama Kelas -->
         <div class="space-y-2">
             <label class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-2" for="nama_kelas">
-                <span class="material-symbols-outlined text-[16px]">school</span> NAMA KELAS
+                <span class="material-symbols-outlined text-[16px]">school</span> TÊN LỚP
             </label>
             <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all outline-none font-body-md"
-                   id="nama_kelas" name="nama_kelas" placeholder="Contoh: TI-2A"
+                   id="nama_kelas" name="nama_kelas" placeholder="Ví dụ: TI-2A"
                    value="{{ kelas.nama_kelas if kelas else request.form.get('nama_kelas', '') }}" required/>
         </div>
         <!-- Angkatan -->
         <div class="space-y-2">
             <label class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-2" for="angkatan">
-                <span class="material-symbols-outlined text-[16px]">calendar_today</span> ANGKATAN
+                <span class="material-symbols-outlined text-[16px]">calendar_today</span> KHÓA
             </label>
             <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all outline-none font-body-md"
-                   id="angkatan" name="angkatan" placeholder="Contoh: 2023"
+                   id="angkatan" name="angkatan" placeholder="Ví dụ: 2023"
                    value="{{ kelas.angkatan if kelas else request.form.get('angkatan', '') }}" required/>
         </div>
         <!-- Tombol -->
         <div class="flex gap-3 pt-4">
             <button type="submit" class="bg-primary-container text-on-primary-container px-6 py-3 rounded-lg font-title-sm flex items-center gap-2 hover:brightness-110 transition-all">
                 <span class="material-symbols-outlined">save</span>
-                {{ 'Simpan Perubahan' if kelas else 'Tambah Kelas' }}
+                {{ 'Lưu thay đổi' if kelas else 'Thêm lớp' }}
             </button>
-            <a href="{{ url_for('kelas_index') }}" class="px-6 py-3 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors font-title-sm">Batal</a>
+            <a href="{{ url_for('kelas_index') }}" class="px-6 py-3 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors font-title-sm">Hủy</a>
         </div>
     </form>
 </div>

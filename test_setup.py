@@ -1,6 +1,6 @@
 # test_setup.py
 
-import requests
+from importlib.metadata import version
 
 
 print("=== TES PERSIAPAN SISTEM ABSENSI ===\n")
@@ -17,11 +17,12 @@ try:
     print(f"[OK] OpenCV {cv2.__version__}")
 except: print("[GAGAL] OpenCV")
 
-# Tes 3: LBPH Face Recognizer
+# Tes 3: InsightFace ArcFace + model asset lokal
 try:
-    recognizer = cv2.face.LBPHFaceRecognizer_create()
-    print("[OK] LBPH Face Recognizer tersedia")
-except: print("[GAGAL] LBPH — pastikan opencv-contrib-python terinstall")
+    from face.recognition import ensure_model_ready
+    model_info = ensure_model_ready()
+    print("[OK] YOLOv8-Face + ArcFace ONNX siap")
+except Exception as e: print(f"[GAGAL] Model ONNX/Runtime - {e}")
 
 # Tes 4: Webcam
 try:
@@ -36,7 +37,7 @@ except: print("[GAGAL] Webcam")
 # Tes 5: Flask
 try:
     import flask
-    print(f"[OK] Flask {flask.__version__}")
+    print(f"[OK] Flask {version('Flask')}")
 except: print("[GAGAL] Flask")
 
 # Tes 6: MySQL
@@ -59,7 +60,7 @@ except: print("[GAGAL] Pillow")
 # Tes 8: requests
 try:
     import requests
-    print(f"[OK] Flask {requests.__version__}")
+    print(f"[OK] Requests {requests.__version__}")
 except: print("[GAGAL] requests")
 
 print("\n=== TES SELESAI ===")

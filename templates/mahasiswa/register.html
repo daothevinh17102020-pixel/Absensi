@@ -1,20 +1,58 @@
 {% extends 'base.html' %}
-{% block title %}Registrasi Mahasiswa - Sistem Absensi{% endblock %}
+{% block title %}Đăng ký sinh viên - Hệ thống điểm danh{% endblock %}
 
 {% block styles %}
 <style>
-    /* Overlay oval panduan wajah di atas video */
-    .face-oval-overlay {
-        border: 2px dashed rgba(56, 189, 248, 0.6);
-        border-radius: 50% / 60% 60% 40% 40%;
-        width: 240px;
-        height: 300px;
-        transition: border-color 0.3s;
+    /* Mirror video so it behaves like a selfie mirror */
+    #videoFeed {
+        transform: scaleX(-1);
     }
-    .face-oval-overlay.capturing {
-        border-color: #22c55e;
-        border-style: solid;
-        box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+
+    /* Oval face guide – Spotlight Mask */
+    .face-oval-overlay {
+        border: 3px solid rgba(239, 68, 68, 0.95);
+        border-radius: 50% / 60% 60% 40% 40%;
+        width: 210px;
+        height: 270px;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        box-shadow: 0 0 24px rgba(239, 68, 68, 0.45), 0 0 0 9999px rgba(0, 0, 0, 0.68);
+        pointer-events: none;
+    }
+
+    .face-oval-overlay.is-ready {
+        border-color: #10b981;
+        box-shadow: 0 0 28px rgba(16, 185, 129, 0.65), 0 0 0 9999px rgba(0, 0, 0, 0.68);
+    }
+
+    #expressionLabel.is-ready {
+        background-color: rgba(6, 78, 59, 0.96);
+        border-color: rgba(52, 211, 153, 0.9);
+    }
+
+    /* Camera modal backdrop fade */
+    @keyframes fadeInBackdrop {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+    #cameraModal[data-open="true"] {
+        animation: fadeInBackdrop 0.18s ease;
+    }
+
+    /* Modal content slide-up */
+    @keyframes slideUpModal {
+        from { transform: translateY(24px); opacity: 0; }
+        to   { transform: translateY(0);    opacity: 1; }
+    }
+    #cameraModal[data-open="true"] > .modal-content {
+        animation: slideUpModal 0.22s ease;
+    }
+
+    /* Orange progress bar glow */
+    #progressBar {
+        box-shadow: 0 0 10px rgba(251, 146, 60, 0.7);
+    }
+    #progressBarDisplay {
+        box-shadow: 0 0 6px rgba(251, 146, 60, 0.4);
     }
 </style>
 {% endblock %}
@@ -23,15 +61,15 @@
 <!-- Breadcrumb -->
 <nav class="flex text-on-surface-variant font-label-caps text-label-caps mb-6">
     <ol class="inline-flex items-center space-x-2">
-        <li><a class="hover:text-primary" href="{{ url_for('mahasiswa_index') }}">Mahasiswa</a></li>
+        <li><a class="hover:text-primary" href="{{ url_for('mahasiswa_index') }}">Sinh viên</a></li>
         <li><span class="material-symbols-outlined text-sm">chevron_right</span></li>
-        <li class="text-primary font-bold">Registrasi Baru</li>
+        <li class="text-primary font-bold">Đăng ký mới</li>
     </ol>
 </nav>
 
 <header class="mb-8">
-    <h2 class="font-headline-md text-headline-md text-on-surface">Registrasi Mahasiswa Baru</h2>
-    <p class="font-body-md text-body-md text-on-surface-variant">Daftarkan profil wajah mahasiswa untuk integrasi sistem absensi otomatis.</p>
+    <h2 class="font-headline-md text-headline-md text-on-surface">Đăng ký sinh viên mới</h2>
+    <p class="font-body-md text-body-md text-on-surface-variant">Đăng ký hồ sơ khuôn mặt của sinh viên để tích hợp với hệ thống điểm danh tự động.</p>
 </header>
 
 {% if error %}
@@ -41,352 +79,621 @@
 </div>
 {% endif %}
 
-<div class="grid grid-cols-12 gap-8">
-    <!-- FORM DATA (Kiri) -->
-    <section class="col-span-12 lg:col-span-4 flex flex-col gap-6">
-        <div class="bg-surface-container-high border border-outline-variant rounded-xl p-card-padding">
-            <div class="flex items-center gap-2 mb-6 text-primary">
-                <span class="material-symbols-outlined">badge</span>
-                <h3 class="font-title-sm text-title-sm font-bold uppercase tracking-wider">Form Data Diri</h3>
+<!-- ── Main Form (centered, standalone) ── -->
+<div class="max-w-2xl mx-auto flex flex-col gap-6">
+
+    <!-- Form Card -->
+    <div class="bg-surface-container-high border border-outline-variant rounded-xl p-card-padding">
+        <div class="flex items-center gap-2 mb-6 text-primary">
+            <span class="material-symbols-outlined">badge</span>
+            <h3 class="font-title-sm text-title-sm font-bold uppercase tracking-wider">Thông tin cá nhân</h3>
+        </div>
+
+        <form id="formMahasiswa" method="POST" action="{{ url_for('mahasiswa_register') }}" class="space-y-5">
+            <!-- Họ và tên (full width) -->
+            <div class="space-y-2">
+                <label class="font-label-caps text-label-caps text-on-surface-variant block uppercase" for="nama">Họ và tên</label>
+                <input class="w-full bg-surface-container-low border border-outline-variant rounded-lg py-3 px-4 text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                    id="nama" name="nama" placeholder="Ví dụ: Nguyễn Văn An" type="text" required />
             </div>
-            <form id="formMahasiswa" method="POST" action="{{ url_for('mahasiswa_register') }}" class="space-y-6">
+
+            <!-- Mã SV + Lớp (2 cols) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="space-y-2">
-                    <label class="font-label-caps text-label-caps text-on-surface-variant block uppercase" for="nama">Nama Lengkap</label>
+                    <label class="font-label-caps text-label-caps text-on-surface-variant block uppercase" for="nim">Mã sinh viên</label>
                     <input class="w-full bg-surface-container-low border border-outline-variant rounded-lg py-3 px-4 text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                           id="nama" name="nama" placeholder="Contoh: Adrian Wijaya" type="text" required/>
+                        id="nim" name="nim" placeholder="2024001002" type="text" required />
                 </div>
                 <div class="space-y-2">
-                    <label class="font-label-caps text-label-caps text-on-surface-variant block uppercase" for="nim">NIM</label>
-                    <input class="w-full bg-surface-container-low border border-outline-variant rounded-lg py-3 px-4 text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                           id="nim" name="nim" placeholder="2024001002" type="text" required/>
-                </div>
-                <div class="space-y-2">
-                    <label class="font-label-caps text-label-caps text-on-surface-variant block uppercase" for="kelas_id">Pilih Kelas</label>
+                    <label class="font-label-caps text-label-caps text-on-surface-variant block uppercase" for="kelas_id">Chọn lớp</label>
                     <select class="w-full bg-surface-container-low border border-outline-variant rounded-lg py-3 px-4 text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                            id="kelas_id" name="kelas_id" required>
-                        <option value="">Pilih Kelas</option>
+                        id="kelas_id" name="kelas_id" required>
+                        <option value="">Chọn lớp</option>
                         {% for k in daftar_kelas %}
                         <option value="{{ k.id }}">{{ k.nama_kelas }} ({{ k.angkatan }})</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="pt-4 flex flex-col gap-3">
-                    <!-- Tombol ambil foto (intercepted via JS, tidak submit form) -->
-                    <button id="btnMulaiFoto" type="button"
-                            class="w-full bg-primary-container text-on-primary-container font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all">
-                        <span class="material-symbols-outlined">camera</span>
-                        Mulai Ambil Foto
-                    </button>
-                    <!-- Tombol simpan data saja (submit form ke server) -->
-                    <button type="submit"
-                            class="w-full bg-surface-container border border-outline-variant text-on-surface font-semibold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-surface-variant active:scale-[0.98] transition-all">
-                        <span class="material-symbols-outlined text-[20px]">save</span>
-                        Simpan Data Saja
-                    </button>
-                </div>
-            </form>
-        </div>
-        <!-- Panduan -->
-        <div class="bg-surface-container border border-outline-variant rounded-xl p-5 flex gap-4 items-start">
-            <span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">info</span>
-            <div>
-                <p class="font-label-caps text-label-caps text-tertiary uppercase mb-1">Penting</p>
-                <p class="text-[13px] text-on-surface-variant leading-relaxed">Pastikan pencahayaan cukup dan hindari penggunaan kacamata hitam atau topi selama proses pendaftaran wajah.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- LIVE CAMERA (Kanan) -->
-    <section class="col-span-12 lg:col-span-8">
-        <div class="bg-surface-container-high border border-outline-variant rounded-xl overflow-hidden flex flex-col h-full">
-            <!-- Header kamera -->
-            <div class="p-card-padding border-b border-outline-variant flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-primary">face</span>
-                    <h3 class="font-title-sm text-title-sm font-bold text-on-surface uppercase tracking-wider">Pendaftaran Wajah</h3>
-                </div>
-                <div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-full border border-outline-variant" id="statusKamera">
-                    <span class="w-2 h-2 rounded-full bg-on-surface-variant" id="statusDot"></span>
-                    <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-tighter" id="statusText">Kamera Mati</span>
-                </div>
             </div>
 
-            <!-- Area video -->
-            <div class="flex-1 bg-surface-container-lowest p-gutter relative flex items-center justify-center overflow-hidden min-h-[400px]">
-                <div class="relative w-full max-w-[640px] aspect-[4/3] rounded-lg overflow-hidden bg-surface-dim border border-outline-variant">
-                    <!-- Video element — hidden sampai kamera aktif -->
-                    <video id="videoFeed" autoplay playsinline class="w-full h-full object-cover hidden"></video>
-                    <!-- Canvas untuk capture — hidden -->
-                    <canvas id="canvasCapture" class="hidden"></canvas>
-                    <!-- Placeholder saat kamera mati -->
-                    <div id="placeholderKamera" class="absolute inset-0 flex items-center justify-center flex-col gap-2">
-                        <span class="material-symbols-outlined text-5xl text-on-surface-variant/20">videocam_off</span>
-                        <p class="text-on-surface-variant font-body-sm">Kamera belum aktif</p>
-                        <p class="text-outline text-[11px]">Isi form dan klik "Mulai Ambil Foto"</p>
+            <!-- Photo progress card – visible after capture starts -->
+            <div id="captureStatusCard" class="hidden bg-orange-500/5 border border-orange-500/20 rounded-xl p-4">
+                <div class="flex items-center gap-4">
+                    <div class="shrink-0 bg-orange-500/10 p-2.5 rounded-xl">
+                        <span class="material-symbols-outlined text-orange-400 text-[22px]">photo_library</span>
                     </div>
-                    <!-- Face overlay guide -->
-                    <div class="absolute inset-0 flex items-center justify-center hidden" id="faceGuide">
-                        <div class="face-oval-overlay flex items-center justify-center" id="faceOval">
-                            <div class="absolute top-4 backdrop-blur-md text-[11px] px-4 py-1.5 rounded-full border font-bold transition-all duration-300" id="expressionLabel" style="color:#38bdf8; background:rgba(56,189,248,0.15); border-color:rgba(56,189,248,0.3);">
-                                😐 Sejajarkan Wajah
-                            </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="font-label-caps text-label-caps text-on-surface uppercase">Ảnh đã chụp</p>
+                            <p class="text-sm font-bold text-orange-400">
+                                <span id="fotoCountDisplay">0</span>/{{ enrollment_total }}
+                            </p>
+                        </div>
+                        <div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+                            <div class="h-full bg-orange-500 transition-all duration-500 rounded-full" id="progressBarDisplay" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Progress bar + info -->
-            <div class="p-card-padding bg-surface-container border-t border-outline-variant">
-                <div class="flex flex-col gap-4">
-                    <div class="flex justify-between items-center mb-1">
-                        <div class="flex items-center gap-3">
-                            <div class="bg-primary/10 p-2 rounded-lg">
-                                <span class="material-symbols-outlined text-primary text-[20px]">photo_library</span>
-                            </div>
-                            <div>
-                                <p class="font-label-caps text-label-caps text-on-surface uppercase">Foto Terkumpul</p>
-                                <p class="text-xl font-bold text-primary"><span id="fotoCount">0</span>/50</p>
-                            </div>
-                        </div>
-                        <div class="text-right" id="statusProses">
-                            <p class="font-label-caps text-label-caps text-on-surface-variant uppercase">Status</p>
-                            <p class="font-bold text-on-surface" id="statusLabel">Menunggu</p>
-                        </div>
-                    </div>
-                    <!-- Progress bar -->
-                    <div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
-                        <div class="h-full bg-primary-container transition-all duration-500 rounded-full shadow-[0_0_8px_rgba(56,189,248,0.5)]" id="progressBar" style="width: 0%"></div>
-                    </div>
-                    <!-- Instruksi -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                        <div class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-low border border-outline-variant">
-                            <span class="w-6 h-6 rounded-full bg-primary text-on-primary text-xs flex items-center justify-center font-bold">1</span>
-                            <p class="text-xs text-on-surface-variant leading-snug">Posisikan wajah di dalam area oval. Pastikan pencahayaan cukup.</p>
-                        </div>
-                        <div class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-low border border-outline-variant">
-                            <span class="w-6 h-6 rounded-full bg-outline text-on-surface text-xs flex items-center justify-center font-bold">2</span>
-                            <p class="text-xs text-on-surface-variant leading-snug">Tatap kamera, lalu perlahan menoleh kiri-kanan untuk variasi data wajah.</p>
-                        </div>
-                    </div>
-                </div>
+            <!-- Action buttons -->
+            <div class="pt-1 flex flex-col gap-3">
+                <button id="btnMulaiFoto" type="button"
+                    class="w-full bg-primary-container text-on-primary-container font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all">
+                    <span class="material-symbols-outlined">camera</span>
+                    Bắt đầu chụp ảnh
+                </button>
+                <button id="btnSimpanSubmit" type="submit"
+                    class="w-full bg-surface-container border border-outline-variant text-on-surface font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all text-xs">
+                    <span class="material-symbols-outlined text-[18px]">save</span>
+                    Chỉ lưu thông tin (không chụp ảnh)
+                </button>
             </div>
+        </form>
+    </div>
+
+    <!-- Info note -->
+    <div class="bg-surface-container border border-outline-variant rounded-xl p-5 flex gap-4 items-start">
+        <span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">info</span>
+        <div>
+            <p class="font-label-caps text-label-caps text-tertiary uppercase mb-1">Lưu ý quan trọng</p>
+            <p class="text-[13px] text-on-surface-variant leading-relaxed">Đảm bảo đủ ánh sáng và không đeo kính râm hoặc đội mũ trong quá trình đăng ký khuôn mặt.</p>
         </div>
-    </section>
+    </div>
 </div>
+
+
+<!-- ════════════════════════════════════════
+     CAMERA POPUP MODAL (centered overlay)
+     ════════════════════════════════════════ -->
+<div id="cameraModal"
+     class="fixed inset-0 z-50 items-center justify-center bg-black/85 backdrop-blur-sm"
+     style="display: none;">
+
+    <div class="modal-content relative bg-surface-container-high border border-outline-variant rounded-2xl overflow-hidden shadow-2xl w-full max-w-lg mx-4">
+
+        <!-- Modal Header -->
+        <div class="px-4 py-3 border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
+            <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-primary text-[20px]">face</span>
+                <h3 class="font-title-sm text-title-sm font-bold text-on-surface uppercase tracking-wider">Đăng ký khuôn mặt</h3>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- Status badge -->
+                <div class="flex items-center gap-1.5 bg-surface-container-lowest px-2.5 py-1 rounded-full border border-outline-variant" id="statusKamera">
+                    <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant" id="statusDot"></span>
+                    <span class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-tighter" id="statusText">Đang kết nối</span>
+                </div>
+                <!-- Close button -->
+                <button id="btnDongModal" type="button"
+                    class="p-1.5 rounded-lg hover:bg-surface-container-highest active:scale-95 transition-all"
+                    title="Dừng và đóng">
+                    <span class="material-symbols-outlined text-[20px] text-on-surface-variant">close</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Video area (4:3) -->
+        <div class="relative bg-black overflow-hidden" style="aspect-ratio: 4/3;">
+            <video id="videoFeed" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+            <canvas id="canvasCapture" class="hidden"></canvas>
+
+            <!-- Placeholder (shown when camera off or building gallery) -->
+            <div id="placeholderKamera" class="absolute inset-0 flex items-center justify-center flex-col gap-3 bg-surface-dim">
+                <span class="material-symbols-outlined text-5xl text-on-surface-variant/30" id="placeholderIcon">videocam_off</span>
+                <p class="text-on-surface-variant font-body-sm" id="placeholderTitle">Đang khởi động máy ảnh...</p>
+                <p class="text-outline text-[11px] text-center px-6" id="buildStatusText" style="display: none;"></p>
+            </div>
+
+            <!-- Face guide overlay (instruction banner + oval + progress bar inside video) -->
+            <div class="absolute inset-0 flex items-center justify-center hidden overflow-hidden pointer-events-none" id="faceGuide">
+
+                <!-- Instruction banner – only UI source for user guidance -->
+                <div class="absolute top-2.5 inset-x-4 flex justify-center z-20">
+                    <div class="max-w-[calc(100%-1rem)] px-4 py-2 bg-neutral-900/95 backdrop-blur-md border-2 border-sky-400/70 rounded-2xl shadow-2xl text-center text-white font-bold text-sm leading-snug transition-colors duration-150"
+                        id="expressionLabel" aria-live="polite">
+                        😐 Căn khuôn mặt vào giữa khung
+                    </div>
+                </div>
+
+                <!-- Oval guide (no text – banner above handles all instructions) -->
+                <div class="face-oval-overlay relative z-10" id="faceOval"></div>
+
+                <!-- ── Progress bar overlaid inside video (bottom) ── -->
+                <div class="absolute bottom-0 inset-x-0 z-20 px-4 pb-3 pt-8 bg-gradient-to-t from-black/80 to-transparent pointer-events-none">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-[11px] font-semibold text-white/75 uppercase tracking-wide">Ảnh đã chụp</span>
+                        <span class="text-[11px] font-bold text-orange-400">
+                            <span id="fotoCount">0</span>/{{ enrollment_total }}
+                        </span>
+                    </div>
+                    <div class="h-2.5 w-full bg-white/20 rounded-full overflow-hidden">
+                        <div class="h-full bg-orange-500 transition-all duration-500 rounded-full" id="progressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <!-- ── End progress bar ── -->
+            </div>
+        </div>
+        <!-- End video area -->
+
+    </div>
+</div>
+<!-- ════════ END CAMERA MODAL ════════ -->
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-// Elemen DOM
-const video       = document.getElementById('videoFeed');
-const canvas      = document.getElementById('canvasCapture');
-const ctx         = canvas.getContext('2d');
-const placeholder = document.getElementById('placeholderKamera');
-const faceGuide   = document.getElementById('faceGuide');
-const faceOval    = document.getElementById('faceOval');
-const btnMulai    = document.getElementById('btnMulaiFoto');
-const fotoCount   = document.getElementById('fotoCount');
-const progressBar = document.getElementById('progressBar');
-const statusDot   = document.getElementById('statusDot');
-const statusText  = document.getElementById('statusText');
-const statusLabel = document.getElementById('statusLabel');
+    const video            = document.getElementById('videoFeed');
+    const canvas           = document.getElementById('canvasCapture');
+    const ctx              = canvas.getContext('2d');
+    const placeholder      = document.getElementById('placeholderKamera');
+    const placeholderIcon  = document.getElementById('placeholderIcon');
+    const placeholderTitle = document.getElementById('placeholderTitle');
+    const buildStatusEl    = document.getElementById('buildStatusText');
+    const faceGuide        = document.getElementById('faceGuide');
+    const faceOval         = document.getElementById('faceOval');
+    const btnMulai         = document.getElementById('btnMulaiFoto');
+    const fotoCount        = document.getElementById('fotoCount');
+    const progressBar      = document.getElementById('progressBar');
+    const expressionLabel  = document.getElementById('expressionLabel');
+    const statusLabel = expressionLabel;
+    const statusDot        = document.getElementById('statusDot');
+    const statusText       = document.getElementById('statusText');
+    const cameraModal      = document.getElementById('cameraModal');
+    const btnDongModal     = document.getElementById('btnDongModal');
+    const captureStatusCard   = document.getElementById('captureStatusCard');
+    const fotoCountDisplay    = document.getElementById('fotoCountDisplay');
+    const progressBarDisplay  = document.getElementById('progressBarDisplay');
 
-const MAX_FOTO = 50;
-let captureInterval = null;
-let jumlahFoto = 0;
-let stream = null;
-let isUploading = false; // Flag anti race-condition
+    const MAX_FOTO = {{ enrollment_total }};
+    const SERVER_ENROLLMENT_STAGES = {{ enrollment_stages | tojson }};
 
-// ═══════════════════════════════════════════════════
-// TAHAP EKSPRESI — Bagi 50 foto jadi 5 tahap
-// ═══════════════════════════════════════════════════
-const EKSPRESI_STAGES = [
-    { nama: '😐 Wajah Normal',     icon: 'sentiment_neutral',    color: '#38bdf8', mulai: 0,  akhir: 9  },
-    { nama: '😊 Tersenyum',        icon: 'sentiment_satisfied',  color: '#34d399', mulai: 10, akhir: 19 },
-    { nama: '👈 Lihat Kiri',       icon: 'arrow_back',           color: '#f59e0b', mulai: 20, akhir: 29 },
-    { nama: '👉 Lihat Kanan',      icon: 'arrow_forward',        color: '#a78bfa', mulai: 30, akhir: 39 },
-    { nama: '🙂 Sedikit Menunduk', icon: 'vertical_align_bottom',color: '#f472b6', mulai: 40, akhir: 49 }
-];
+    let stream = null;
+    let captureTimer = null;
+    let activeUploadController = null;
+    let jumlahFoto = 0;
+    let isUploading = false;
+    let resetLegacyMode = false;
+    let enrollmentComplete = false;
+    let galleryBuildInProgress = false;
+    let galleryPollTimer = null;
+    let lastFeedbackReason = null;
+    let lastFeedbackAt = 0;
+    let transientFailureCount = 0;
 
-// Ambil stage berdasarkan jumlah foto saat ini
-function getCurrentStage() {
-    for (let s of EKSPRESI_STAGES) {
-        if (jumlahFoto >= s.mulai && jumlahFoto <= s.akhir) return s;
+    const CAPTURE_DELAY_MS           = 180;
+    const RETRY_DELAY_MS             = 350;
+    const STAGE_CHANGE_DELAY_MS      = 800;
+    const FEEDBACK_HOLD_MS           = 900;
+    const UPLOAD_TIMEOUT_MS          = 8000;
+    const MAX_TRANSIENT_RETRY_DELAY_MS = 4000;
+
+    // ── Modal helpers ──────────────────────────────────────────
+    function showModal() {
+        cameraModal.setAttribute('data-open', 'true');
+        cameraModal.style.display = 'flex';
     }
-    return EKSPRESI_STAGES[EKSPRESI_STAGES.length - 1];
-}
 
-// Update tampilan panduan ekspresi
-function updateEkspresiGuide() {
-    const stage = getCurrentStage();
-    const label = document.getElementById('expressionLabel');
-    if (label) {
-        label.textContent = stage.nama;
-        label.style.borderColor = stage.color + '50';
-        label.style.color = stage.color;
-        label.style.background = stage.color + '20';
+    function hideModal() {
+        cameraModal.style.display = 'none';
+        cameraModal.removeAttribute('data-open');
     }
-    // Ubah warna oval sesuai tahap
-    if (faceOval) {
-        faceOval.style.borderColor = stage.color;
+
+    function showBuildPhase() {
+        // Stop camera stream visuals, keep modal open for gallery build status
+        video.classList.add('hidden');
+        faceGuide.classList.add('hidden');
+        placeholderIcon.textContent = 'sync';
+        placeholderIcon.className = 'material-symbols-outlined text-4xl text-primary';
+        placeholderTitle.textContent = 'Đang cập nhật cơ sở dữ liệu khuôn mặt...';
+        buildStatusEl.style.display = 'block';
+        buildStatusEl.textContent   = '';
+        placeholder.classList.remove('hidden');
+        statusDot.className  = 'w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse';
+        statusText.textContent = 'Đang xử lý';
+        statusText.className = 'text-[11px] font-semibold text-yellow-500 uppercase tracking-tighter';
     }
-    // Update status label
-    statusLabel.textContent = stage.nama + ' (' + (jumlahFoto - stage.mulai + 1) + '/10)';
-}
 
-// ═══════════════════════════════════════════════════
-// LOGIKA UTAMA
-// ═══════════════════════════════════════════════════
-
-// Validasi form sebelum mulai
-function validasiForm() {
-    const nama = document.getElementById('nama').value.trim();
-    const nim  = document.getElementById('nim').value.trim();
-    const kelas = document.getElementById('kelas_id').value;
-    if (!nama || !nim || !kelas) {
-        alert('Lengkapi nama, NIM, dan kelas terlebih dahulu.');
-        return false;
+    // ── Sync progress display in form card ────────────────────
+    function syncFormProgress(count) {
+        captureStatusCard.classList.remove('hidden');
+        fotoCountDisplay.textContent  = count;
+        const pct = Math.min(100, Math.round((count / MAX_FOTO) * 100));
+        progressBarDisplay.style.width = pct + '%';
     }
-    return true;
-}
 
-// Aktifkan kamera
-async function aktifkanKamera() {
-    try {
-        stream = await navigator.mediaDevices.getUserMedia({
-            video: { width: 640, height: 480, facingMode: 'user' }
-        });
-        video.srcObject = stream;
-        video.classList.remove('hidden');
-        placeholder.classList.add('hidden');
-        faceGuide.classList.remove('hidden');
-        statusDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
-        statusText.textContent = 'Kamera Aktif';
-        statusText.className = 'text-xs font-semibold text-emerald-500 uppercase tracking-tighter';
-        return true;
-    } catch (err) {
-        alert('Gagal mengakses kamera: ' + err.message);
-        return false;
-    }
-}
+    // ── Close button ──────────────────────────────────────────
+    btnDongModal.addEventListener('click', function () {
+        dungCapture();
+    });
 
-// Capture satu frame dan kirim ke server via AJAX
-function captureFrame() {
-    // Hentikan jika sudah cukup atau sedang upload
-    if (jumlahFoto >= MAX_FOTO || isUploading) {
-        if (jumlahFoto >= MAX_FOTO) selesaiCapture();
-        return;
-    }
-    isUploading = true; // Kunci — tunggu response sebelum kirim lagi
+    // ── Start / stop / retry button ───────────────────────────
+    btnMulai.addEventListener('click', function () {
+        const nama    = document.getElementById('nama').value.trim();
+        const nim     = document.getElementById('nim').value.trim();
+        const kelasId = document.getElementById('kelas_id').value;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-
-    fetch('/api/foto/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            nama: document.getElementById('nama').value.trim(),
-            nim:  document.getElementById('nim').value.trim(),
-            kelas_id: document.getElementById('kelas_id').value,
-            foto: dataUrl,
-            index: jumlahFoto
-        })
-    })
-    .then(r => r.json())
-    .then(data => {
-        isUploading = false; // Buka kunci setelah response
-        if (data.status === 'ok') {
-            jumlahFoto++;
-            fotoCount.textContent = jumlahFoto;
-            progressBar.style.width = (jumlahFoto / MAX_FOTO * 100) + '%';
-            updateEkspresiGuide();
-
-            // Jeda antar tahap — beri waktu user ganti ekspresi
-            const stage = getCurrentStage();
-            if (jumlahFoto === stage.mulai && jumlahFoto > 0) {
-                clearInterval(captureInterval);
-                captureInterval = null;
-                faceOval.classList.remove('capturing');
-                statusLabel.textContent = '⏸ Ganti ekspresi: ' + stage.nama;
-
-                // Lanjut otomatis setelah 2 detik
-                setTimeout(() => {
-                    faceOval.classList.add('capturing');
-                    captureInterval = setInterval(captureFrame, 400);
-                }, 2000);
-            }
-
-            if (jumlahFoto >= MAX_FOTO) selesaiCapture();
-        } else if (data.status === 'selesai') {
-            // Server sudah penuh — langsung training
-            jumlahFoto = MAX_FOTO;
-            fotoCount.textContent = jumlahFoto;
-            progressBar.style.width = '100%';
-            selesaiCapture();
-        } else {
-            statusLabel.textContent = data.pesan || 'Error';
+        if (!nama || !nim || !kelasId) {
+            alert('Vui lòng nhập đầy đủ Họ tên, Mã sinh viên và Lớp!');
+            return;
         }
-    })
-    .catch(() => {
+
+        if (galleryBuildInProgress) return;
+        if (enrollmentComplete) {
+            showModal();
+            showBuildPhase();
+            mulaiBuildGallery();
+        } else if (stream) {
+            dungCapture();
+        } else {
+            muliaCapture();
+        }
+    });
+
+    // ── Open camera ───────────────────────────────────────────
+    async function bukaKamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }
+            });
+            video.srcObject = stream;
+            if (video.readyState < HTMLMediaElement.HAVE_METADATA || !video.videoWidth) {
+                await new Promise((resolve, reject) => {
+                    const timeoutId = window.setTimeout(
+                        () => reject(new Error('Máy ảnh khởi động quá lâu.')),
+                        5000
+                    );
+                    video.addEventListener('loadedmetadata', () => {
+                        clearTimeout(timeoutId);
+                        resolve();
+                    }, { once: true });
+                });
+            }
+            await video.play();
+            video.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            faceGuide.classList.remove('hidden');
+            statusDot.className  = 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse';
+            statusText.textContent = 'Máy ảnh đang bật';
+            statusText.className = 'text-[11px] font-semibold text-emerald-500 uppercase tracking-tighter';
+            return true;
+        } catch (err) {
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            stream = null;
+            video.srcObject = null;
+            alert('Không thể truy cập máy ảnh: ' + err.message);
+            return false;
+        }
+    }
+
+    // ── Stop capture with error ────────────────────────────────
+    function dungCaptureDoLoi(message) {
+        if (captureTimer) { clearTimeout(captureTimer); captureTimer = null; }
+        if (activeUploadController) { activeUploadController.abort(); activeUploadController = null; }
         isUploading = false;
-        statusLabel.textContent = 'Koneksi gagal';
-    });
-}
+        faceOval.classList.remove('is-ready');
+        statusLabel.textContent = message || 'Không thể chụp ảnh. Hãy kiểm tra dữ liệu và thử lại.';
 
-// Selesai capture → trigger training
-function selesaiCapture() {
-    clearInterval(captureInterval);
-    captureInterval = null;
-    faceOval.classList.remove('capturing');
-    statusLabel.textContent = 'Memulai training...';
-    btnMulai.disabled = true;
-    btnMulai.textContent = 'Training...';
+        btnMulai.disabled = false;
+        btnMulai.innerHTML = '<span class="material-symbols-outlined">camera</span> Bắt đầu chụp ảnh';
 
-    // Kirim request training
-    fetch('/api/training/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            nim: document.getElementById('nim').value.trim()
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+        video.srcObject = null;
+        video.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        faceGuide.classList.add('hidden');
+        statusDot.className  = 'w-1.5 h-1.5 rounded-full bg-on-surface-variant';
+        statusText.textContent = 'Máy ảnh đang tắt';
+        statusText.className = 'text-[11px] font-semibold text-on-surface-variant uppercase tracking-tighter';
+
+        hideModal();
+    }
+
+    // ── Start capture ─────────────────────────────────────────
+    async function muliaCapture() {
+        showModal();
+        const ok = await bukaKamera();
+        if (!ok) { hideModal(); return; }
+
+        jumlahFoto = 0;
+        enrollmentComplete = false;
+        resetLegacyMode = false;
+        transientFailureCount = 0;
+        fotoCount.textContent = '0';
+        progressBar.style.width = '0%';
+        faceOval.classList.remove('is-ready');
+        setPrimaryInstruction('Đặt khuôn mặt vào giữa khung oval.', 'position', true);
+
+        btnMulai.innerHTML = '<span class="material-symbols-outlined">stop</span> Dừng chụp';
+        captureStatusCard.classList.remove('hidden');
+        fotoCountDisplay.textContent = '0';
+        progressBarDisplay.style.width = '0%';
+
+        scheduleNextCapture(150);
+    }
+
+    // ── Stop capture (optionally keep modal) ──────────────────
+    function dungCapture(keepModal = false) {
+        if (captureTimer) { clearTimeout(captureTimer); captureTimer = null; }
+        if (activeUploadController) { activeUploadController.abort(); activeUploadController = null; }
+        isUploading = false;
+        faceOval.classList.remove('is-ready');
+        btnMulai.innerHTML = '<span class="material-symbols-outlined">camera</span> Bắt đầu chụp ảnh';
+        statusLabel.textContent = 'Đã dừng chụp.';
+
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+        video.srcObject = null;
+        video.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        faceGuide.classList.add('hidden');
+        statusDot.className  = 'w-1.5 h-1.5 rounded-full bg-on-surface-variant';
+        statusText.textContent = 'Máy ảnh đang tắt';
+        statusText.className = 'text-[11px] font-semibold text-on-surface-variant uppercase tracking-tighter';
+        // Reset placeholder to default text (unless build phase will override)
+        if (!keepModal) {
+            placeholderIcon.textContent = 'videocam_off';
+            placeholderIcon.className   = 'material-symbols-outlined text-5xl text-on-surface-variant/30';
+            placeholderTitle.textContent = 'Máy ảnh chưa được bật';
+            buildStatusEl.style.display = 'none';
+        }
+
+        if (!keepModal) hideModal();
+    }
+
+    function scheduleNextCapture(delay = CAPTURE_DELAY_MS) {
+        if (!stream || enrollmentComplete || galleryBuildInProgress || jumlahFoto >= MAX_FOTO) return;
+        if (captureTimer) clearTimeout(captureTimer);
+        captureTimer = window.setTimeout(captureFrame, delay);
+    }
+
+    function setPrimaryInstruction(message, reason, force = false) {
+        const now = Date.now();
+        if (!force && reason !== 'stabilizing' && reason !== lastFeedbackReason &&
+            now - lastFeedbackAt < FEEDBACK_HOLD_MS) {
+            return;
+        }
+        expressionLabel.textContent = message;
+        expressionLabel.classList.toggle('is-ready', reason === 'stabilizing');
+        lastFeedbackReason = reason;
+        lastFeedbackAt = now;
+    }
+
+    function handleRetry(data) {
+        transientFailureCount = 0;
+        const progress = data.data || {};
+        const reason   = data.reason || 'retry';
+        if (reason === 'stabilizing') {
+            faceOval.classList.add('is-ready');
+            const stable   = progress.stable || 1;
+            const required = progress.stable_required || 3;
+            const acceptedMessage = `Ảnh đạt yêu cầu — giữ yên để máy chụp (${stable}/${required})`;
+            statusLabel.textContent = acceptedMessage;
+            setPrimaryInstruction(acceptedMessage, reason, true);
+        } else {
+            faceOval.classList.remove('is-ready');
+            statusLabel.textContent = data.pesan || 'Điều chỉnh khuôn mặt rồi thử lại.';
+            setPrimaryInstruction(data.pesan || 'Điều chỉnh khuôn mặt', reason);
+        }
+        scheduleNextCapture(reason === 'stabilizing' ? CAPTURE_DELAY_MS : RETRY_DELAY_MS);
+    }
+
+    function handleTransientCaptureFailure(message) {
+        isUploading = false;
+        faceOval.classList.remove('is-ready');
+        transientFailureCount += 1;
+        const retryDelay = Math.min(
+            MAX_TRANSIENT_RETRY_DELAY_MS,
+            500 * (2 ** Math.min(transientFailureCount - 1, 3))
+        );
+        statusLabel.textContent = message || 'Kết nối tạm thời gián đoạn, đang tự thử lại...';
+        setPrimaryInstruction('Giữ khuôn mặt trong khung — hệ thống đang kết nối lại.', 'connection_retry', true);
+        scheduleNextCapture(retryDelay);
+    }
+
+    function captureFrame() {
+        if (jumlahFoto >= MAX_FOTO || isUploading || !stream) {
+            if (jumlahFoto >= MAX_FOTO && !enrollmentComplete) selesaiCapture();
+            return;
+        }
+        if (!video.videoWidth || !video.videoHeight || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+            faceOval.classList.remove('is-ready');
+            setPrimaryInstruction('Đang chờ hình ảnh từ máy ảnh...', 'camera_wait', true);
+            scheduleNextCapture(RETRY_DELAY_MS);
+            return;
+        }
+        isUploading = true;
+
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+        const abortController = new AbortController();
+        activeUploadController = abortController;
+        const uploadTimeout = window.setTimeout(() => abortController.abort(), UPLOAD_TIMEOUT_MS);
+        fetch('/api/foto/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: abortController.signal,
+            body: JSON.stringify({
+                nama:          document.getElementById('nama').value.trim(),
+                nim:           document.getElementById('nim').value.trim(),
+                kelas_id:      document.getElementById('kelas_id').value,
+                foto:          dataUrl,
+                index:         jumlahFoto,
+                protocol:      'quality_v1',
+                reset_legacy:  resetLegacyMode
+            })
         })
-    })
-    .then(r => r.json())
-    .then(data => {
-        statusLabel.textContent = data.pesan || 'Training dimulai di background';
-        statusDot.className = 'w-2 h-2 rounded-full bg-emerald-500';
-        // Matikan kamera
-        if (stream) { stream.getTracks().forEach(t => t.stop()); }
-        // Redirect setelah 2 detik
-        setTimeout(() => {
-            window.location.href = '{{ url_for("mahasiswa_index") }}';
-        }, 2000);
-    })
-    .catch(() => {
-        statusLabel.textContent = 'Training gagal — coba manual nanti.';
-    });
-}
+            .then(async response => ({ response, data: await response.json() }))
+            .then(({ response, data }) => {
+                if (activeUploadController !== abortController) return;
+                activeUploadController = null;
+                isUploading = false;
+                if (response.status === 429 || response.status >= 500) {
+                    handleTransientCaptureFailure(data.pesan);
+                    return;
+                }
+                if (data.status === 'retry') {
+                    handleRetry(data);
+                    return;
+                }
 
-// Tombol mulai
-btnMulai.addEventListener('click', async () => {
-    if (!validasiForm()) return;
-    if (captureInterval) return; // Sudah jalan
+                if (data.status === 'ok') {
+                    transientFailureCount = 0;
+                    faceOval.classList.remove('is-ready');
+                    const progress = data.data || {};
+                    jumlahFoto = Number.isInteger(progress.accepted) ? progress.accepted : (jumlahFoto + 1);
+                    fotoCount.textContent = jumlahFoto;
+                    const pct = Math.min(100, Math.round((jumlahFoto / MAX_FOTO) * 100));
+                    progressBar.style.width = pct + '%';
+                    // Sync form card progress
+                    syncFormProgress(jumlahFoto);
 
-    const ok = await aktifkanKamera();
-    if (!ok) return;
+                    statusLabel.textContent = `Đã chụp ${jumlahFoto}/${MAX_FOTO} ảnh.`;
+                    setPrimaryInstruction(
+                        progress.next_stage_label || progress.stage_label || 'Giữ tư thế hiện tại',
+                        progress.next_stage || progress.stage,
+                        true
+                    );
 
-    // Mulai capture setelah 1 detik (beri waktu posisi wajah)
-    statusLabel.textContent = 'Bersiap...';
-    btnMulai.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> Mengambil Foto...';
-    btnMulai.disabled = true;
+                    if (jumlahFoto >= MAX_FOTO) {
+                        selesaiCapture();
+                    } else {
+                        const stageChanged = progress.next_stage && progress.next_stage !== progress.stage;
+                        scheduleNextCapture(stageChanged ? STAGE_CHANGE_DELAY_MS : CAPTURE_DELAY_MS);
+                    }
+                } else if (data.status === 'selesai') {
+                    selesaiCapture();
+                } else if (data.status === 'error') {
+                    if (data.can_reset && !resetLegacyMode) {
+                        const confirmed = confirm(
+                            'Sinh viên này có ảnh đăng ký cũ chưa chuẩn. Bạn có muốn xóa ảnh cũ và đăng ký lại không?'
+                        );
+                        if (confirmed) {
+                            resetLegacyMode = true;
+                            statusLabel.textContent = 'Đang làm mới dữ liệu cũ...';
+                            scheduleNextCapture(CAPTURE_DELAY_MS);
+                        } else {
+                            dungCaptureDoLoi('Bạn đã hủy làm mới dữ liệu khuôn mặt cũ.');
+                        }
+                    } else {
+                        dungCaptureDoLoi(data.pesan);
+                    }
+                } else {
+                    dungCaptureDoLoi('Máy chủ trả về trạng thái ảnh không hỗ trợ.');
+                }
+            })
+            .catch(err => {
+                if (activeUploadController !== abortController) return;
+                activeUploadController = null;
+                console.error('Error upload:', err);
+                handleTransientCaptureFailure(
+                    err && err.name === 'AbortError'
+                        ? 'Máy chủ phản hồi chậm, đang tự thử lại...'
+                        : 'Mất kết nối máy chủ, đang tự thử lại...'
+                );
+            })
+            .finally(() => clearTimeout(uploadTimeout));
+    }
 
-    setTimeout(() => {
-        faceOval.classList.add('capturing');
-        updateEkspresiGuide();
-        captureInterval = setInterval(captureFrame, 250);
-    }, 1000);
-});
+    function selesaiCapture() {
+        if (galleryBuildInProgress) return;
+        enrollmentComplete = true;
+        // Stop camera but keep modal open for gallery build phase
+        dungCapture(true);
+        showBuildPhase();
+        btnMulai.disabled = true;
+        mulaiBuildGallery();
+    }
+
+    function mulaiBuildGallery() {
+        if (galleryBuildInProgress) return;
+        galleryBuildInProgress = true;
+        buildStatusEl.textContent = 'Đang gửi yêu cầu cập nhật gallery...';
+        btnMulai.disabled = true;
+
+        const nim = document.getElementById('nim').value.trim();
+        fetch('/api/training/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nim: nim })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    pollGalleryBuild(data.data && data.data.build_id);
+                } else {
+                    buildStatusEl.textContent = data.pesan || 'Không thể cập nhật gallery.';
+                    galleryBuildInProgress = false;
+                    btnMulai.disabled = false;
+                    btnMulai.innerHTML = '<span class="material-symbols-outlined">refresh</span> Thử cập nhật gallery';
+                    hideModal();
+                }
+            })
+            .catch(err => {
+                console.error('Error training:', err);
+                buildStatusEl.textContent = 'Lỗi kết nối khi cập nhật gallery.';
+                galleryBuildInProgress = false;
+                btnMulai.disabled = false;
+                btnMulai.innerHTML = '<span class="material-symbols-outlined">refresh</span> Thử cập nhật gallery';
+                hideModal();
+            });
+    }
+
+    function pollGalleryBuild(buildId) {
+        if (!buildId) {
+            buildStatusEl.textContent = 'Không nhận được mã cập nhật gallery.';
+            galleryBuildInProgress = false;
+            btnMulai.disabled = false;
+            hideModal();
+            return;
+        }
+        fetch('/api/training/status?build_id=' + encodeURIComponent(buildId))
+            .then(r => r.json())
+            .then(data => {
+                const build = data.data || {};
+                if (data.status !== 'ok') throw new Error(data.pesan || 'Không thể kiểm tra gallery.');
+                if (build.state === 'succeeded') {
+                    buildStatusEl.textContent = 'Gallery đã sẵn sàng. Đang chuyển hướng...';
+                    window.location.href = "{{ url_for('mahasiswa_index') }}";
+                    return;
+                }
+                if (build.state === 'failed') {
+                    throw new Error(build.last_error || 'Cập nhật gallery thất bại.');
+                }
+                buildStatusEl.textContent = 'Đang xây dựng gallery khuôn mặt...';
+                galleryPollTimer = window.setTimeout(() => pollGalleryBuild(buildId), 1000);
+            })
+            .catch(error => {
+                if (galleryPollTimer) clearTimeout(galleryPollTimer);
+                buildStatusEl.textContent = error.message || 'Cập nhật gallery thất bại.';
+                galleryBuildInProgress = false;
+                btnMulai.disabled = false;
+                btnMulai.innerHTML = '<span class="material-symbols-outlined">refresh</span> Thử cập nhật gallery';
+                hideModal();
+            });
+    }
 </script>
 {% endblock %}

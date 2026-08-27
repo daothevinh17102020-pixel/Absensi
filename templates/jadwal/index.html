@@ -1,71 +1,79 @@
 {% extends 'base.html' %}
-{% block title %}Manajemen Jadwal - Sistem Absensi{% endblock %}
+{% block title %}Quản lý lịch học - Hệ thống điểm danh{% endblock %}
 
 {% block content %}
-<div class="flex justify-between items-end mb-section-gap">
-    <div>
-        <h2 class="font-headline-md text-headline-md text-on-surface">Manajemen Jadwal</h2>
-        <p class="text-on-surface-variant font-body-md mt-1">Atur jadwal perkuliahan per matakuliah.</p>
+<div class="mb-section-gap flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div class="max-w-2xl">
+        <h2 class="font-headline-md text-headline-md text-on-surface">Quản lý lịch học</h2>
+        <p class="text-on-surface-variant font-body-md mt-1">Quản lý lịch học theo từng môn.</p>
     </div>
-    <a href="{{ url_for('jadwal_tambah') }}" class="bg-primary-container text-on-primary-container px-6 py-3 rounded-lg font-title-sm flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary-container/20">
-        <span class="material-symbols-outlined">add</span> Tambah Jadwal
+    <a href="{{ url_for('jadwal_tambah') }}" class="bg-primary-container text-on-primary-container w-full justify-center px-6 py-3 rounded-lg font-title-sm flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary-container/20 sm:w-auto">
+        <span class="material-symbols-outlined">add</span> Thêm lịch học
     </a>
 </div>
 
 <div class="bg-surface-container border border-outline-variant rounded-xl overflow-hidden">
     {% if daftar_jadwal|length > 0 %}
-    <table class="w-full text-left border-collapse">
+    <div class="overflow-x-auto overscroll-x-contain" aria-label="Bảng lịch học có thể cuộn ngang trên thiết bị nhỏ">
+    <table class="w-full min-w-[920px] text-left border-collapse">
         <thead>
             <tr class="bg-surface-container-highest/50 border-b border-outline-variant">
-                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Hari</th>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Mata Kuliah</th>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Kelas</th>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Jam Mulai</th>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Jam Selesai</th>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Batas Terlambat</th>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase text-right">Aksi</th>
+                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Thứ</th>
+                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Môn học</th>
+                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Lớp</th>
+                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Giờ bắt đầu</th>
+                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Giờ kết thúc</th>
+                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Hạn đi muộn</th>
+                <th class="sticky right-0 z-20 bg-surface-container-highest px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase text-right shadow-[-8px_0_16px_-12px_rgba(0,0,0,0.9)]">Thao tác</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-outline-variant/30">
             {% for j in daftar_jadwal %}
             <tr class="hover:bg-surface-variant/20 transition-colors group">
                 <td class="px-6 py-4">
-                    <span class="px-2.5 py-1 rounded-full bg-primary-container/10 text-primary text-[12px] font-semibold border border-primary/20">{{ j.hari }}</span>
+                    <span class="whitespace-nowrap px-2.5 py-1 rounded-full bg-primary-container/10 text-primary text-[12px] font-semibold border border-primary/20">{{ {'Senin': 'Thứ Hai', 'Selasa': 'Thứ Ba', 'Rabu': 'Thứ Tư', 'Kamis': 'Thứ Năm', 'Jumat': 'Thứ Sáu', 'Sabtu': 'Thứ Bảy', 'Minggu': 'Chủ Nhật'}.get(j.hari, j.hari) }}</span>
                 </td>
                 <td class="px-6 py-4">
                     <p class="font-body-md text-on-surface font-semibold">{{ j.nama_mk }}</p>
-                    <p class="text-[11px] text-on-surface-variant">{{ j.kode_mk }}</p>
+                    <p class="whitespace-nowrap text-[11px] text-on-surface-variant">{{ j.kode_mk }}</p>
                 </td>
-                <td class="px-6 py-4 font-body-sm text-on-surface-variant">{{ j.nama_kelas }}</td>
-                <td class="px-6 py-4 font-mono text-sm text-on-surface">{{ j.jam_mulai }}</td>
-                <td class="px-6 py-4 font-mono text-sm text-on-surface">{{ j.jam_selesai }}</td>
-                <td class="px-6 py-4 font-mono text-sm text-tertiary">{{ j.batas_terlambat }}</td>
-                <td class="px-6 py-4 text-right">
-                    <button onclick="konfirmasiHapusJadwal({{ j.id }}, '{{ j.nama_mk }} - {{ j.hari }}')" class="p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all">
-                        <span class="material-symbols-outlined text-sm">delete</span>
-                    </button>
+                <td class="whitespace-nowrap px-6 py-4 font-body-sm text-on-surface-variant">{{ j.nama_kelas }}</td>
+                <td class="whitespace-nowrap px-6 py-4 font-mono text-sm text-on-surface">{{ j.jam_mulai }}</td>
+                <td class="whitespace-nowrap px-6 py-4 font-mono text-sm text-on-surface">{{ j.jam_selesai }}</td>
+                <td class="whitespace-nowrap px-6 py-4 font-mono text-sm text-tertiary">{{ j.batas_terlambat }}</td>
+                <td class="sticky right-0 z-10 bg-surface-container px-6 py-4 text-right shadow-[-8px_0_16px_-12px_rgba(0,0,0,0.9)] group-hover:bg-surface-variant">
+                    {% set ngay_hien_thi = {'Senin': 'Thứ Hai', 'Selasa': 'Thứ Ba', 'Rabu': 'Thứ Tư', 'Kamis': 'Thứ Năm', 'Jumat': 'Thứ Sáu', 'Sabtu': 'Thứ Bảy', 'Minggu': 'Chủ Nhật'}.get(j.hari, j.hari) %}
+                    <div class="flex items-center justify-end gap-1 whitespace-nowrap">
+                        <a href="{{ url_for('jadwal_edit', id=j.id) }}" class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Sửa lịch học" aria-label="Sửa lịch {{ j.nama_mk }}">
+                            <span class="material-symbols-outlined text-sm">edit</span>
+                        </a>
+                        <button type="button" onclick='konfirmasiHapusJadwal({{ j.id }}, {{ (j.nama_mk ~ ' - ' ~ ngay_hien_thi)|tojson }})' class="p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-lg transition-colors" aria-label="Xóa lịch {{ j.nama_mk }}">
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    </div>
     {% else %}
     <div class="px-6 py-16 text-center">
         <span class="material-symbols-outlined text-4xl text-on-surface-variant/30 mb-2">calendar_month</span>
-        <p class="font-body-sm text-on-surface-variant">Belum ada jadwal. Tambahkan jadwal pertama.</p>
+        <p class="font-body-sm text-on-surface-variant">Chưa có lịch học nào. Hãy thêm lịch học đầu tiên.</p>
     </div>
     {% endif %}
 </div>
 
 <!-- Modal hapus -->
-<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden flex items-center justify-center" id="modalHapusJadwal">
-    <div class="bg-surface-container border border-outline-variant rounded-xl p-6 w-[400px] max-w-[90vw]">
-        <h3 class="font-title-sm text-title-sm text-on-surface mb-2">Hapus Jadwal</h3>
-        <p class="font-body-sm text-body-sm text-on-surface-variant mb-6">Hapus jadwal <strong id="namaJadwalHapus" class="text-on-surface"></strong>?</p>
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden flex items-center justify-center" id="modalHapusJadwal" role="dialog" aria-modal="true" aria-labelledby="judulModalHapus">
+    <div class="bg-surface-container border border-outline-variant rounded-xl p-6 w-[400px] max-w-[90vw] shadow-2xl">
+        <h3 class="font-title-sm text-title-sm text-on-surface mb-2" id="judulModalHapus">Xóa lịch học</h3>
+        <p class="font-body-sm text-body-sm text-on-surface-variant mb-6">Xóa lịch học <strong id="namaJadwalHapus" class="text-on-surface"></strong>?</p>
         <div class="flex justify-end gap-3">
-            <button onclick="document.getElementById('modalHapusJadwal').classList.add('hidden')" class="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors font-body-sm">Batal</button>
+            <button type="button" onclick="dongModalHapusJadwal()" class="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors font-body-sm">Hủy</button>
             <form id="formHapusJadwal" method="POST">
-                <button type="submit" class="px-4 py-2 rounded-lg bg-error-container text-on-error-container hover:brightness-110 transition-all font-body-sm">Ya, Hapus</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-error-container text-on-error-container hover:brightness-110 transition-all font-body-sm">Có, xóa</button>
             </form>
         </div>
     </div>
@@ -78,6 +86,10 @@ function konfirmasiHapusJadwal(id, nama) {
     document.getElementById('namaJadwalHapus').textContent = nama;
     document.getElementById('formHapusJadwal').action = '/jadwal/hapus/' + id;
     document.getElementById('modalHapusJadwal').classList.remove('hidden');
+}
+
+function dongModalHapusJadwal() {
+    document.getElementById('modalHapusJadwal').classList.add('hidden');
 }
 </script>
 {% endblock %}

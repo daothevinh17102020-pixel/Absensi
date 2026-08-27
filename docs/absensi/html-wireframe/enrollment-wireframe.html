@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>enrollment — Wireframe Giải pháp Căn giữa Webcam Laptop</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bar:#000; --line:#ccc; --muted:#777; --bg:#f4f4f4; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #000; background: var(--bg); height: 100vh; display: flex; }
+
+    /* SIDEBAR TOC */
+    .toc { width: 290px; flex-shrink: 0; background: #fff; border-right: 2px solid #000; height: 100vh; overflow-y: auto; padding: 18px 0; }
+    .toc-brand { padding: 0 18px 14px; border-bottom: 1px solid var(--line); }
+    .toc-feature { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+    .toc-title { font-size: 17px; font-weight: 800; margin-top: 2px; }
+    .toc-meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .toc-section { padding: 14px 18px 4px; font-size: 10px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); font-weight: bold; }
+    .toc a { display: block; padding: 7px 18px; font-size: 13px; color: #000; text-decoration: none; border-left: 3px solid transparent; cursor: pointer; }
+    .toc a:hover { background: #f4f4f4; }
+    .toc a.active { border-left-color: #000; background: #e8e8e8; font-weight: 700; }
+    .toc a.screen { padding-left: 34px; font-size: 12px; color: #444; }
+    .toc a.screen::before { content: "› "; color: var(--muted); }
+
+    /* MAIN */
+    .main { flex: 1; height: 100vh; display: flex; flex-direction: column; }
+    .topbar { background: #fff; border-bottom: 1px solid var(--line); padding: 10px 18px; font-size: 13px; display: flex; align-items: center; gap: 12px; }
+    .topbar .crumb { font-weight: 700; }
+    .topbar .device { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 1px 6px; }
+    .topbar .open-raw { margin-left: auto; font-size: 12px; text-decoration: underline; color: #000; }
+    .frame-wrap { flex: 1; overflow: hidden; background: var(--bg); }
+    iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+
+    /* OVERVIEW */
+    .overview { height: 100%; overflow-y: auto; padding: 24px 28px; }
+    .overview h2 { font-size: 20px; margin-bottom: 4px; font-weight: 800; }
+    .overview .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+    
+    .flowmap { display: flex; flex-direction: column; gap: 22px; }
+    .flowgroup { border: 1.5px solid #000; border-radius: 8px; padding: 16px; background: #fff; }
+    .flowgroup h3 { font-size: 15px; margin-bottom: 4px; font-weight: 700; }
+    .flowgroup .cover { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+    .chain { display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
+    .node { border: 1.5px solid #000; border-radius: 6px; padding: 8px 12px; font-size: 12px; background: #fff; cursor: pointer; text-decoration: none; color: #000; }
+    .node:hover { background: #f0f0f0; }
+    .node .n { font-weight: 800; margin-right: 4px; }
+    .arrow { color: var(--muted); padding: 0 8px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <nav class="toc">
+    <div class="toc-brand">
+      <div class="toc-feature">Absensi System</div>
+      <div class="toc-title">Căn Giữa Camera Laptop</div>
+      <div class="toc-meta">2 Giải pháp Bố cục · Centered UX</div>
+    </div>
+
+    <a class="active" data-view="overview">▤ Tổng quan Giải pháp UX</a>
+
+    <div class="toc-section">Flow 1 · Căn Giữa Camera <span class="flow-count">2 màn</span></div>
+    <a data-view="flow" data-src="scan-face-hud.html">Khắc phục lệch trục nhìn Laptop</a>
+    <a class="screen" data-view="flow" data-src="scan-face-hud.html" data-scroll="1">Popup Modal Căn Giữa (Khuyên chọn)</a>
+    <a class="screen" data-view="flow" data-src="scan-face-hud.html" data-scroll="2">Bố cục 1 Cột Dọc Căn Giữa Trang</a>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <span class="crumb" id="crumb">Tổng quan Giải pháp UX</span>
+      <span class="device" id="device">Desktop (1024px)</span>
+      <a class="open-raw" id="openRaw" href="#" target="_blank" style="display:none">Mở file HTML gốc ↗</a>
+    </div>
+    <div class="frame-wrap">
+      <!-- OVERVIEW FLOWMAP -->
+      <div class="overview" id="overview">
+        <h2>Giải quyết Triệt để Vấn đề Lệch Mắt khi Nhìn Camera Laptop</h2>
+        <div class="sub">Click vào từng ô bên dưới để xem thiết kế wireframe chi tiết. Nguồn đặc tả: <code>srs/enrollment-userflow.md</code></div>
+        
+        <div class="flowmap">
+          <div class="flowgroup">
+            <h3>Giải pháp 1 — Popup Modal Căn Giữa Màn Hình (Khuyên dùng)</h3>
+            <div class="cover">Khi bật chụp, một Popup Modal hiển thị chính giữa màn hình (Center Aligned). Vì webcam laptop luôn ở giữa cạnh trên màn hình, khung video đặt ở giữa sẽ vuông góc trực diện 90° với mắt người dùng.</div>
+            <div class="chain">
+              <a class="node" data-view="flow" data-src="scan-face-hud.html" data-scroll="1"><span class="n">1</span>Center Popup Modal Scan Mode</a>
+            </div>
+          </div>
+
+          <div class="flowgroup">
+            <h3>Giải pháp 2 — Bố cục 1 Cột Dọc Căn Giữa Trang (Centered 1-Column)</h3>
+            <div class="cover">Thay đổi bố cục trang web từ 2 cột Trái-Phải thành 1 cột dọc căn giữa, đưa khung Video Camera nằm trực tiếp ở vị trí trung tâm trang web.</div>
+            <div class="chain">
+              <a class="node" data-view="flow" data-src="scan-face-hud.html" data-scroll="2"><span class="n">2</span>Centered 1-Column Page Layout</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FLOW IFRAME -->
+      <iframe id="frame" style="display:none"></iframe>
+    </div>
+  </div>
+
+  <script>
+    const overview = document.getElementById('overview');
+    const frame = document.getElementById('frame');
+    const crumb = document.getElementById('crumb');
+    const openRaw = document.getElementById('openRaw');
+
+    function show(el){
+      if(el.dataset.view==='overview'){
+        overview.style.display='block'; frame.style.display='none';
+        crumb.textContent='Tổng quan Giải pháp UX'; openRaw.style.display='none';
+        document.querySelectorAll('.toc a').forEach(a=>a.classList.remove('active'));
+        document.querySelector('.toc a[data-view="overview"]').classList.add('active');
+        return;
+      }
+      const src = el.dataset.src, scroll = el.dataset.scroll;
+      overview.style.display='none'; frame.style.display='block';
+      frame.src = scroll ? src + '#s' + scroll : src;
+      crumb.textContent = src.replace('.html','');
+      openRaw.style.display='inline'; openRaw.href = src;
+      
+      document.querySelectorAll('.toc a').forEach(a=>a.classList.remove('active'));
+      const tocMatch=[...document.querySelectorAll('.toc a')].find(a=>a.dataset.src===src && (a.dataset.scroll||'')===(scroll||''))
+                    || [...document.querySelectorAll('.toc a')].find(a=>a.dataset.src===src && !a.classList.contains('screen'));
+      if(tocMatch) tocMatch.classList.add('active');
+    }
+
+    document.querySelectorAll('[data-view]').forEach(el => el.addEventListener('click', e=>{ e.preventDefault(); show(el); }));
+  </script>
+</body>
+</html>

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview Redesign UI Absensi - AI4BA Dark Minimalist Theme</title>
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Google Material Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#0A0A0A',
+                            card: '#141414',
+                            cardHover: '#1A1A1A',
+                            border: '#242424',
+                            borderBright: '#363636',
+                            orange: '#FF5500',
+                            orangeHover: '#E04B00',
+                            orangeGlow: 'rgba(255, 85, 0, 0.15)',
+                            textMain: '#F3F4F6',
+                            textMuted: '#9CA3AF',
+                            textSubtle: '#6B7280',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0A0A0A;
+            color: #F3F4F6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Ambient grid pattern background matching AI4BA slides */
+        .grid-bg {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        }
+
+        /* Subtle orange glow effect */
+        .orange-glow {
+            box-shadow: 0 0 25px -5px rgba(255, 85, 0, 0.25);
+        }
+
+        .border-glow {
+            box-shadow: inset 0 0 0 1px rgba(255, 85, 0, 0.3);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0A0A0A;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #262626;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FF5500;
+        }
+
+        /* Pulse dot animation */
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+        .animate-dot {
+            animation: pulseDot 2s infinite ease-in-out;
+        }
+
+        /* Scanning line effect for camera */
+        @keyframes scanline {
+            0% { top: 0%; opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { top: 100%; opacity: 0.8; }
+        }
+        .scanline {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #FF5500, transparent);
+            animation: scanline 3s linear infinite;
+        }
+    </style>
+</head>
+<body class="grid-bg min-h-screen flex flex-col justify-between">
+
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-brand-border bg-brand-bg/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <!-- Brand Logo & Badge -->
+            <div class="flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full bg-brand-orange animate-dot orange-glow"></span>
+                <span class="font-extrabold text-xl tracking-tight text-white font-mono">ABSENSI<span class="text-brand-orange">.AI</span></span>
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-brand-orange/15 text-brand-orange border border-brand-orange/30 uppercase tracking-wider">
+                    ● UNIT 3 / 6 — AI SYSTEM
+                </span>
+            </div>
+
+            <!-- Main Menu Links -->
+            <nav class="hidden md:flex items-center gap-1 text-sm font-semibold">
+                <a href="#" class="px-4 py-2 rounded-lg bg-brand-card text-brand-orange border border-brand-orange/40 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">dashboard</span>
+                    Bảng điều khiển
+                </a>
+                <a href="#" class="px-4 py-2 rounded-lg text-brand-textMuted hover:text-white hover:bg-brand-card transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">school</span>
+                    Lớp học
+                </a>
+                <a href="#" class="px-4 py-2 rounded-lg text-brand-textMuted hover:text-white hover:bg-brand-card transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">group</span>
+                    Sinh viên
+                </a>
+                <a href="#" class="px-4 py-2 rounded-lg text-brand-textMuted hover:text-white hover:bg-brand-card transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">calendar_month</span>
+                    Lịch học
+                </a>
+                <a href="#" class="px-4 py-2 rounded-lg text-brand-textMuted hover:text-white hover:bg-brand-card transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">analytics</span>
+                    Báo cáo
+                </a>
+            </nav>
+
+            <!-- Mobile Menu Toggle Button -->
+            <button id="btn-mobile-menu" class="md:hidden p-2 rounded-lg bg-brand-card text-brand-textMuted hover:text-white border border-brand-border">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+
+            <!-- User Info & Slide Number -->
+            <div class="hidden sm:flex items-center gap-4">
+                <div class="flex items-center gap-2 bg-brand-card px-3 py-1.5 rounded-lg border border-brand-border text-xs font-mono text-brand-textMuted">
+                    <span>ESP32:</span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span class="text-emerald-400 font-bold">ONLINE</span>
+                </div>
+                <div class="text-xs font-mono text-brand-orange font-bold">01 / 31</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-6 py-8 flex-1 w-full space-y-8">
+
+        <!-- Banner Header Section (AI4BA Style) -->
+        <section class="border-b border-brand-border pb-6">
+            <div class="flex items-center gap-2 text-xs font-mono font-bold text-brand-orange uppercase tracking-wider mb-2">
+                <span>— HỆ THỐNG ĐIỂM DANH KHUÔN MẶT THỜI GIAN THỰC</span>
+            </div>
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight text-white uppercase font-mono">
+                        CAMERA <span class="text-brand-orange">⇒</span> AI RECOGNITION <span class="text-brand-orange">⇒</span> ATTENDANCE
+                    </h1>
+                    <p class="text-brand-textMuted text-sm md:text-base mt-2 max-w-3xl">
+                        Tự động nhận diện khuôn mặt qua WebSocket, kiểm tra chống giả mạo LBP & ArcFace cosine similarity, tự động đồng bộ điểm danh theo thời gian thực.
+                    </p>
+                </div>
+                <!-- Badge Tags -->
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-brand-card text-brand-textMuted border border-brand-border">
+                        Ứng dụng AI cho TMU
+                    </span>
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-brand-card text-brand-textMuted border border-brand-border">
+                        Presenter: Phan Minh Hoàng
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 1: Stats Cards (AI4BA Numbered Card Style) -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- Card 1: Hadir -->
+            <div class="bg-brand-card border border-brand-border p-5 rounded-2xl relative overflow-hidden group hover:border-brand-orange/50 transition-all">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full border border-brand-orange text-brand-orange text-xs font-mono font-bold flex items-center justify-center">1</span>
+                        <span class="text-xs font-mono font-bold uppercase tracking-wider text-brand-textMuted">Có mặt hôm nay</span>
+                    </div>
+                    <span class="material-symbols-outlined text-brand-orange text-2xl">how_to_reg</span>
+                </div>
+                <div class="mt-4">
+                    <div id="stat-hadir" class="text-4xl font-extrabold font-mono text-white">42</div>
+                    <div class="flex items-center gap-2 mt-2 text-xs text-emerald-400 font-medium">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-dot"></span>
+                        <span>Trực tiếp hôm nay</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Terlambat -->
+            <div class="bg-brand-card border border-brand-border p-5 rounded-2xl relative overflow-hidden group hover:border-brand-orange/50 transition-all">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full border border-amber-500 text-amber-500 text-xs font-mono font-bold flex items-center justify-center">2</span>
+                        <span class="text-xs font-mono font-bold uppercase tracking-wider text-brand-textMuted">Đi muộn</span>
+                    </div>
+                    <span class="material-symbols-outlined text-amber-500 text-2xl">schedule</span>
+                </div>
+                <div class="mt-4">
+                    <div id="stat-terlambat" class="text-4xl font-extrabold font-mono text-amber-400">3</div>
+                    <div class="flex items-center gap-2 mt-2 text-xs text-brand-textSubtle">
+                        <span>Cần xem xét lý do</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Alpha -->
+            <div class="bg-brand-card border border-brand-border p-5 rounded-2xl relative overflow-hidden group hover:border-brand-orange/50 transition-all">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full border border-rose-500 text-rose-500 text-xs font-mono font-bold flex items-center justify-center">3</span>
+                        <span class="text-xs font-mono font-bold uppercase tracking-wider text-brand-textMuted">Vắng không phép</span>
+                    </div>
+                    <span class="material-symbols-outlined text-rose-500 text-2xl">person_off</span>
+                </div>
+                <div class="mt-4">
+                    <div id="stat-alpha" class="text-4xl font-extrabold font-mono text-rose-400">5</div>
+                    <div class="flex items-center gap-2 mt-2 text-xs text-brand-textSubtle">
+                        <span>Chưa cập nhật xin phép</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4: Total -->
+            <div class="bg-brand-card border border-brand-border p-5 rounded-2xl relative overflow-hidden group hover:border-brand-orange/50 transition-all">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full border border-brand-textSubtle text-brand-textMuted text-xs font-mono font-bold flex items-center justify-center">4</span>
+                        <span class="text-xs font-mono font-bold uppercase tracking-wider text-brand-textMuted">Tổng số sinh viên</span>
+                    </div>
+                    <span class="material-symbols-outlined text-brand-textMuted text-2xl">groups</span>
+                </div>
+                <div class="mt-4">
+                    <div class="text-4xl font-extrabold font-mono text-white">50</div>
+                    <div class="flex items-center gap-2 mt-2 text-xs text-brand-textMuted">
+                        <span>2 lớp học diễn ra hôm nay</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Camera Feed + Real-time Attendance List -->
+        <section class="grid grid-cols-12 gap-8">
+            
+            <!-- Left: Camera Live Stream Box (AI4BA Tech Frame) -->
+            <div class="col-span-12 lg:col-span-7 bg-brand-card border border-brand-border rounded-2xl overflow-hidden flex flex-col min-h-[380px] lg:h-[520px]">
+                <!-- Camera Box Header -->
+                <div class="p-4 border-b border-brand-border flex justify-between items-center bg-brand-bg/50">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-brand-orange">videocam</span>
+                        <h3 class="font-bold text-white text-base">Camera điểm danh thời gian thực</h3>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-dot"></span>
+                            <span id="connection-status" class="text-xs font-bold font-mono text-emerald-400">WebSocket Connected (1.2s)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Camera Container -->
+                <div id="camera-container" class="flex-1 bg-black relative flex items-center justify-center overflow-hidden">
+                    <!-- Note: avoid Tailwind 'hidden' class to prevent CSS priority override over JS inline style.display -->
+                    <video id="camera-feed" class="w-full h-full object-cover" autoplay playsinline muted style="display:none"></video>
+                    
+                    <!-- Scanline Animation effect -->
+                    <div class="scanline"></div>
+
+                    <!-- Placeholder Graphic when Camera Off -->
+                    <div id="camera-placeholder" class="text-center p-8 z-10">
+                        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-brand-card border border-brand-border flex items-center justify-center text-brand-orange orange-glow">
+                            <span class="material-symbols-outlined text-4xl">linked_camera</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-white font-mono">BẮT ĐẦU LUỒNG NHẬN DIỆN</h4>
+                        <p class="text-xs text-brand-textMuted mt-1 max-w-sm mx-auto">
+                            Nhấn nút "Bật camera" bên dưới để kích hoạt AI cắt frame & đối soát sinh viên tự động
+                        </p>
+                    </div>
+
+                    <!-- Anti-spoofing Badge Overlay with required JS child classes: dot and label -->
+                    <div id="spoofing-indicator" class="active absolute top-4 left-4 bg-brand-bg/90 border border-brand-border px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-2 backdrop-blur-md">
+                        <span class="dot w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span class="label text-brand-textMuted">Chống giả mạo: <strong class="text-emerald-400">Đạt</strong></span>
+                    </div>
+
+                    <!-- Recognition Overlay Container required by dashboard.js (showRecognitionSuccess & showSpoofingWarning) -->
+                    <div id="recognition-overlay" class="absolute bottom-0 inset-x-0 p-4 z-20 pointer-events-none"></div>
+
+                    <!-- Layer bbox tung khuon mat; khong chan thao tac camera -->
+                    <div id="face-box-layer" class="absolute inset-0 pointer-events-none" aria-live="polite">
+                        <!-- Prototype visual bounding box preview -->
+                        <div class="absolute top-1/4 left-1/3 w-48 h-60 border-2 border-brand-orange rounded-xl border-glow flex flex-col justify-between p-2">
+                            <div class="flex justify-between items-start text-[10px] font-mono text-brand-orange font-bold bg-brand-bg/80 px-2 py-0.5 rounded backdrop-blur-sm">
+                                <span>SIM: 0.89 (Match)</span>
+                                <span>99.4%</span>
+                            </div>
+                            <div class="bg-brand-orange text-black font-bold text-xs font-mono px-2 py-1 rounded text-center">
+                                Nguyễn Văn A — 21010045
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Processing Spinner Indicator -->
+                    <div id="processing-indicator" class="absolute bottom-16 left-4 bg-brand-bg/90 border border-brand-border px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-2 backdrop-blur-md" style="display:none">
+                        <div class="spinner w-3 h-3 border-2 border-brand-orange border-t-transparent rounded-full animate-spin"></div>
+                        <span class="text-brand-textMuted">Đang xử lý...</span>
+                    </div>
+
+                    <!-- Camera Control Buttons -->
+                    <div class="camera-controls absolute bottom-4 right-4 flex items-center gap-3 z-20">
+                        <button id="btn-camera-on" class="btn-camera btn-camera-on px-4 py-2 rounded-xl bg-brand-orange hover:bg-brand-orangeHover text-white font-bold text-sm flex items-center gap-2 shadow-lg transition-all orange-glow">
+                            <span class="material-symbols-outlined text-[18px]">videocam</span>
+                            <span>Bật camera</span>
+                        </button>
+                        <button id="btn-camera-off" class="btn-camera btn-camera-off px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm flex items-center gap-2 shadow-lg transition-all" style="display:none">
+                            <span class="material-symbols-outlined text-[18px]">videocam_off</span>
+                            <span>Tắt camera</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Absensi Today Table (AI4BA Structured Data Table) -->
+            <div class="col-span-12 lg:col-span-5 bg-brand-card border border-brand-border rounded-2xl overflow-hidden flex flex-col min-h-[380px] lg:h-[520px]">
+                <!-- Table Header -->
+                <div class="p-4 border-b border-brand-border flex justify-between items-center bg-brand-bg/50">
+                    <div>
+                        <h3 class="font-bold text-white text-base">Điểm danh mới nhất</h3>
+                        <p class="text-xs text-brand-textSubtle font-mono">Dữ liệu ghi nhận trực tiếp</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="btn-absen-manual" class="px-3 py-1.5 rounded-lg bg-brand-orange/15 hover:bg-brand-orange/25 text-brand-orange text-xs font-bold border border-brand-orange/30 flex items-center gap-1.5 transition-colors">
+                            <span class="material-symbols-outlined text-[16px]">edit_note</span>
+                            Thủ công
+                        </button>
+                        <a href="#" class="text-xs text-brand-textMuted hover:text-white font-semibold underline">Xem tất cả</a>
+                    </div>
+                </div>
+
+                <!-- Table Content Container -->
+                <div class="flex-1 overflow-y-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="sticky top-0 bg-brand-card border-b border-brand-border z-10">
+                            <tr class="text-[11px] font-mono font-bold uppercase text-brand-textMuted tracking-wider">
+                                <th class="px-4 py-3">Sinh viên</th>
+                                <th class="px-4 py-3">Thời gian</th>
+                                <th class="px-4 py-3">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <!-- ID required for JS dynamic updates; rows represent prototype static fallback (corresponding to Jinja {% for a in absensi_hari_ini %}) -->
+                        <tbody id="absensi-tbody" class="divide-y divide-brand-border text-sm font-sans">
+                            <!-- Row 1 -->
+                            <tr class="hover:bg-brand-cardHover transition-colors">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-full bg-brand-border flex items-center justify-center font-bold text-brand-orange font-mono text-xs border border-brand-border">
+                                            NA
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-white">Nguyễn Văn A</p>
+                                            <p class="text-xs text-brand-textSubtle font-mono">21010045 — CNTT K16</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-xs font-mono text-brand-textMuted">07:45:12</td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-bold border border-emerald-500/20">Có mặt</span>
+                                </td>
+                            </tr>
+                            <!-- Row 2 -->
+                            <tr class="hover:bg-brand-cardHover transition-colors">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-full bg-brand-border flex items-center justify-center font-bold text-amber-500 font-mono text-xs border border-brand-border">
+                                            TB
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-white">Trần Thị B</p>
+                                            <p class="text-xs text-brand-textSubtle font-mono">21010088 — CNTT K16</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-xs font-mono text-brand-textMuted">08:12:05</td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-400 text-xs font-bold border border-amber-500/20">Đi muộn</span>
+                                </td>
+                            </tr>
+                            <!-- Row 3 -->
+                            <tr class="hover:bg-brand-cardHover transition-colors">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-full bg-brand-border flex items-center justify-center font-bold text-blue-400 font-mono text-xs border border-brand-border">
+                                            LC
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-white">Lê Văn C</p>
+                                            <p class="text-xs text-brand-textSubtle font-mono">21010102 — KHMT K15</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-xs font-mono text-brand-textMuted">08:00:00</td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-400 text-xs font-bold border border-blue-500/20" title="Lý do: Đi khám bệnh">Vắng có phép</span>
+                                </td>
+                            </tr>
+                            <!-- Row 4 -->
+                            <tr class="hover:bg-brand-cardHover transition-colors">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-full bg-brand-border flex items-center justify-center font-bold text-rose-400 font-mono text-xs border border-brand-border">
+                                            PD
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-white">Phạm Văn D</p>
+                                            <p class="text-xs text-brand-textSubtle font-mono">21010150 — CNTT K16</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-xs font-mono text-brand-textMuted">—</td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2.5 py-1 rounded-full bg-rose-500/15 text-rose-400 text-xs font-bold border border-rose-500/20">Vắng không phép</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: AI System Architecture & Model Parameters (AI4BA Slide Style Table/Grid) -->
+        <section class="grid grid-cols-12 gap-8">
+            <!-- Left: Attendance Rate Chart Placeholder -->
+            <div class="col-span-12 lg:col-span-6 bg-brand-card border border-brand-border rounded-2xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-brand-orange"></span>
+                        <h4 class="font-mono font-bold text-white uppercase text-sm">TỶ LỆ CÓ MẶT THEO LỚP</h4>
+                    </div>
+                    <span class="material-symbols-outlined text-brand-textMuted">bar_chart</span>
+                </div>
+                <!-- Progress Bars Representation -->
+                <div class="space-y-4 pt-2">
+                    <div>
+                        <div class="flex justify-between text-xs font-mono mb-1">
+                            <span class="text-white">Lớp L01 — Học máy ứng dụng</span>
+                            <span class="text-brand-orange font-bold">92% (23/25)</span>
+                        </div>
+                        <div class="w-full bg-brand-border h-2 rounded-full overflow-hidden">
+                            <div class="bg-brand-orange h-full rounded-full" style="width: 92%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs font-mono mb-1">
+                            <span class="text-white">Lớp L02 — Trí tuệ nhân tạo</span>
+                            <span class="text-emerald-400 font-bold">88% (22/25)</span>
+                        </div>
+                        <div class="w-full bg-brand-border h-2 rounded-full overflow-hidden">
+                            <div class="bg-emerald-500 h-full rounded-full" style="width: 88%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: AI Model System Specs -->
+            <div class="col-span-12 lg:col-span-6 bg-brand-card border border-brand-border rounded-2xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-brand-orange"></span>
+                        <h4 class="font-mono font-bold text-white uppercase text-sm">THÔNG SỐ MÔ HÌNH AI & VẬN HÀNH</h4>
+                    </div>
+                    <span class="material-symbols-outlined text-brand-orange">tune</span>
+                </div>
+                
+                <div class="space-y-3 font-mono text-xs">
+                    <div class="p-3 bg-brand-bg rounded-xl border border-brand-border flex justify-between items-center">
+                        <div>
+                            <p class="text-brand-orange font-bold">ArcFace Cosine Similarity</p>
+                            <p class="text-brand-textSubtle text-[11px]">Trích xuất 512-dim face vector embedding</p>
+                        </div>
+                        <span class="px-2.5 py-1 rounded bg-brand-orange/15 text-brand-orange font-bold">Thresh: 0.68</span>
+                    </div>
+
+                    <div class="p-3 bg-brand-bg rounded-xl border border-brand-border flex justify-between items-center">
+                        <div>
+                            <p class="text-emerald-400 font-bold">LBP Anti-Spoofing Detector</p>
+                            <p class="text-brand-textSubtle text-[11px]">Phát hiện giả mạo khuôn mặt bằng ảnh/video</p>
+                        </div>
+                        <span class="px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-400 font-bold">Thresh: 0.75</span>
+                    </div>
+
+                    <div class="p-3 bg-brand-bg rounded-xl border border-brand-border flex justify-between items-center">
+                        <div>
+                            <p class="text-brand-textMuted font-bold">WebSocket Streaming Frequency</p>
+                            <p class="text-brand-textSubtle text-[11px]">Tốc độ gửi frame tránh nghẽn Cloud Backend</p>
+                        </div>
+                        <span class="px-2.5 py-1 rounded bg-brand-border text-white font-bold">1200ms / frame</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Absen Manual (100% complete element IDs: manual-jadwal, manual-mahasiswa, manual-status-group, alasan-group, manual-alasan, manual-error, manual-error-text, modal-cancel, modal-submit) -->
+    <div id="modal-absen-manual" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" id="modal-overlay"></div>
+        <div class="bg-brand-card border border-brand-border rounded-2xl w-full max-w-md shadow-2xl relative z-10 overflow-hidden">
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-brand-border flex justify-between items-center bg-brand-bg">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-brand-orange/15 text-brand-orange border border-brand-orange/30 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[20px]">edit_note</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base">Điểm danh thủ công</h3>
+                        <p class="text-xs text-brand-textSubtle font-mono">Ghi nhận điểm danh trực tiếp</p>
+                    </div>
+                </div>
+                <button id="modal-close" class="w-8 h-8 rounded-lg hover:bg-brand-border flex items-center justify-center text-brand-textMuted hover:text-white">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-5 space-y-4 text-xs font-sans">
+                <div>
+                    <label class="block font-mono font-bold uppercase text-brand-textMuted mb-1.5">Lịch học hôm nay</label>
+                    <select id="manual-jadwal" class="w-full px-3 py-2.5 rounded-xl bg-brand-bg border border-brand-border text-white outline-none focus:border-brand-orange">
+                        <option value="">-- Chọn lịch học --</option>
+                        <option value="1" selected>L01 — Học máy ứng dụng (07:30 - 09:30)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-mono font-bold uppercase text-brand-textMuted mb-1.5">Sinh viên</label>
+                    <select id="manual-mahasiswa" class="w-full px-3 py-2.5 rounded-xl bg-brand-bg border border-brand-border text-white outline-none focus:border-brand-orange">
+                        <option value="">-- Chọn sinh viên --</option>
+                        <option value="21010045">21010045 — Nguyễn Văn A</option>
+                        <option value="21010088">21010088 — Trần Thị B</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-mono font-bold uppercase text-brand-textMuted mb-1.5">Trạng thái điểm danh</label>
+                    <div class="grid grid-cols-5 gap-1.5" id="manual-status-group">
+                        <button type="button" data-status="hadir" class="status-btn px-2 py-2 rounded-lg border border-brand-border bg-brand-bg text-brand-textMuted hover:border-emerald-500 hover:text-emerald-400 font-bold transition-all text-[11px]">Có mặt</button>
+                        <button type="button" data-status="terlambat" class="status-btn px-2 py-2 rounded-lg border border-brand-border bg-brand-bg text-brand-textMuted hover:border-amber-500 hover:text-amber-400 font-bold transition-all text-[11px]">Đi muộn</button>
+                        <button type="button" data-status="izin" class="status-btn px-2 py-2 rounded-lg border border-brand-border bg-brand-bg text-brand-textMuted hover:border-blue-400 hover:text-blue-400 font-bold transition-all text-[11px]">Có phép</button>
+                        <button type="button" data-status="sakit" class="status-btn px-2 py-2 rounded-lg border border-brand-border bg-brand-bg text-brand-textMuted hover:border-amber-400 hover:text-amber-400 font-bold transition-all text-[11px]">Nghỉ ốm</button>
+                        <button type="button" data-status="alpha" class="status-btn px-2 py-2 rounded-lg border border-brand-border bg-brand-bg text-brand-textMuted hover:border-rose-500 hover:text-rose-400 font-bold transition-all text-[11px]">Vắng mặt</button>
+                    </div>
+                </div>
+
+                <!-- Alasan Group for izin/sakit -->
+                <div id="alasan-group" class="hidden">
+                    <label class="block font-mono font-bold uppercase text-brand-textMuted mb-1.5">Lý do nghỉ</label>
+                    <input id="manual-alasan" type="text" placeholder="Nhập lý do vắng có phép/nghỉ ốm..."
+                        class="w-full px-3 py-2.5 rounded-xl bg-brand-bg border border-brand-border text-white text-xs outline-none focus:border-brand-orange placeholder:text-brand-textSubtle">
+                </div>
+
+                <!-- Error Container -->
+                <div id="manual-error" class="hidden bg-rose-500/10 border border-rose-500/30 rounded-lg p-3 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-rose-400 text-[16px]">error</span>
+                    <span class="text-xs text-rose-300 font-mono" id="manual-error-text"></span>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-5 border-t border-brand-border bg-brand-bg flex justify-end gap-3">
+                <button id="modal-cancel" class="px-4 py-2 rounded-xl text-xs font-bold text-brand-textMuted hover:text-white hover:bg-brand-border transition-colors">Hủy</button>
+                <button id="modal-submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-brand-orange hover:bg-brand-orangeHover text-white flex items-center gap-1.5 shadow-md">
+                    <span class="material-symbols-outlined text-[16px]">save</span>
+                    Xác nhận lưu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Root Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <!-- Footer -->
+    <footer class="border-t border-brand-border py-4 bg-brand-bg">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs font-mono text-brand-textSubtle">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-white">AI4BA</span>
+                <span>|</span>
+                <span>Unit 3 — From Prompt ⇒ Skill ⇒ Reusable System</span>
+            </div>
+            <div>
+                Preview Layout Redesign — Absensi Face Recognition System
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive Mock Script (For standalone preview testing only; strip script block when converting to Flask Jinja template) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnCamOn = document.getElementById('btn-camera-on');
+            const btnCamOff = document.getElementById('btn-camera-off');
+            const placeholder = document.getElementById('camera-placeholder');
+            const video = document.getElementById('camera-feed');
+            
+            const btnManual = document.getElementById('btn-absen-manual');
+            const modal = document.getElementById('modal-absen-manual');
+            const modalClose = document.getElementById('modal-close');
+            const modalCancel = document.getElementById('modal-cancel');
+            const modalOverlay = document.getElementById('modal-overlay');
+
+            btnCamOn?.addEventListener('click', () => {
+                btnCamOn.style.display = 'none';
+                btnCamOff.style.display = 'flex';
+                placeholder.style.display = 'none';
+                video.style.display = 'block';
+            });
+
+            btnCamOff?.addEventListener('click', () => {
+                btnCamOff.style.display = 'none';
+                btnCamOn.style.display = 'flex';
+                video.style.display = 'none';
+                placeholder.style.display = 'block';
+            });
+
+            const toggleModal = (show) => {
+                if (show) modal.classList.remove('hidden');
+                else modal.classList.add('hidden');
+            };
+
+            btnManual?.addEventListener('click', () => toggleModal(true));
+            modalClose?.addEventListener('click', () => toggleModal(false));
+            modalCancel?.addEventListener('click', () => toggleModal(false));
+            modalOverlay?.addEventListener('click', () => toggleModal(false));
+        });
+    </script>
+</body>
+</html>

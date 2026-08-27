@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
-{% block title %}Detail Kelas: {{ kelas.nama_kelas }} - Sistem Absensi{% endblock %}
+{% block title %}Chi tiết lớp: {{ kelas.nama_kelas }} - Hệ thống điểm danh{% endblock %}
 
 {% block content %}
 <!-- Breadcrumb -->
 <nav class="flex text-on-surface-variant font-label-caps text-label-caps mb-6">
     <ol class="inline-flex items-center space-x-2">
-        <li><a class="hover:text-primary" href="{{ url_for('kelas_index') }}">Kelas &amp; MK</a></li>
+        <li><a class="hover:text-primary" href="{{ url_for('kelas_index') }}">Lớp &amp; môn học</a></li>
         <li><span class="material-symbols-outlined text-sm">chevron_right</span></li>
-        <li class="text-primary font-bold">Detail Kelas: {{ kelas.nama_kelas }}</li>
+        <li class="text-primary font-bold">Chi tiết lớp: {{ kelas.nama_kelas }}</li>
     </ol>
 </nav>
 
@@ -17,7 +17,7 @@
         <div class="z-10">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-container/10 border border-primary/20 text-primary font-label-caps text-[10px] mb-3">
                 <span class="material-symbols-outlined text-[14px]">school</span>
-                ANGKATAN {{ kelas.angkatan }}
+                KHÓA {{ kelas.angkatan }}
             </div>
             <h2 class="font-display-lg text-display-lg text-on-surface">{{ kelas.nama_kelas }}</h2>
         </div>
@@ -26,14 +26,14 @@
     <div class="md:col-span-2 bg-surface-container border border-outline-variant p-card-padding rounded-xl flex flex-col items-center justify-center text-center space-y-2 hover:border-primary/50 transition-colors">
         <span class="material-symbols-outlined text-3xl text-tertiary">calendar_today</span>
         <div>
-            <p class="text-[10px] font-label-caps text-on-surface-variant uppercase">Angkatan</p>
+            <p class="text-[10px] font-label-caps text-on-surface-variant uppercase">Khóa</p>
             <p class="font-display-lg text-display-lg text-on-surface">{{ kelas.angkatan }}</p>
         </div>
     </div>
     <div class="md:col-span-2 bg-surface-container border border-outline-variant p-card-padding rounded-xl flex flex-col items-center justify-center text-center space-y-2 hover:border-primary/50 transition-colors">
         <span class="material-symbols-outlined text-3xl text-primary">group</span>
         <div>
-            <p class="text-[10px] font-label-caps text-on-surface-variant uppercase">Total Mahasiswa</p>
+            <p class="text-[10px] font-label-caps text-on-surface-variant uppercase">Tổng số sinh viên</p>
             <p class="font-display-lg text-display-lg text-on-surface">{{ jumlah_mhs }}</p>
         </div>
     </div>
@@ -43,12 +43,12 @@
 <section class="space-y-4">
     <div class="flex items-center justify-between">
         <div>
-            <h3 class="font-headline-md text-headline-md text-on-surface">Daftar Mata Kuliah</h3>
-            <p class="font-body-sm text-body-sm text-on-surface-variant">{{ matakuliah|length }} mata kuliah terdaftar</p>
+            <h3 class="font-headline-md text-headline-md text-on-surface">Danh sách môn học</h3>
+            <p class="font-body-sm text-body-sm text-on-surface-variant">{{ matakuliah|length }} môn học đã đăng ký</p>
         </div>
         <a href="{{ url_for('matakuliah_tambah', kelas_id=kelas.id) }}" class="flex items-center gap-2 px-5 py-2.5 bg-primary-container text-on-primary-container font-bold rounded-lg hover:brightness-110 transition-all shadow-lg shadow-primary/10">
             <span class="material-symbols-outlined">add_circle</span>
-            Tambah Mata Kuliah
+            Thêm môn học
         </a>
     </div>
 
@@ -57,10 +57,10 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-surface-container-highest/50 border-b border-outline-variant">
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Kode MK</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Nama Mata Kuliah</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider text-center">SKS</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider text-right">Aksi</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Mã môn học</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Tên môn học</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider text-center">Số tín chỉ</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider text-right">Thao tác</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant">
@@ -78,7 +78,7 @@
                             <a href="{{ url_for('matakuliah_edit', id=mk.id) }}" class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg">
                                 <span class="material-symbols-outlined text-sm">edit</span>
                             </a>
-                            <button onclick="konfirmasiHapusMK({{ mk.id }}, '{{ mk.nama_mk }}')" class="p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-lg">
+                            <button onclick='konfirmasiHapusMK({{ mk.id }}, {{ mk.nama_mk|tojson }})' class="p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-lg">
                                 <span class="material-symbols-outlined text-sm">delete</span>
                             </button>
                         </div>
@@ -90,7 +90,7 @@
         {% else %}
         <div class="px-6 py-12 text-center">
             <span class="material-symbols-outlined text-4xl text-on-surface-variant/30 mb-2">menu_book</span>
-            <p class="font-body-sm text-on-surface-variant">Belum ada mata kuliah. Klik tombol "Tambah Mata Kuliah" untuk memulai.</p>
+            <p class="font-body-sm text-on-surface-variant">Chưa có môn học nào. Nhấp vào nút "Thêm môn học" để bắt đầu.</p>
         </div>
         {% endif %}
     </div>
@@ -99,14 +99,14 @@
 <!-- Modal hapus MK -->
 <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden flex items-center justify-center" id="modalHapusMK">
     <div class="bg-surface-container border border-outline-variant rounded-xl p-6 w-[400px] max-w-[90vw]">
-        <h3 class="font-title-sm text-title-sm text-on-surface mb-2">Hapus Mata Kuliah</h3>
+        <h3 class="font-title-sm text-title-sm text-on-surface mb-2">Xóa môn học</h3>
         <p class="font-body-sm text-body-sm text-on-surface-variant mb-6">
-            Hapus <strong id="namaMKHapus" class="text-on-surface"></strong>? Semua jadwal terkait juga akan terhapus.
+            Xóa <strong id="namaMKHapus" class="text-on-surface"></strong>? Tất cả lịch học liên quan cũng sẽ bị xóa.
         </p>
         <div class="flex justify-end gap-3">
-            <button onclick="document.getElementById('modalHapusMK').classList.add('hidden')" class="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors font-body-sm">Batal</button>
+            <button onclick="document.getElementById('modalHapusMK').classList.add('hidden')" class="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors font-body-sm">Hủy</button>
             <form id="formHapusMK" method="POST">
-                <button type="submit" class="px-4 py-2 rounded-lg bg-error-container text-on-error-container hover:brightness-110 transition-all font-body-sm">Ya, Hapus</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-error-container text-on-error-container hover:brightness-110 transition-all font-body-sm">Có, xóa</button>
             </form>
         </div>
     </div>

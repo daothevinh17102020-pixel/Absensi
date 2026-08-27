@@ -1,22 +1,22 @@
 {% extends 'base.html' %}
-{% block title %}Laporan Kehadiran - Sistem Absensi{% endblock %}
+{% block title %}Báo cáo điểm danh - Hệ thống điểm danh{% endblock %}
 
 {% block content %}
 <!-- Header -->
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
     <div>
-        <h2 class="font-headline-md text-headline-md text-on-surface">Laporan Kehadiran</h2>
-        <p class="font-body-sm text-body-sm text-on-surface-variant">Analisis data statistik absensi mahasiswa periode berjalan.</p>
+        <h2 class="font-headline-md text-headline-md text-on-surface">Báo cáo điểm danh</h2>
+        <p class="font-body-sm text-body-sm text-on-surface-variant">Phân tích dữ liệu thống kê điểm danh của sinh viên trong kỳ hiện tại.</p>
     </div>
     <div class="flex items-center gap-3">
         <!-- Periode filter -->
         <div class="flex bg-surface-container-high border border-outline-variant rounded-lg overflow-hidden">
-            <a href="{{ url_for('laporan_index', periode='bulan') }}" class="px-4 py-2 text-body-sm font-semibold transition-all {% if periode == 'bulan' %}bg-primary-container text-on-primary-container{% else %}text-on-surface-variant hover:bg-surface-variant{% endif %}">Bulan Ini</a>
-            <a href="{{ url_for('laporan_index', periode='semester') }}" class="px-4 py-2 text-body-sm font-semibold transition-all {% if periode == 'semester' %}bg-primary-container text-on-primary-container{% else %}text-on-surface-variant hover:bg-surface-variant{% endif %}">Semester</a>
+            <a href="{{ url_for('laporan_index', periode='bulan') }}" class="px-4 py-2 text-body-sm font-semibold transition-all {% if periode == 'bulan' %}bg-primary-container text-on-primary-container{% else %}text-on-surface-variant hover:bg-surface-variant{% endif %}">Tháng này</a>
+            <a href="{{ url_for('laporan_index', periode='semester') }}" class="px-4 py-2 text-body-sm font-semibold transition-all {% if periode == 'semester' %}bg-primary-container text-on-primary-container{% else %}text-on-surface-variant hover:bg-surface-variant{% endif %}">Học kỳ</a>
         </div>
         <a href="{{ url_for('absensi_export', format='xlsx') }}" class="bg-primary-container text-on-primary-container px-5 py-2.5 rounded-lg flex items-center gap-2 font-title-sm hover:brightness-110 transition-all shadow-lg shadow-primary-container/20">
             <span class="material-symbols-outlined text-[20px]">print</span>
-            Cetak Laporan
+            In báo cáo
         </a>
     </div>
 </div>
@@ -27,8 +27,8 @@
     <div class="col-span-12 lg:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl p-card-padding">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h4 class="font-title-sm text-title-sm text-on-surface">Overview Kehadiran</h4>
-                <p class="text-body-sm text-on-surface-variant">Distribusi status seluruh mahasiswa</p>
+                <h4 class="font-title-sm text-title-sm text-on-surface">Tổng quan điểm danh</h4>
+                <p class="text-body-sm text-on-surface-variant">Phân bố trạng thái của toàn bộ sinh viên</p>
             </div>
             <span class="material-symbols-outlined text-on-surface-variant">info</span>
         </div>
@@ -53,7 +53,7 @@
                     </svg>
                     <div class="absolute inset-0 flex flex-col items-center justify-center">
                         <span class="text-3xl font-bold text-on-surface">{{ persen.hadir }}%</span>
-                        <span class="text-[10px] text-on-surface-variant uppercase tracking-widest">Kehadiran</span>
+                        <span class="text-[10px] text-on-surface-variant uppercase tracking-widest">Có mặt</span>
                     </div>
                 </div>
             </div>
@@ -63,34 +63,34 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <span class="w-3 h-3 rounded-full bg-primary"></span>
-                        <span class="text-body-sm text-on-surface">Hadir Tepat Waktu</span>
+                        <span class="text-body-sm text-on-surface">Có mặt đúng giờ</span>
                     </div>
                     <span class="font-bold text-primary">{{ persen.hadir }}%</span>
                 </div>
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <span class="w-3 h-3 rounded-full bg-tertiary"></span>
-                        <span class="text-body-sm text-on-surface">Terlambat</span>
+                        <span class="text-body-sm text-on-surface">Đi muộn</span>
                     </div>
                     <span class="font-bold text-tertiary">{{ persen.terlambat }}%</span>
                 </div>
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <span class="w-3 h-3 rounded-full bg-secondary"></span>
-                        <span class="text-body-sm text-on-surface">Izin</span>
+                        <span class="text-body-sm text-on-surface">Vắng có phép</span>
                     </div>
                     <span class="font-bold text-secondary">{{ persen.izin }}%</span>
                 </div>
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <span class="w-3 h-3 rounded-full bg-error"></span>
-                        <span class="text-body-sm text-on-surface">Alpha / Tanpa Ket.</span>
+                        <span class="text-body-sm text-on-surface">Vắng không phép</span>
                     </div>
                     <span class="font-bold text-error">{{ persen.alpha }}%</span>
                 </div>
                 <div class="pt-3 border-t border-outline-variant">
                     <div class="flex items-center justify-between text-on-surface-variant text-body-sm">
-                        <span>Total Record</span>
+                        <span>Tổng số bản ghi</span>
                         <span class="font-bold text-on-surface">{{ persen.total }}</span>
                     </div>
                 </div>
@@ -101,18 +101,18 @@
     <!-- Highlight Cards -->
     <div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
         <div class="bg-surface-container-low border border-outline-variant rounded-xl p-card-padding flex-1">
-            <p class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mb-3">Mahasiswa Terajin</p>
+            <p class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mb-3">Sinh viên chuyên cần nhất</p>
             {% if top_mahasiswa %}
             <h3 class="font-headline-md text-headline-md text-on-surface">{{ top_mahasiswa.nama }}</h3>
-            <p class="text-body-sm text-primary mt-1">{{ top_mahasiswa.nama_kelas }} — {{ top_mahasiswa.persen }}% Kehadiran</p>
+            <p class="text-body-sm text-primary mt-1">{{ top_mahasiswa.nama_kelas }} — {{ top_mahasiswa.persen }}% có mặt</p>
             {% else %}
-            <p class="text-on-surface-variant font-body-sm">Belum ada data</p>
+            <p class="text-on-surface-variant font-body-sm">Chưa có dữ liệu</p>
             {% endif %}
         </div>
         <div class="bg-surface-container-low border border-outline-variant rounded-xl p-card-padding flex-1">
-            <p class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mb-3">Total Kelas Aktif</p>
+            <p class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mb-3">Tổng số lớp đang hoạt động</p>
             <h3 class="font-headline-md text-headline-md text-on-surface">{{ total_kelas }}</h3>
-            <p class="text-body-sm text-primary mt-1">{{ total_mahasiswa }} mahasiswa terdaftar</p>
+            <p class="text-body-sm text-primary mt-1">{{ total_mahasiswa }} sinh viên đã đăng ký</p>
         </div>
     </div>
 </section>
@@ -120,7 +120,7 @@
 <!-- Row 2: Peringkat Per Kelas -->
 <section>
     <div class="flex justify-between items-center mb-6">
-        <h4 class="font-title-sm text-title-sm text-on-surface">Peringkat Kehadiran Per Kelas</h4>
+        <h4 class="font-title-sm text-title-sm text-on-surface">Xếp hạng tỷ lệ có mặt theo lớp</h4>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {% for kls in ranking_kelas %}
@@ -134,7 +134,7 @@
                 </span>
             </div>
             <h5 class="font-body-md font-bold text-on-surface">{{ kls.nama_kelas }}</h5>
-            <p class="text-[11px] text-on-surface-variant">Angkatan {{ kls.angkatan }}</p>
+            <p class="text-[11px] text-on-surface-variant">Khóa {{ kls.angkatan }}</p>
             <div class="mt-3 h-1.5 w-full bg-surface-variant rounded-full overflow-hidden">
                 <div class="h-full rounded-full transition-all {% if kls.persen >= 90 %}bg-emerald-400{% elif kls.persen >= 75 %}bg-primary{% elif kls.persen >= 60 %}bg-tertiary{% else %}bg-error{% endif %}" style="width: {{ kls.persen }}%"></div>
             </div>
@@ -142,7 +142,7 @@
         {% else %}
         <div class="col-span-full text-center py-8">
             <span class="material-symbols-outlined text-3xl text-on-surface-variant/20 mb-2">analytics</span>
-            <p class="text-body-sm text-on-surface-variant">Belum ada data kehadiran per kelas.</p>
+            <p class="text-body-sm text-on-surface-variant">Chưa có dữ liệu điểm danh theo lớp.</p>
         </div>
         {% endfor %}
     </div>

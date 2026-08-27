@@ -17,11 +17,51 @@
     height: 100%;
     object-fit: cover;
     display: none;
+    /* Mirror only the user-facing preview. The capture canvas remains raw. */
+    transform: scaleX(-1);
 }
 
 #camera-feed.active {
     display: block;
 }
+
+/* Bbox is positioned by JS after accounting for object-fit: cover and mirror. */
+#face-box-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    pointer-events: none;
+}
+
+.face-box {
+    position: absolute;
+    border: 2px solid var(--face-box-color);
+    border-radius: 6px;
+    box-sizing: border-box;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--face-box-color) 30%, transparent);
+    transition: left 120ms linear, top 120ms linear, width 120ms linear, height 120ms linear;
+}
+
+.face-box-label {
+    position: absolute;
+    top: -28px;
+    left: -2px;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 4px 7px;
+    border-radius: 5px 5px 5px 0;
+    background: var(--face-box-color);
+    color: #07130d;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+}
+
+.face-box.warning { --face-box-color: #facc15; }
+.face-box.error { --face-box-color: #f87171; }
+.face-box.recognized { --face-box-color: #34d399; }
 
 /* Overlay saat kamera mati */
 #camera-placeholder {

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard - Sistem Absensi{% endblock %}
+{% block title %}Bảng điều khiển - Hệ thống điểm danh{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -9,11 +9,13 @@
 <!-- Section 1: Stats Cards -->
 <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <!-- Hadir -->
-    <div class="bg-surface-container-low border border-outline-variant p-card-padding rounded-xl relative overflow-hidden group">
+    <div
+        class="bg-surface-container-low border border-outline-variant p-card-padding rounded-xl relative overflow-hidden group">
         <div class="flex justify-between items-start relative z-10">
             <div>
-                <p class="text-on-surface-variant text-label-caps uppercase font-label-caps">Hadir Hari Ini</p>
-                <h3 id="stat-hadir" class="text-display-lg font-display-lg text-primary mt-1">{{ statistik.hadir_hari_ini }}</h3>
+                <p class="text-on-surface-variant text-label-caps uppercase font-label-caps">Có mặt hôm nay</p>
+                <h3 id="stat-hadir" class="text-display-lg font-display-lg text-primary mt-1">{{
+                    statistik.hadir_hari_ini }}</h3>
             </div>
             <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                 <span class="material-symbols-outlined text-primary">how_to_reg</span>
@@ -21,44 +23,49 @@
         </div>
         <div class="mt-4 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span class="text-body-sm font-body-sm text-emerald-500">Live hari ini</span>
+            <span class="text-body-sm font-body-sm text-emerald-500">Trực tiếp hôm nay</span>
         </div>
     </div>
     <!-- Terlambat -->
-    <div class="bg-surface-container-low border border-outline-variant p-card-padding rounded-xl relative overflow-hidden group">
+    <div
+        class="bg-surface-container-low border border-outline-variant p-card-padding rounded-xl relative overflow-hidden group">
         <div class="flex justify-between items-start relative z-10">
             <div>
-                <p class="text-on-surface-variant text-label-caps uppercase font-label-caps">Terlambat</p>
-                <h3 id="stat-terlambat" class="text-display-lg font-display-lg text-tertiary mt-1">{{ statistik.terlambat_hari_ini }}</h3>
+                <p class="text-on-surface-variant text-label-caps uppercase font-label-caps">Đi muộn</p>
+                <h3 id="stat-terlambat" class="text-display-lg font-display-lg text-tertiary mt-1">{{
+                    statistik.terlambat_hari_ini }}</h3>
             </div>
             <div class="w-10 h-10 bg-tertiary/10 rounded-lg flex items-center justify-center">
                 <span class="material-symbols-outlined text-tertiary">schedule</span>
             </div>
         </div>
         <div class="mt-4 flex items-center gap-2">
-            <span class="text-body-sm font-body-sm text-on-surface-variant">Membutuhkan review</span>
+            <span class="text-body-sm font-body-sm text-on-surface-variant">Cần xem xét</span>
         </div>
     </div>
     <!-- Alpha -->
-    <div class="bg-surface-container-low border border-outline-variant p-card-padding rounded-xl relative overflow-hidden group">
+    <div
+        class="bg-surface-container-low border border-outline-variant p-card-padding rounded-xl relative overflow-hidden group">
         <div class="flex justify-between items-start relative z-10">
             <div>
-                <p class="text-on-surface-variant text-label-caps uppercase font-label-caps">Alpha</p>
-                <h3 id="stat-alpha" class="text-display-lg font-display-lg text-error mt-1">{{ statistik.alpha_hari_ini }}</h3>
+                <p class="text-on-surface-variant text-label-caps uppercase font-label-caps">Vắng không phép</p>
+                <h3 id="stat-alpha" class="text-display-lg font-display-lg text-error mt-1">{{ statistik.alpha_hari_ini
+                    }}</h3>
             </div>
             <div class="w-10 h-10 bg-error/10 rounded-lg flex items-center justify-center">
                 <span class="material-symbols-outlined text-error">person_off</span>
             </div>
         </div>
         <div class="mt-4 flex items-center gap-2">
-            <span class="text-body-sm font-body-sm text-on-surface-variant">Hari ini</span>
+            <span class="text-body-sm font-body-sm text-on-surface-variant">Hôm nay</span>
         </div>
     </div>
     <!-- Total -->
-    <div class="bg-surface-container-low border border-outline-variant p-card-padding rounded-xl relative overflow-hidden group">
+    <div
+        class="bg-surface-container-low border border-outline-variant p-card-padding rounded-xl relative overflow-hidden group">
         <div class="flex justify-between items-start relative z-10">
             <div>
-                <p class="text-on-surface-variant text-label-caps uppercase font-label-caps">Total Mahasiswa</p>
+                <p class="text-on-surface-variant text-label-caps uppercase font-label-caps">Tổng số sinh viên</p>
                 <h3 class="text-display-lg font-display-lg text-on-surface mt-1">{{ statistik.total_mahasiswa }}</h3>
             </div>
             <div class="w-10 h-10 bg-surface-container-highest rounded-lg flex items-center justify-center">
@@ -66,7 +73,8 @@
             </div>
         </div>
         <div class="mt-4 flex items-center gap-2">
-            <span class="text-body-sm font-body-sm text-on-surface-variant">{{ statistik.total_kelas }} kelas hari ini</span>
+            <span class="text-body-sm font-body-sm text-on-surface-variant">{{ statistik.total_kelas }} lớp hôm
+                nay</span>
         </div>
     </div>
 </section>
@@ -74,15 +82,16 @@
 <!-- Section 2: Kamera + Absensi Hari Ini -->
 <section class="grid grid-cols-12 gap-8 mb-8">
     <!-- Kamera Absensi (live feed) -->
-    <div class="col-span-12 lg:col-span-7 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col h-[500px]">
+    <div
+        class="col-span-12 lg:col-span-7 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col h-[500px]">
         <div class="p-gutter border-b border-outline-variant flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <span class="material-symbols-outlined text-primary">videocam</span>
-                <h4 class="font-title-sm text-title-sm text-on-surface">Kamera Absensi</h4>
+                <h4 class="font-title-sm text-title-sm text-on-surface">Camera điểm danh</h4>
             </div>
             <div class="flex items-center gap-2 bg-emerald-500/10 px-3 py-1 rounded-full">
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span id="connection-status" class="text-body-sm font-semibold text-emerald-500">Anti-Spoofing: Aktif</span>
+                <span id="connection-status" class="text-body-sm font-semibold text-emerald-500">Đang kết nối...</span>
             </div>
         </div>
         <!-- Container kamera dengan video feed -->
@@ -93,58 +102,65 @@
             <!-- Placeholder saat kamera mati -->
             <div id="camera-placeholder" class="text-center">
                 <span class="material-symbols-outlined text-6xl text-on-surface-variant/20 mb-4">videocam</span>
-                <p class="text-on-surface-variant font-body-sm">Klik tombol "Kamera ON" untuk memulai</p>
-                <p class="text-outline text-[11px] mt-1">Face recognition + anti-spoofing akan aktif otomatis</p>
+                <p class="text-on-surface-variant font-body-sm">Nhấn nút "Bật camera" để bắt đầu</p>
+                <p class="text-outline text-[11px] mt-1">Nhận diện khuôn mặt và chống giả mạo sẽ tự động bật</p>
             </div>
 
             <!-- Anti-spoofing indicator -->
             <div id="spoofing-indicator" class="active" style="display:none">
                 <span class="dot"></span>
-                <span class="label">Anti-Spoofing: OK</span>
+                <span class="label">Chống giả mạo: Đạt</span>
             </div>
 
             <!-- Recognition overlay (tampil saat wajah dikenali) -->
             <div id="recognition-overlay"></div>
 
-            <!-- Processing indicator -->
-            <div id="processing-indicator">
-                <div class="spinner"></div>
-                <span>Memproses...</span>
-            </div>
+            <!-- Layer bbox tung khuon mat; khong chan thao tac camera -->
+            <div id="face-box-layer" aria-live="polite"></div>
 
             <!-- Tombol kontrol kamera -->
             <div class="camera-controls">
                 <button id="btn-camera-on" class="btn-camera btn-camera-on">
                     <span class="material-symbols-outlined">videocam</span>
-                    <span>Kamera ON</span>
+                    <span>Bật camera</span>
                 </button>
                 <button id="btn-camera-off" class="btn-camera btn-camera-off" style="display:none">
                     <span class="material-symbols-outlined">videocam_off</span>
-                    <span>Kamera OFF</span>
+                    <span>Tắt camera</span>
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Absensi Hari Ini -->
-    <div class="col-span-12 lg:col-span-5 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col h-[500px]">
-        <div class="p-gutter border-b border-outline-variant flex justify-between items-center bg-surface-container-high/50">
-            <h4 class="font-title-sm text-title-sm text-on-surface">Absensi Hari Ini</h4>
+    <div
+        class="col-span-12 lg:col-span-5 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col h-[500px]">
+        <div
+            class="p-gutter border-b border-outline-variant flex justify-between items-center bg-surface-container-high/50">
+            <h4 class="font-title-sm text-title-sm text-on-surface">Điểm danh hôm nay</h4>
             <div class="flex items-center gap-2">
-                <button id="btn-absen-manual" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[12px] font-bold hover:bg-primary/20 transition-colors border border-primary/20">
+                <button id="btn-absen-manual"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[12px] font-bold hover:bg-primary/20 transition-colors border border-primary/20">
                     <span class="material-symbols-outlined text-[16px]">edit_note</span>
-                    Absen Manual
+                    Điểm danh thủ công
                 </button>
-                <a href="{{ url_for('absensi_rekap') }}" class="text-primary text-body-sm font-semibold hover:underline">Lihat Semua</a>
+                <a href="{{ url_for('absensi_rekap') }}"
+                    class="text-primary text-body-sm font-semibold hover:underline">Xem tất cả</a>
             </div>
         </div>
         <div class="flex-1 overflow-y-auto">
             <table class="w-full text-left border-collapse">
                 <thead class="sticky top-0 bg-surface-container-low z-10">
                     <tr>
-                        <th class="px-6 py-4 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant">Mahasiswa</th>
-                        <th class="px-6 py-4 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant">Waktu</th>
-                        <th class="px-6 py-4 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant">Status</th>
+                        <th
+                            class="px-6 py-4 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant">
+                            Sinh viên</th>
+                        <th
+                            class="px-6 py-4 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant">
+                            Thời gian</th>
+                        <th
+                            class="px-6 py-4 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant">
+                            Trạng thái</th>
                     </tr>
                 </thead>
                 <tbody id="absensi-tbody" class="divide-y divide-outline-variant">
@@ -152,7 +168,8 @@
                     <tr class="hover:bg-surface-container-high transition-colors">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center">
                                     <span class="material-symbols-outlined text-secondary text-[20px]">person</span>
                                 </div>
                                 <div>
@@ -164,25 +181,33 @@
                         <td class="px-6 py-4 text-body-sm text-on-surface-variant">{{ a.waktu_absen }}</td>
                         <td class="px-6 py-4">
                             {% if a.status == 'hadir' %}
-                            <span class="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-500 text-[12px] font-bold">Hadir</span>
+                            <span
+                                class="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-500 text-[12px] font-bold">Có
+                                mặt</span>
                             {% elif a.status == 'terlambat' %}
-                            <span class="px-3 py-1 rounded-full bg-tertiary/15 text-tertiary text-[12px] font-bold">Terlambat</span>
+                            <span class="px-3 py-1 rounded-full bg-tertiary/15 text-tertiary text-[12px] font-bold">Đi
+                                muộn</span>
                             {% elif a.status == 'alpha' %}
-                            <span class="px-3 py-1 rounded-full bg-error/15 text-error text-[12px] font-bold">Alpha</span>
+                            <span class="px-3 py-1 rounded-full bg-error/15 text-error text-[12px] font-bold">Vắng không
+                                phép</span>
                             {% elif a.status == 'izin' %}
-                            <span class="px-3 py-1 rounded-full bg-blue-500/15 text-blue-400 text-[12px] font-bold" {% if a.alasan %}title="Alasan: {{ a.alasan }}"{% endif %}>Izin</span>
+                            <span class="px-3 py-1 rounded-full bg-blue-500/15 text-blue-400 text-[12px] font-bold" {%
+                                if a.alasan %}title="Lý do: {{ a.alasan }}" {% endif %}>Vắng có phép</span>
                             {% elif a.status == 'sakit' %}
-                            <span class="px-3 py-1 rounded-full bg-amber-500/15 text-amber-400 text-[12px] font-bold" {% if a.alasan %}title="Alasan: {{ a.alasan }}"{% endif %}>Sakit</span>
+                            <span class="px-3 py-1 rounded-full bg-amber-500/15 text-amber-400 text-[12px] font-bold" {%
+                                if a.alasan %}title="Lý do: {{ a.alasan }}" {% endif %}>Nghỉ ốm</span>
                             {% else %}
-                            <span class="px-3 py-1 rounded-full bg-secondary/15 text-secondary text-[12px] font-bold">{{ a.status|capitalize }}</span>
+                            <span class="px-3 py-1 rounded-full bg-secondary/15 text-secondary text-[12px] font-bold">{{
+                                a.status|capitalize }}</span>
                             {% endif %}
                         </td>
                     </tr>
                     {% else %}
                     <tr class="empty-row">
                         <td colspan="3" class="px-6 py-12 text-center">
-                            <span class="material-symbols-outlined text-3xl text-on-surface-variant/20 mb-2">event_busy</span>
-                            <p class="text-body-sm text-on-surface-variant">Belum ada absensi hari ini</p>
+                            <span
+                                class="material-symbols-outlined text-3xl text-on-surface-variant/20 mb-2">event_busy</span>
+                            <p class="text-body-sm text-on-surface-variant">Chưa có dữ liệu điểm danh hôm nay</p>
                         </td>
                     </tr>
                     {% endfor %}
@@ -196,7 +221,8 @@
 <div id="modal-absen-manual" class="fixed inset-0 z-50 hidden">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="modal-overlay"></div>
     <div class="absolute inset-0 flex items-center justify-center p-4">
-        <div class="bg-surface-container-high border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl relative">
+        <div
+            class="bg-surface-container-high border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl relative">
             <!-- Header -->
             <div class="p-6 border-b border-outline-variant flex justify-between items-center">
                 <div class="flex items-center gap-3">
@@ -204,11 +230,12 @@
                         <span class="material-symbols-outlined text-primary">edit_note</span>
                     </div>
                     <div>
-                        <h3 class="font-title-sm text-title-sm text-on-surface font-bold">Absen Manual</h3>
-                        <p class="text-[12px] text-on-surface-variant">Catat absensi secara manual</p>
+                        <h3 class="font-title-sm text-title-sm text-on-surface font-bold">Điểm danh thủ công</h3>
+                        <p class="text-[12px] text-on-surface-variant">Ghi nhận điểm danh thủ công</p>
                     </div>
                 </div>
-                <button id="modal-close" class="w-8 h-8 rounded-lg hover:bg-surface-container-highest flex items-center justify-center">
+                <button id="modal-close"
+                    class="w-8 h-8 rounded-lg hover:bg-surface-container-highest flex items-center justify-center">
                     <span class="material-symbols-outlined text-on-surface-variant">close</span>
                 </button>
             </div>
@@ -216,47 +243,67 @@
             <div class="p-6 space-y-4">
                 <!-- Pilih Jadwal -->
                 <div>
-                    <label class="block text-label-caps font-label-caps text-on-surface-variant uppercase mb-2">Jadwal Hari Ini</label>
-                    <select id="manual-jadwal" class="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
-                        <option value="">Memuat jadwal...</option>
+                    <label class="block text-label-caps font-label-caps text-on-surface-variant uppercase mb-2">Lịch học
+                        hôm nay</label>
+                    <select id="manual-jadwal"
+                        class="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                        <option value="">Đang tải lịch học...</option>
                     </select>
                 </div>
                 <!-- Pilih Mahasiswa -->
                 <div>
-                    <label class="block text-label-caps font-label-caps text-on-surface-variant uppercase mb-2">Mahasiswa</label>
-                    <select id="manual-mahasiswa" class="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
-                        <option value="">Pilih mahasiswa...</option>
+                    <label class="block text-label-caps font-label-caps text-on-surface-variant uppercase mb-2">Sinh
+                        viên</label>
+                    <select id="manual-mahasiswa"
+                        class="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                        <option value="">Chọn sinh viên...</option>
                     </select>
                 </div>
                 <!-- Pilih Status -->
                 <div>
-                    <label class="block text-label-caps font-label-caps text-on-surface-variant uppercase mb-2">Status</label>
+                    <label class="block text-label-caps font-label-caps text-on-surface-variant uppercase mb-2">Trạng
+                        thái</label>
                     <div class="grid grid-cols-5 gap-2" id="manual-status-group">
-                        <button type="button" data-status="hadir" class="status-btn px-2 py-2.5 rounded-xl border text-[11px] font-bold text-center transition-all border-outline-variant text-on-surface-variant hover:border-emerald-500 hover:text-emerald-500">Hadir</button>
-                        <button type="button" data-status="terlambat" class="status-btn px-2 py-2.5 rounded-xl border text-[11px] font-bold text-center transition-all border-outline-variant text-on-surface-variant hover:border-tertiary hover:text-tertiary">Terlambat</button>
-                        <button type="button" data-status="izin" class="status-btn px-2 py-2.5 rounded-xl border text-[11px] font-bold text-center transition-all border-outline-variant text-on-surface-variant hover:border-blue-400 hover:text-blue-400">Izin</button>
-                        <button type="button" data-status="sakit" class="status-btn px-2 py-2.5 rounded-xl border text-[11px] font-bold text-center transition-all border-outline-variant text-on-surface-variant hover:border-amber-400 hover:text-amber-400">Sakit</button>
-                        <button type="button" data-status="alpha" class="status-btn px-2 py-2.5 rounded-xl border text-[11px] font-bold text-center transition-all border-outline-variant text-on-surface-variant hover:border-error hover:text-error">Alpha</button>
+                        <button type="button" data-status="hadir"
+                            class="status-btn px-2 py-2.5 rounded-xl border text-[11px] font-bold text-center transition-all border-outline-variant text-on-surface-variant hover:border-emerald-500 hover:text-emerald-500">Có
+                            mặt</button>
+                        <button type="button" data-status="terlambat"
+                            class="status-btn px-2 py-2.5 rounded-xl border text-[11px] font-bold text-center transition-all border-outline-variant text-on-surface-variant hover:border-tertiary hover:text-tertiary">Đi
+                            muộn</button>
+                        <button type="button" data-status="izin"
+                            class="status-btn px-2 py-2.5 rounded-xl border text-[11px] font-bold text-center transition-all border-outline-variant text-on-surface-variant hover:border-blue-400 hover:text-blue-400">Vắng
+                            có phép</button>
+                        <button type="button" data-status="sakit"
+                            class="status-btn px-2 py-2.5 rounded-xl border text-[11px] font-bold text-center transition-all border-outline-variant text-on-surface-variant hover:border-amber-400 hover:text-amber-400">Nghỉ
+                            ốm</button>
+                        <button type="button" data-status="alpha"
+                            class="status-btn px-2 py-2.5 rounded-xl border text-[11px] font-bold text-center transition-all border-outline-variant text-on-surface-variant hover:border-error hover:text-error">Vắng
+                            không phép</button>
                     </div>
                 </div>
                 <!-- Alasan (muncul untuk izin/sakit) -->
                 <div id="alasan-group" class="hidden">
-                    <label class="block text-label-caps font-label-caps text-on-surface-variant uppercase mb-2">Alasan</label>
-                    <input id="manual-alasan" type="text" placeholder="Tuliskan alasan izin/sakit..."
+                    <label class="block text-label-caps font-label-caps text-on-surface-variant uppercase mb-2">Lý
+                        do</label>
+                    <input id="manual-alasan" type="text" placeholder="Nhập lý do vắng có phép/nghỉ ốm..."
                         class="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none placeholder:text-on-surface-variant/50">
                 </div>
                 <!-- Error message -->
-                <div id="manual-error" class="hidden bg-error-container/20 border border-error/30 rounded-lg p-3 flex items-center gap-2">
+                <div id="manual-error"
+                    class="hidden bg-error-container/20 border border-error/30 rounded-lg p-3 flex items-center gap-2">
                     <span class="material-symbols-outlined text-error text-[16px]">error</span>
                     <span class="text-[12px] text-on-error-container" id="manual-error-text"></span>
                 </div>
             </div>
             <!-- Footer -->
             <div class="p-6 border-t border-outline-variant flex justify-end gap-3">
-                <button id="modal-cancel" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-surface-container-highest transition-colors">Batal</button>
-                <button id="modal-submit" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-primary text-on-primary hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50" disabled>
+                <button id="modal-cancel"
+                    class="px-5 py-2.5 rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-surface-container-highest transition-colors">Hủy</button>
+                <button id="modal-submit"
+                    class="px-5 py-2.5 rounded-xl text-sm font-bold bg-primary text-on-primary hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    disabled>
                     <span class="material-symbols-outlined text-[18px]">save</span>
-                    Simpan
+                    Lưu
                 </button>
             </div>
         </div>
@@ -266,36 +313,41 @@
 <!-- Section 3: Statistik bawah -->
 <section class="grid grid-cols-12 gap-8">
     <!-- Kehadiran Per Kelas -->
-    <div class="col-span-12 lg:col-span-6 bg-surface-container-low border border-outline-variant rounded-xl p-card-padding">
+    <div
+        class="col-span-12 lg:col-span-6 bg-surface-container-low border border-outline-variant rounded-xl p-card-padding">
         <div class="flex justify-between items-center mb-6">
-            <h4 class="font-title-sm text-title-sm text-on-surface">Kehadiran Per Kelas</h4>
+            <h4 class="font-title-sm text-title-sm text-on-surface">Tỷ lệ có mặt theo lớp</h4>
             <span class="material-symbols-outlined text-on-surface-variant">bar_chart</span>
         </div>
         <div class="space-y-6">
             <div class="text-center py-8 text-on-surface-variant">
                 <span class="material-symbols-outlined text-3xl text-on-surface-variant/20 mb-2">analytics</span>
-                <p class="font-body-sm">Statistik akan tersedia setelah data absensi terkumpul</p>
+                <p class="font-body-sm">Thống kê sẽ hiển thị sau khi có dữ liệu điểm danh</p>
             </div>
         </div>
     </div>
     <!-- Info Sistem -->
-    <div class="col-span-12 lg:col-span-6 bg-surface-container-low border border-outline-variant rounded-xl p-card-padding">
+    <div
+        class="col-span-12 lg:col-span-6 bg-surface-container-low border border-outline-variant rounded-xl p-card-padding">
         <div class="flex justify-between items-center mb-6">
-            <h4 class="font-title-sm text-title-sm text-on-surface">Info Sistem</h4>
+            <h4 class="font-title-sm text-title-sm text-on-surface">Thông tin hệ thống</h4>
             <span class="material-symbols-outlined text-primary">info</span>
         </div>
         <div class="space-y-4">
             <div class="p-4 bg-primary/5 border-l-4 border-primary rounded-r-xl">
-                <h5 class="font-body-md font-bold text-primary">Face Recognition</h5>
-                <p class="text-body-sm text-on-surface-variant">LBPH Engine — Confidence threshold: {{ conf_threshold }}</p>
+                <h5 class="font-body-md font-bold text-primary">Nhận diện khuôn mặt</h5>
+                <p class="text-body-sm text-on-surface-variant">ArcFace + độ tương đồng cosine — Ngưỡng: {{
+                    conf_threshold if conf_threshold is not none else 'Cần hiệu chuẩn' }}</p>
             </div>
             <div class="p-4 bg-emerald-500/5 border-l-4 border-emerald-500 rounded-r-xl">
-                <h5 class="font-body-md font-bold text-emerald-500">Anti-Spoofing</h5>
-                <p class="text-body-sm text-on-surface-variant">LBP Texture Analysis — Threshold: {{ spoof_threshold }}</p>
+                <h5 class="font-body-md font-bold text-emerald-500">Chống giả mạo</h5>
+                <p class="text-body-sm text-on-surface-variant">Phân tích kết cấu LBP — Ngưỡng: {{ spoof_threshold }}
+                </p>
             </div>
             <div class="p-4 bg-surface-container-high/40 border-l-4 border-outline-variant rounded-r-xl">
-                <h5 class="font-body-md font-bold text-on-surface">Statistik</h5>
-                <p class="text-body-sm text-on-surface-variant">{{ statistik.total_kelas }} kelas — {{ statistik.total_mahasiswa }} mahasiswa terdaftar</p>
+                <h5 class="font-body-md font-bold text-on-surface">Thống kê</h5>
+                <p class="text-body-sm text-on-surface-variant">{{ statistik.total_kelas }} lớp — {{
+                    statistik.total_mahasiswa }} sinh viên đã đăng ký</p>
             </div>
         </div>
     </div>
@@ -309,195 +361,195 @@
 <!-- SocketIO client library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
 <!-- Camera + Dashboard scripts -->
-<script src="{{ url_for('static', filename='js/camera.js') }}?v=1.5"></script>
-<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/camera.js') }}?v=1.6"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}?v=1.6"></script>
 
 <!-- Script Modal Absen Manual -->
 <script>
-(function() {
-    const modal     = document.getElementById('modal-absen-manual');
-    const btnOpen   = document.getElementById('btn-absen-manual');
-    const btnClose  = document.getElementById('modal-close');
-    const btnCancel = document.getElementById('modal-cancel');
-    const btnSubmit = document.getElementById('modal-submit');
-    const overlay   = document.getElementById('modal-overlay');
-    const selJadwal = document.getElementById('manual-jadwal');
-    const selMhs    = document.getElementById('manual-mahasiswa');
-    const inpAlasan = document.getElementById('manual-alasan');
-    const grpAlasan = document.getElementById('alasan-group');
-    const errDiv    = document.getElementById('manual-error');
-    const errText   = document.getElementById('manual-error-text');
+    (function () {
+        const modal = document.getElementById('modal-absen-manual');
+        const btnOpen = document.getElementById('btn-absen-manual');
+        const btnClose = document.getElementById('modal-close');
+        const btnCancel = document.getElementById('modal-cancel');
+        const btnSubmit = document.getElementById('modal-submit');
+        const overlay = document.getElementById('modal-overlay');
+        const selJadwal = document.getElementById('manual-jadwal');
+        const selMhs = document.getElementById('manual-mahasiswa');
+        const inpAlasan = document.getElementById('manual-alasan');
+        const grpAlasan = document.getElementById('alasan-group');
+        const errDiv = document.getElementById('manual-error');
+        const errText = document.getElementById('manual-error-text');
 
-    let selectedStatus = '';
-    let allMahasiswa = [];
+        let selectedStatus = '';
+        let allMahasiswa = [];
 
-    // Buka modal
-    function openModal() {
-        modal.classList.remove('hidden');
-        loadJadwal();
-        loadMahasiswa();
-        resetForm();
-    }
+        // Buka modal
+        function openModal() {
+            modal.classList.remove('hidden');
+            loadJadwal();
+            loadMahasiswa();
+            resetForm();
+        }
 
-    // Tutup modal
-    function closeModal() {
-        modal.classList.add('hidden');
-        resetForm();
-    }
+        // Tutup modal
+        function closeModal() {
+            modal.classList.add('hidden');
+            resetForm();
+        }
 
-    function resetForm() {
-        selectedStatus = '';
-        inpAlasan.value = '';
-        grpAlasan.classList.add('hidden');
-        errDiv.classList.add('hidden');
-        btnSubmit.disabled = true;
-        document.querySelectorAll('.status-btn').forEach(function(b) {
-            b.classList.remove('ring-2', 'bg-primary/10');
-            b.style.borderColor = '';
-            b.style.color = '';
-        });
-    }
-
-    // Load jadwal hari ini
-    function loadJadwal() {
-        selJadwal.innerHTML = '<option value="">Memuat jadwal...</option>';
-        fetch('/api/jadwal/hari-ini')
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-                if (res.status === 'ok' && res.data.length > 0) {
-                    selJadwal.innerHTML = '<option value="">Pilih jadwal...</option>';
-                    res.data.forEach(function(j) {
-                        var opt = document.createElement('option');
-                        opt.value = j.id;
-                        opt.dataset.kelasId = j.kelas_id;
-                        opt.textContent = j.nama_mk + ' (' + j.jam_mulai + '-' + j.jam_selesai + ') - ' + j.nama_kelas;
-                        selJadwal.appendChild(opt);
-                    });
-                } else {
-                    selJadwal.innerHTML = '<option value="">Tidak ada jadwal hari ini</option>';
-                }
-            })
-            .catch(function() {
-                selJadwal.innerHTML = '<option value="">Gagal memuat jadwal</option>';
-            });
-    }
-
-    // Load mahasiswa
-    function loadMahasiswa() {
-        fetch('/api/mahasiswa/list')
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-                if (res.status === 'ok') {
-                    allMahasiswa = res.data;
-                    filterMahasiswa();
-                }
-            });
-    }
-
-    // Filter mahasiswa berdasarkan kelas dari jadwal yang dipilih
-    function filterMahasiswa() {
-        var selectedOpt = selJadwal.options[selJadwal.selectedIndex];
-        var kelasId = selectedOpt ? selectedOpt.dataset.kelasId : null;
-
-        selMhs.innerHTML = '<option value="">Pilih mahasiswa...</option>';
-        var filtered = kelasId ? allMahasiswa.filter(function(m) { return m.kelas_id == kelasId; }) : allMahasiswa;
-        filtered.forEach(function(m) {
-            var opt = document.createElement('option');
-            opt.value = m.id;
-            opt.textContent = m.nama + ' (' + m.nim + ') - ' + m.nama_kelas;
-            selMhs.appendChild(opt);
-        });
-    }
-
-    // Event: jadwal berubah → filter mahasiswa
-    selJadwal.addEventListener('change', function() {
-        filterMahasiswa();
-        checkValid();
-    });
-
-    selMhs.addEventListener('change', checkValid);
-
-    // Event: status button click
-    var statusColors = {
-        hadir: '#34d399', terlambat: '#f59e0b',
-        izin: '#60a5fa', sakit: '#fbbf24', alpha: '#f87171'
-    };
-
-    document.querySelectorAll('.status-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            selectedStatus = btn.dataset.status;
-            // Reset semua
-            document.querySelectorAll('.status-btn').forEach(function(b) {
-                b.classList.remove('ring-2');
+        function resetForm() {
+            selectedStatus = '';
+            inpAlasan.value = '';
+            grpAlasan.classList.add('hidden');
+            errDiv.classList.add('hidden');
+            btnSubmit.disabled = true;
+            document.querySelectorAll('.status-btn').forEach(function (b) {
+                b.classList.remove('ring-2', 'bg-primary/10');
                 b.style.borderColor = '';
                 b.style.color = '';
-                b.style.background = '';
             });
-            // Aktifkan yang dipilih
-            var color = statusColors[selectedStatus] || '#888';
-            btn.style.borderColor = color;
-            btn.style.color = color;
-            btn.style.background = color + '15';
-            btn.classList.add('ring-2');
+        }
 
-            // Tampilkan alasan untuk izin/sakit
-            if (selectedStatus === 'izin' || selectedStatus === 'sakit') {
-                grpAlasan.classList.remove('hidden');
-            } else {
-                grpAlasan.classList.add('hidden');
-                inpAlasan.value = '';
-            }
+        // Load jadwal hari ini
+        function loadJadwal() {
+            selJadwal.innerHTML = '<option value="">Đang tải lịch học...</option>';
+            fetch('/api/jadwal/hari-ini')
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (res.status === 'ok' && res.data.length > 0) {
+                        selJadwal.innerHTML = '<option value="">Chọn lịch học...</option>';
+                        res.data.forEach(function (j) {
+                            var opt = document.createElement('option');
+                            opt.value = j.id;
+                            opt.dataset.kelasId = j.kelas_id;
+                            opt.textContent = j.nama_mk + ' (' + j.jam_mulai + '-' + j.jam_selesai + ') - ' + j.nama_kelas;
+                            selJadwal.appendChild(opt);
+                        });
+                    } else {
+                        selJadwal.innerHTML = '<option value="">Hôm nay không có lịch học</option>';
+                    }
+                })
+                .catch(function () {
+                    selJadwal.innerHTML = '<option value="">Không thể tải lịch học</option>';
+                });
+        }
+
+        // Load mahasiswa
+        function loadMahasiswa() {
+            fetch('/api/mahasiswa/list')
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (res.status === 'ok') {
+                        allMahasiswa = res.data;
+                        filterMahasiswa();
+                    }
+                });
+        }
+
+        // Filter mahasiswa berdasarkan kelas dari jadwal yang dipilih
+        function filterMahasiswa() {
+            var selectedOpt = selJadwal.options[selJadwal.selectedIndex];
+            var kelasId = selectedOpt ? selectedOpt.dataset.kelasId : null;
+
+            selMhs.innerHTML = '<option value="">Chọn sinh viên...</option>';
+            var filtered = kelasId ? allMahasiswa.filter(function (m) { return m.kelas_id == kelasId; }) : allMahasiswa;
+            filtered.forEach(function (m) {
+                var opt = document.createElement('option');
+                opt.value = m.id;
+                opt.textContent = m.nama + ' (' + m.nim + ') - ' + m.nama_kelas;
+                selMhs.appendChild(opt);
+            });
+        }
+
+        // Event: jadwal berubah → filter mahasiswa
+        selJadwal.addEventListener('change', function () {
+            filterMahasiswa();
             checkValid();
         });
-    });
 
-    function checkValid() {
-        var valid = selJadwal.value && selMhs.value && selectedStatus;
-        btnSubmit.disabled = !valid;
-    }
+        selMhs.addEventListener('change', checkValid);
 
-    // Submit
-    btnSubmit.addEventListener('click', function() {
-        errDiv.classList.add('hidden');
-        btnSubmit.disabled = true;
-        btnSubmit.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span> Menyimpan...';
+        // Event: status button click
+        var statusColors = {
+            hadir: '#34d399', terlambat: '#f59e0b',
+            izin: '#60a5fa', sakit: '#fbbf24', alpha: '#f87171'
+        };
 
-        fetch('/api/absensi/manual', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                user_id: parseInt(selMhs.value),
-                jadwal_id: parseInt(selJadwal.value),
-                status: selectedStatus,
-                alasan: inpAlasan.value.trim()
-            })
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(res) {
-            if (res.status === 'ok') {
-                closeModal();
-                // Refresh halaman untuk update tabel
-                window.location.reload();
-            } else {
-                errText.textContent = res.pesan || 'Gagal menyimpan.';
-                errDiv.classList.remove('hidden');
-                btnSubmit.disabled = false;
-                btnSubmit.innerHTML = '<span class="material-symbols-outlined text-[18px]">save</span> Simpan';
-            }
-        })
-        .catch(function() {
-            errText.textContent = 'Koneksi ke server gagal.';
-            errDiv.classList.remove('hidden');
-            btnSubmit.disabled = false;
-            btnSubmit.innerHTML = '<span class="material-symbols-outlined text-[18px]">save</span> Simpan';
+        document.querySelectorAll('.status-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                selectedStatus = btn.dataset.status;
+                // Reset semua
+                document.querySelectorAll('.status-btn').forEach(function (b) {
+                    b.classList.remove('ring-2');
+                    b.style.borderColor = '';
+                    b.style.color = '';
+                    b.style.background = '';
+                });
+                // Aktifkan yang dipilih
+                var color = statusColors[selectedStatus] || '#888';
+                btn.style.borderColor = color;
+                btn.style.color = color;
+                btn.style.background = color + '15';
+                btn.classList.add('ring-2');
+
+                // Tampilkan alasan untuk izin/sakit
+                if (selectedStatus === 'izin' || selectedStatus === 'sakit') {
+                    grpAlasan.classList.remove('hidden');
+                } else {
+                    grpAlasan.classList.add('hidden');
+                    inpAlasan.value = '';
+                }
+                checkValid();
+            });
         });
-    });
 
-    // Event listeners
-    btnOpen.addEventListener('click', openModal);
-    btnClose.addEventListener('click', closeModal);
-    btnCancel.addEventListener('click', closeModal);
-    overlay.addEventListener('click', closeModal);
-})();
+        function checkValid() {
+            var valid = selJadwal.value && selMhs.value && selectedStatus;
+            btnSubmit.disabled = !valid;
+        }
+
+        // Submit
+        btnSubmit.addEventListener('click', function () {
+            errDiv.classList.add('hidden');
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span> Đang lưu...';
+
+            fetch('/api/absensi/manual', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: parseInt(selMhs.value),
+                    jadwal_id: parseInt(selJadwal.value),
+                    status: selectedStatus,
+                    alasan: inpAlasan.value.trim()
+                })
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (res.status === 'ok') {
+                        closeModal();
+                        // Refresh halaman untuk update tabel
+                        window.location.reload();
+                    } else {
+                        errText.textContent = res.pesan || 'Không thể lưu.';
+                        errDiv.classList.remove('hidden');
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerHTML = '<span class="material-symbols-outlined text-[18px]">save</span> Lưu';
+                    }
+                })
+                .catch(function () {
+                    errText.textContent = 'Không thể kết nối đến máy chủ.';
+                    errDiv.classList.remove('hidden');
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = '<span class="material-symbols-outlined text-[18px]">save</span> Lưu';
+                });
+        });
+
+        // Event listeners
+        btnOpen.addEventListener('click', openModal);
+        btnClose.addEventListener('click', closeModal);
+        btnCancel.addEventListener('click', closeModal);
+        overlay.addEventListener('click', closeModal);
+    })();
 </script>
 {% endblock %}

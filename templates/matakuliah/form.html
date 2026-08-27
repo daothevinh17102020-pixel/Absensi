@@ -1,22 +1,22 @@
 {% extends 'base.html' %}
-{% block title %}{{ 'Edit' if mk else 'Tambah' }} Mata Kuliah - Sistem Absensi{% endblock %}
+{% block title %}{{ 'Chỉnh sửa' if mk else 'Thêm' }} môn học - Hệ thống điểm danh{% endblock %}
 
 {% block content %}
 <nav class="flex text-on-surface-variant font-label-caps text-label-caps mb-6">
     <ol class="inline-flex items-center space-x-2">
-        <li><a class="hover:text-primary" href="{{ url_for('kelas_index') }}">Kelas &amp; MK</a></li>
+        <li><a class="hover:text-primary" href="{{ url_for('kelas_index') }}">Lớp &amp; môn học</a></li>
         <li><span class="material-symbols-outlined text-sm">chevron_right</span></li>
         {% if kelas_asal %}
         <li><a class="hover:text-primary" href="{{ url_for('kelas_detail', id=kelas_asal.id) }}">{{ kelas_asal.nama_kelas }}</a></li>
         <li><span class="material-symbols-outlined text-sm">chevron_right</span></li>
         {% endif %}
-        <li class="text-primary font-bold">{{ 'Edit MK' if mk else 'Tambah MK' }}</li>
+        <li class="text-primary font-bold">{{ 'Chỉnh sửa môn học' if mk else 'Thêm môn học' }}</li>
     </ol>
 </nav>
 
 <div class="max-w-lg">
-    <h2 class="font-headline-md text-headline-md text-on-surface mb-2">{{ 'Edit Mata Kuliah' if mk else 'Tambah Mata Kuliah' }}</h2>
-    <p class="font-body-sm text-body-sm text-on-surface-variant mb-8">Lengkapi data mata kuliah berikut.</p>
+    <h2 class="font-headline-md text-headline-md text-on-surface mb-2">{{ 'Chỉnh sửa môn học' if mk else 'Thêm môn học' }}</h2>
+    <p class="font-body-sm text-body-sm text-on-surface-variant mb-8">Điền đầy đủ thông tin môn học dưới đây.</p>
 
     {% if error %}
     <div class="bg-error-container/20 border border-error/30 rounded-lg p-3 mb-6 flex items-center gap-2">
@@ -27,22 +27,22 @@
 
     <form method="POST" class="space-y-6">
         <div class="space-y-2">
-            <label class="font-label-caps text-label-caps text-on-surface-variant" for="kode_mk">KODE MK</label>
+            <label class="font-label-caps text-label-caps text-on-surface-variant" for="kode_mk">MÃ MÔN HỌC</label>
             <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
-                   id="kode_mk" name="kode_mk" placeholder="Contoh: MK-TI001"
+                   id="kode_mk" name="kode_mk" placeholder="Ví dụ: MK-TI001"
                    value="{{ mk.kode_mk if mk else request.form.get('kode_mk', '') }}" required/>
         </div>
         <div class="space-y-2">
-            <label class="font-label-caps text-label-caps text-on-surface-variant" for="nama_mk">NAMA MATA KULIAH</label>
+            <label class="font-label-caps text-label-caps text-on-surface-variant" for="nama_mk">TÊN MÔN HỌC</label>
             <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
-                   id="nama_mk" name="nama_mk" placeholder="Contoh: Pemrograman Web Lanjut"
+                   id="nama_mk" name="nama_mk" placeholder="Ví dụ: Lập trình Web nâng cao"
                    value="{{ mk.nama_mk if mk else request.form.get('nama_mk', '') }}" required/>
         </div>
         <div class="space-y-2">
-            <label class="font-label-caps text-label-caps text-on-surface-variant" for="kelas_id">KELAS</label>
+            <label class="font-label-caps text-label-caps text-on-surface-variant" for="kelas_id">LỚP</label>
             <select class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
                     id="kelas_id" name="kelas_id" required>
-                <option value="">-- Pilih Kelas --</option>
+                <option value="">-- Chọn lớp --</option>
                 {% for k in daftar_kelas %}
                 <option value="{{ k.id }}" {% if (mk and mk.kelas_id == k.id) or (kelas_asal and kelas_asal.id == k.id) or request.form.get('kelas_id')|int == k.id %}selected{% endif %}>
                     {{ k.nama_kelas }} ({{ k.angkatan }})
@@ -51,16 +51,16 @@
             </select>
         </div>
         <div class="space-y-2">
-            <label class="font-label-caps text-label-caps text-on-surface-variant" for="sks">SKS</label>
+            <label class="font-label-caps text-label-caps text-on-surface-variant" for="sks">SỐ TÍN CHỈ</label>
             <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
                    id="sks" name="sks" type="number" min="1" max="6"
                    value="{{ mk.sks if mk else request.form.get('sks', '2') }}" required/>
         </div>
         <div class="flex gap-3 pt-4">
             <button type="submit" class="bg-primary-container text-on-primary-container px-6 py-3 rounded-lg font-title-sm flex items-center gap-2 hover:brightness-110 transition-all">
-                <span class="material-symbols-outlined">save</span> {{ 'Simpan' if mk else 'Tambah MK' }}
+                <span class="material-symbols-outlined">save</span> {{ 'Lưu' if mk else 'Thêm môn học' }}
             </button>
-            <a href="{{ url_for('kelas_detail', id=kelas_asal.id) if kelas_asal else url_for('kelas_index') }}" class="px-6 py-3 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors font-title-sm">Batal</a>
+            <a href="{{ url_for('kelas_detail', id=kelas_asal.id) if kelas_asal else url_for('kelas_index') }}" class="px-6 py-3 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors font-title-sm">Hủy</a>
         </div>
     </form>
 </div>
