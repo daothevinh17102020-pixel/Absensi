@@ -644,14 +644,15 @@ class ApiValidationTests(unittest.TestCase):
 
     @patch.object(app.cv2, 'imdecode', return_value=np.zeros((100, 100, 3), dtype=np.uint8))
     @patch.object(app, '_quality_enrollment_upload', side_effect=RuntimeError('private-photo-error'))
-    def test_photo_upload_failure_does_not_expose_exception(self, _upload, _imdecode):
+    def test_photo_upload_failure_returns_retry_without_exposing_exception(self, _upload, _imdecode):
         response = self.client.post('/api/foto/upload', json={
             'nama': 'A', 'nim': '001', 'kelas_id': 1,
             'foto': 'data:image/jpeg;base64,AA==', 'index': 0,
             'protocol': 'quality_v1'
         })
 
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.get_json()['status'], 'retry')
         self.assertNotIn('private-photo-error', response.get_json()['pesan'])
 
     @patch.object(app.cv2, 'imdecode', return_value=np.zeros((100, 100, 3), dtype=np.uint8))

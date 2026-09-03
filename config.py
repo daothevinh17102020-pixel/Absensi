@@ -87,7 +87,10 @@ FOTO_PER_USER        = int(os.environ.get('FOTO_PER_USER', 24))
 ENROLLMENT_MIN_SIZE = max(64, int(os.environ.get('ENROLLMENT_MIN_SIZE', 110)))
 ENROLLMENT_MIN_BRIGHTNESS = float(os.environ.get('ENROLLMENT_MIN_BRIGHTNESS', 60))
 ENROLLMENT_MAX_BRIGHTNESS = float(os.environ.get('ENROLLMENT_MAX_BRIGHTNESS', 200))
-ENROLLMENT_MIN_BLUR_VARIANCE = float(os.environ.get('ENROLLMENT_MIN_BLUR_VARIANCE', 75))
+# Laptop webcams commonly produce a lower Laplacian variance than an external
+# camera even when the face is usable.  40 keeps the quality gate meaningful
+# while preventing a valid, stable preview from being rejected indefinitely.
+ENROLLMENT_MIN_BLUR_VARIANCE = float(os.environ.get('ENROLLMENT_MIN_BLUR_VARIANCE', 40.0))
 ENROLLMENT_POSE_YAW_RATIO = min(0.45, max(0.05, float(os.environ.get('ENROLLMENT_POSE_YAW_RATIO', 0.18))))
 ENROLLMENT_FACE_MIN_RATIO = min(0.50, max(0.01, float(os.environ.get('ENROLLMENT_FACE_MIN_RATIO', 0.035))))
 ENROLLMENT_FACE_MAX_RATIO = min(0.90, max(ENROLLMENT_FACE_MIN_RATIO, float(os.environ.get('ENROLLMENT_FACE_MAX_RATIO', 0.42))))

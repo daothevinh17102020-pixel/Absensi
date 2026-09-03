@@ -16,6 +16,8 @@ from typing import Iterable
 import cv2
 import numpy as np
 
+from face.cascade import create_frontal_face_cascade
+
 
 class FaceEngineError(RuntimeError):
     """Raised when a required licensed ONNX asset is unavailable or invalid."""
@@ -92,6 +94,24 @@ def _as_prediction_rows(output):
     if tensor.shape[0] >= 15:
         return tensor.T
     raise FaceEngineError('YOLO phai tra bbox, score va du 5 landmarks (toi thieu 15 gia tri).')
+
+
+def _decoded_face_row(row):
+    """Read either project decoded rows or Ultralytics NMS face rows.
+
+    The public YOLOv8n-Face export used by this app emits
+    ``x1,y1,x2,y2,score,class,5*(x,y,visibility)`` (21 values), whereas the
+    original licensed export emits ``cx,cy,w,h,score,5*(x,y)`` (15 values).
+    """
+    row = np.asarray(row, dtype=np.float32).reshape(-1)
+    if row.size >= 21:
+        x1, y1, x2, y2, score = row[:5]
+        points = row[6:21].reshape(5, 3)[:, :2]
+        return (x1, y1, x2 - x1, y2 - y1), points, float(score)
+    if row.size >= 15:
+        cx, cy, width, height, score = row[:5]
+        return (cx - width / 2, cy - height / 2, width, height), row[5:15].reshape(5, 2), float(score)
+    raise FaceEngineError('YOLO khong tra du bbox va 5 landmarks.')
 
 
 def _sigmoid(values):
@@ -191,13 +211,11 @@ class YoloFaceDetector:
             rows = _as_prediction_rows(outputs[0])
             letterbox_detections = []
             for row in rows:
-                score = float(row[4])
+                bbox, landmarks, score = _decoded_face_row(row)
                 if score < self.confidence:
                     continue
-                cx, cy, width, height = map(float, row[:4])
-                landmarks = np.asarray(row[5:15], dtype=np.float32).reshape(5, 2)
                 letterbox_detections.append(FaceDetection(
-                    (round(cx - width / 2), round(cy - height / 2), round(width), round(height)),
+                    tuple(round(value) for value in bbox),
                     landmarks, score,
                 ))
         frame_h, frame_w = image.shape[:2]
@@ -221,6 +239,42 @@ class YoloFaceDetector:
             ))
         post_nms = nms(detections, self.nms_iou)
         return limit_detections(post_nms, self.max_detections)
+
+
+class HaarCascadeFaceDetector:
+    """OpenCV-only emergency detector for enrollment when YOLO assets fail.
+
+    Haar does not predict facial keypoints.  The five points are a documented
+    geometric estimate inside the detected frontal-face box so quality gating,
+    cropping and the fallback feature extractor can continue safely.
+    """
+
+    is_fallback = True
+    model_path = 'opencv-haar-cascade'
+
+    def __init__(self, confidence=0.60, max_detections=10):
+        self.cascade = create_frontal_face_cascade()
+        self.confidence = float(confidence)
+        self.max_detections = max(1, int(max_detections))
+
+    @staticmethod
+    def _landmarks(x, y, width, height):
+        return np.asarray([
+            [x + width * .30, y + height * .36], [x + width * .70, y + height * .36],
+            [x + width * .50, y + height * .56], [x + width * .35, y + height * .78],
+            [x + width * .65, y + height * .78],
+        ], dtype=np.float32)
+
+    def detect(self, image):
+        if image is None or not isinstance(image, np.ndarray) or image.size == 0:
+            return []
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if image.ndim == 3 else image
+        faces = self.cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        detections = [
+            FaceDetection(tuple(int(value) for value in face), self._landmarks(*face), self.confidence)
+            for face in faces
+        ]
+        return limit_detections(detections, self.max_detections)
 
 
 class ArcFaceRecognizer:
@@ -263,6 +317,34 @@ class ArcFaceRecognizer:
         if not np.isfinite(norm) or norm == 0:
             raise FaceEngineError('ArcFace tra embedding khong hop le.')
         return vector.astype(np.float32) / norm
+
+
+class HOGFaceRecognizer:
+    """Deterministic local embedding fallback used only when ArcFace is absent."""
+
+    is_fallback = True
+    model_path = 'opencv-hog-normalized-image-vector'
+
+    def __init__(self, *_args, **_kwargs):
+        self.hog = cv2.HOGDescriptor((64, 64), (16, 16), (8, 8), (8, 8), 9)
+
+    def align(self, image, landmarks):
+        points = np.asarray(landmarks, dtype=np.float32)
+        if points.shape != (5, 2) or not np.isfinite(points).all():
+            raise FaceEngineError('5 landmarks khong hop le, khong the can chinh khuon mat.')
+        matrix, _ = cv2.estimateAffinePartial2D(points, ARCFACE_TEMPLATE_112, method=cv2.LMEDS)
+        if matrix is None:
+            raise FaceEngineError('Khong uoc luong duoc affine transform tu 5 landmarks.')
+        return cv2.warpAffine(image, matrix, (64, 64), borderValue=0.0)
+
+    def embed(self, image, landmarks):
+        aligned = self.align(image, landmarks)
+        gray = cv2.equalizeHist(cv2.cvtColor(aligned, cv2.COLOR_BGR2GRAY))
+        vector = self.hog.compute(gray).reshape(-1).astype(np.float32)
+        norm = float(np.linalg.norm(vector))
+        if not np.isfinite(norm) or norm == 0:
+            raise FaceEngineError('Fallback HOG tra embedding khong hop le.')
+        return vector / norm
 
 
 def measure_quality(image, detection, *, min_size, min_brightness, max_brightness, min_blur):

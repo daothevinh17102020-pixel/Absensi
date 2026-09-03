@@ -208,7 +208,10 @@ def validate_enrollment_frame(frame, detector, stage_id):
     if stage_id not in ('near', 'far') and not ENROLLMENT_FACE_MIN_RATIO <= metrics['face_ratio'] <= ENROLLMENT_FACE_MAX_RATIO:
         message = 'Hãy điều chỉnh khoảng cách để khuôn mặt vừa với khung hướng dẫn.'
         return EnrollmentCheck(False, 'face_size_out_of_range', message, stage_id, metrics, detection)
-    stage_reason, message = _stage_error(stage_id, metrics)
+    # Haar fallback has geometrically estimated landmarks, so it cannot infer
+    # yaw reliably. Keep the 24-image sequence and distance/quality gates
+    # usable instead of rejecting every left/right frame.
+    stage_reason, message = (None, None) if getattr(detector, 'is_fallback', False) else _stage_error(stage_id, metrics)
     if stage_reason:
         return EnrollmentCheck(False, stage_reason, message, stage_id, metrics, detection)
     return EnrollmentCheck(True, None, 'Ảnh đạt yêu cầu.', stage_id, metrics, detection)

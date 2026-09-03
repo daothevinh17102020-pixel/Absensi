@@ -150,6 +150,34 @@ class EnrollmentStageTests(unittest.TestCase):
         self.assertEqual(third.get_json()['status'], 'ok')
         self.assertEqual(third.get_json()['data']['accepted'], 1)
 
+    @patch('face.recognition._load_engine')
+    @patch.object(app.db, 'hapus_user')
+    @patch.object(app.db, 'tambah_user', return_value=45)
+    @patch.object(app.db, 'get_user_by_nim', return_value=None)
+    def test_manifest_write_failure_retries_and_rolls_back_crop(
+        self, _get_user, _add_user, delete_user, load_engine
+    ):
+        app._enrollment_states.clear()
+        load_engine.return_value = (_Detector([_detection()]), None, None)
+        with tempfile.TemporaryDirectory() as dataset_dir, \
+             patch.object(app, 'DATASET_PATH', dataset_dir), \
+             patch.object(app.os, 'replace', side_effect=OSError('manifest unavailable')), \
+             app.app.test_request_context('/api/foto/upload'):
+            from flask import session
+            session['admin_id'] = 12
+            app._quality_enrollment_upload('Test Student', 'storage-001', 1, _frame())
+            app._quality_enrollment_upload('Test Student', 'storage-001', 1, _frame())
+            failed, status_code = app._quality_enrollment_upload(
+                'Test Student', 'storage-001', 1, _frame()
+            )
+            user_dir = os.path.join(dataset_dir, '45')
+            remaining = os.listdir(user_dir) if os.path.isdir(user_dir) else []
+
+        self.assertEqual(status_code, 503)
+        self.assertEqual(failed.get_json()['status'], 'retry')
+        self.assertEqual(remaining, [])
+        delete_user.assert_called_once_with(45)
+
     @patch('face.recognition._appearance_changed', side_effect=AssertionError('not used for enrollment'))
     @patch('face.recognition._load_engine')
     @patch.object(app.db, 'tambah_user', return_value=43)

@@ -20,7 +20,8 @@ from config import (
     FACE_ORT_THREADS, FACE_MATCH_MIN_MARGIN, FACE_GALLERY_STAT_INTERVAL_SECONDS,
 )
 from face.yolo_arcface import (
-    ArcFaceRecognizer, FaceEngineError, SpatialFaceTracker, YoloFaceDetector,
+    ArcFaceRecognizer, FaceEngineError, HaarCascadeFaceDetector, HOGFaceRecognizer,
+    SpatialFaceTracker, YoloFaceDetector,
     evaluate_quality,
 )
 
@@ -51,13 +52,21 @@ def _load_engine():
     global _detector, _recognizer
     with _model_lock:
         if _detector is None:
-            _detector = YoloFaceDetector(
-                FACE_DETECTOR_MODEL_PATH, FACE_DET_SIZE,
-                FACE_DETECTOR_CONFIDENCE, FACE_DETECTOR_NMS_IOU, FACE_ORT_THREADS,
-                FACE_MAX_DETECTIONS,
-            )
+            try:
+                _detector = YoloFaceDetector(
+                    FACE_DETECTOR_MODEL_PATH, FACE_DET_SIZE,
+                    FACE_DETECTOR_CONFIDENCE, FACE_DETECTOR_NMS_IOU, FACE_ORT_THREADS,
+                    FACE_MAX_DETECTIONS,
+                )
+            except FaceEngineError:
+                _detector = HaarCascadeFaceDetector(
+                    FACE_DETECTOR_CONFIDENCE, FACE_MAX_DETECTIONS,
+                )
         if _recognizer is None:
-            _recognizer = ArcFaceRecognizer(FACE_RECOGNITION_MODEL_PATH, FACE_ORT_THREADS)
+            try:
+                _recognizer = ArcFaceRecognizer(FACE_RECOGNITION_MODEL_PATH, FACE_ORT_THREADS)
+            except FaceEngineError:
+                _recognizer = HOGFaceRecognizer()
     return _detector, _recognizer, _get_tracker('default')
 
 
@@ -99,7 +108,7 @@ def mark_track_completed(tracker_key, track_id, user_id, confidence=None, match_
 
 
 def ensure_model_ready(download=False):
-    """Health-check licensed assets; no model is downloaded at runtime."""
+    """Health-check ONNX engine, or report the safe local fallback."""
     if download:
         raise FaceEngineError('Tu dong tai model da bi vo hieu hoa. Hay cai dat ONNX da duoc cap quyen.')
     detector, recognizer, _ = _load_engine()
@@ -107,6 +116,7 @@ def ensure_model_ready(download=False):
         'detector': detector.model_path,
         'recognizer': recognizer.model_path,
         'provider': 'CPUExecutionProvider',
+        'fallback_active': bool(getattr(detector, 'is_fallback', False) or getattr(recognizer, 'is_fallback', False)),
         'detector_contract': (
             'YOLOv8-Face raw heads [1,80,H,W] x3 (5 landmarks) or decoded '
             '[N,15]/[15,N]: cx,cy,w,h,score,5 landmarks'

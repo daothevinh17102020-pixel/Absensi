@@ -968,6 +968,19 @@ def _quality_enrollment_upload(nama, nim, kelas_id, frame):
     try:
         with lock_entry['lock']:
             return _quality_enrollment_upload_locked(nama, nim, kelas_id, frame, state_key)
+    except Exception as exc:
+        # Camera capture is a long-lived interaction: an unavailable model or
+        # transient OpenCV/filesystem failure must never turn into an HTML 500
+        # that makes the browser tear down its active stream.
+        from face.yolo_arcface import FaceEngineError
+        if isinstance(exc, FaceEngineError):
+            reason = 'face_engine_unavailable'
+            message = 'Bộ nhận diện đang khởi tạo lại. Giữ nguyên camera, hệ thống sẽ tự thử lại.'
+        else:
+            reason = 'enrollment_processing_failed'
+            message = 'Chưa thể kiểm tra ảnh này. Giữ nguyên camera, hệ thống sẽ tự thử lại.'
+        print(f'[API] Enrollment upload retry ({reason}): {exc}')
+        return jsonify({'status': 'retry', 'reason': reason, 'pesan': message}), 503
     finally:
         with _enrollment_lock:
             lock_entry['users'] -= 1
@@ -995,7 +1008,10 @@ def _quality_enrollment_upload_locked(nama, nim, kelas_id, frame, state_key):
             if not isinstance(manifest.get('samples'), list):
                 raise ValueError('invalid samples')
         except (OSError, ValueError, json.JSONDecodeError):
-            return jsonify({'status': 'error', 'pesan': 'Dá»¯ liá»‡u Ä‘Äƒng kÃ½ khuÃ´n máº·t khÃ´ng há»£p lá»‡.'}), 409
+            return jsonify({
+                'status': 'error', 'reason': 'enrollment_manifest_invalid',
+                'pesan': 'Dá»¯ liá»‡u Ä‘Äƒng kÃ½ khuÃ´n máº·t khÃ´ng há»£p lá»‡.',
+            }), 409
     accepted_count = len(manifest['samples']) if user else 0
     reset_legacy = (
         request.form.get('reset_legacy') == 'true'
@@ -1072,15 +1088,23 @@ def _quality_enrollment_upload_locked(nama, nim, kelas_id, frame, state_key):
         stored_name = _normalize_student_name(user['nama'])
         submitted_name = _normalize_student_name(nama)
         if stored_name != submitted_name or int(user['kelas_id']) != kelas_id:
-            return jsonify({'status': 'error', 'pesan': 'MÃ£ sinh viÃªn Ä‘Ã£ thuá»™c vá» sinh viÃªn khÃ¡c.'}), 409
+            return jsonify({
+                'status': 'error', 'reason': 'nim_conflict',
+                'pesan': 'MÃ£ sinh viÃªn Ä‘Ã£ thuá»™c vá» sinh viÃªn khÃ¡c.',
+            }), 409
         user_id = user['id']
+    image_path = None
+    temporary_path = None
     try:
         folder = os.path.join(DATASET_PATH, str(user_id))
         os.makedirs(folder, exist_ok=True)
         manifest_path = os.path.join(folder, 'enrollment_manifest.json')
         crop, crop_bbox = crop_detected_face(frame, check.detection)
+        if crop is None or crop.size == 0:
+            raise ValueError('empty enrollment face crop')
         filename = f'{accepted_count:02d}_{stage["id"]}.jpg'
-        if not cv2.imwrite(os.path.join(folder, filename), crop):
+        image_path = os.path.join(folder, filename)
+        if not cv2.imwrite(image_path, crop):
             raise OSError('image write failed')
         manifest['samples'].append({
             'file': filename, 'stage': stage['id'], 'captured_at': now_wib().isoformat(),
@@ -1094,10 +1118,32 @@ def _quality_enrollment_upload_locked(nama, nim, kelas_id, frame, state_key):
         finally:
             if os.path.exists(temporary_path):
                 os.remove(temporary_path)
-    except (OSError, TypeError, ValueError) as exc:
+    except Exception as exc:
+        # Treat saving the crop and replacing its manifest as one transaction.
+        # A retry must never advance the UI with an orphaned, unmanifested
+        # image, and must never surface a raw filesystem/OpenCV error as 500.
+        if image_path:
+            try:
+                if os.path.exists(image_path):
+                    os.remove(image_path)
+            except OSError as cleanup_exc:
+                print(f'[API] Enrollment image rollback failed: {cleanup_exc}')
+        if temporary_path:
+            try:
+                if os.path.exists(temporary_path):
+                    os.remove(temporary_path)
+            except OSError as cleanup_exc:
+                print(f'[API] Enrollment manifest cleanup failed: {cleanup_exc}')
         if created_user_id:
-            db.hapus_user(created_user_id)
-        return jsonify({'status': 'error', 'pesan': f'KhÃ´ng thá»ƒ lÆ°u áº£nh Ä‘áº¡t chuáº©n: {exc}'}), 500
+            try:
+                db.hapus_user(created_user_id)
+            except Exception as cleanup_exc:
+                print(f'[API] Enrollment user rollback failed: {cleanup_exc}')
+        print(f'[API] Enrollment image save retry: {exc}')
+        return jsonify({
+            'status': 'retry', 'reason': 'enrollment_storage_failed',
+            'pesan': 'Chưa thể lưu ảnh này. Giữ nguyên camera, hệ thống sẽ tự thử lại.',
+        }), 503
     with _enrollment_lock:
         _enrollment_states.pop(state_key, None)
     next_count = accepted_count + 1
@@ -1165,11 +1211,11 @@ def api_foto_upload():
         return _quality_enrollment_upload(nama, nim, kelas_id, frame)
 
     except Exception as e:
-        print(f'[API] Photo upload failed: {e}')
+        print(f'[API] Photo upload retry: {e}')
         return jsonify({
-            'status': 'error',
-            'pesan': 'KhÃ´ng thá»ƒ xá»­ lÃ½ áº£nh lÃºc nÃ y. Vui lÃ²ng thá»­ láº¡i.'
-        }), 500
+            'status': 'retry', 'reason': 'upload_processing_failed',
+            'pesan': 'Chưa thể xử lý ảnh. Giữ nguyên camera, hệ thống sẽ tự thử lại.'
+        }), 503
 
 
 def _start_gallery_rebuild_background(requested_user_id=None):

@@ -511,6 +511,13 @@
         scheduleNextCapture(retryDelay);
     }
 
+    function isFatalCaptureError(data) {
+        // Only errors that the active camera stream cannot correct belong
+        // here. Quality-gate failures and temporary server/network failures
+        // always return through the retry handlers above.
+        return ['nim_conflict', 'enrollment_manifest_invalid'].includes(data.reason);
+    }
+
     function captureFrame() {
         if (jumlahFoto >= MAX_FOTO || isUploading || !stream) {
             if (jumlahFoto >= MAX_FOTO && !enrollmentComplete) selesaiCapture();
@@ -598,11 +605,15 @@
                         } else {
                             dungCaptureDoLoi('Bạn đã hủy làm mới dữ liệu khuôn mặt cũ.');
                         }
-                    } else {
+                    } else if (isFatalCaptureError(data)) {
                         dungCaptureDoLoi(data.pesan);
+                    } else {
+                        handleTransientCaptureFailure(
+                            data.pesan || 'Máy chủ chưa thể xử lý ảnh, đang tự thử lại...'
+                        );
                     }
                 } else {
-                    dungCaptureDoLoi('Máy chủ trả về trạng thái ảnh không hỗ trợ.');
+                    handleTransientCaptureFailure('Máy chủ trả về trạng thái ảnh chưa hỗ trợ, đang tự thử lại...');
                 }
             })
             .catch(err => {

@@ -5,7 +5,7 @@ import numpy as np
 
 from face.yolo_arcface import (
     FaceDetection, SpatialFaceTracker, _as_prediction_rows, evaluate_quality,
-    limit_detections, measure_quality, YoloFaceDetector,
+    _decoded_face_row, limit_detections, measure_quality, YoloFaceDetector,
 )
 from face.recognition import _appearance_changed
 
@@ -27,6 +27,17 @@ class YoloContractTests(unittest.TestCase):
     def test_contract_rejects_model_without_five_landmarks(self):
         with self.assertRaisesRegex(RuntimeError, '5 landmarks'):
             _as_prediction_rows(np.zeros((2, 14), dtype=np.float32))
+
+    def test_decodes_ultralytics_nms_row_with_visibility_landmarks(self):
+        row = np.asarray([
+            10, 20, 110, 140, .9, 0,
+            35, 55, .8, 85, 55, .8, 60, 85, .8,
+            40, 115, .8, 80, 115, .8,
+        ], dtype=np.float32)
+        bbox, landmarks, score = _decoded_face_row(row)
+        self.assertEqual(tuple(round(value) for value in bbox), (10, 20, 100, 120))
+        self.assertAlmostEqual(score, .9)
+        self.assertTrue(np.allclose(landmarks[2], (60, 85)))
 
     def test_post_nms_budget_keeps_top_ten_detector_scores(self):
         detections = [
