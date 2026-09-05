@@ -59,6 +59,30 @@ class ScheduleEditTests(unittest.TestCase):
         self.assertIn('Cập nhật lịch học', html)
         self.assertIn('08:00', html)
         self.assertIn('10:30', html)
+        self.assertIn('08:15', html)
+        self.assertIn('name="batas_terlambat"', html)
+        self.assertNotIn('Hạn đi muộn được tính tự động: giờ bắt đầu + 15 phút.', html)
+        self.assertNotIn('Trước tiên hãy chọn lớp, sau đó chọn môn học của lớp đó.', html)
+
+    @patch('database.update_jadwal')
+    @patch('database.get_jadwal_by_id')
+    def test_jadwal_edit_post_custom_batas_terlambat(self, mock_get_jadwal, mock_update_jadwal):
+        mock_get_jadwal.return_value = self.sample_jadwal
+        mock_update_jadwal.return_value = True
+
+        post_data = {
+            'kelas_id': '1',
+            'matakuliah_id': '2',
+            'hari': 'Selasa',
+            'jam_mulai': '08:00',
+            'jam_selesai': '10:30',
+            'batas_terlambat': '08:20'
+        }
+        response = self.client.post('/jadwal/edit/10', data=post_data, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        mock_update_jadwal.assert_called_once_with(10, 2, 'Selasa', '08:00', '10:30', '08:20')
+        html = response.get_data(as_text=True)
+        self.assertIn('Cập nhật lịch học thành công!', html)
 
     @patch('database.get_jadwal_by_id')
     def test_jadwal_edit_get_nonexistent_id_redirects(self, mock_get_jadwal):
@@ -144,6 +168,23 @@ class ScheduleEditTests(unittest.TestCase):
         response = self.client.post('/jadwal/tambah', data=post_data, follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         mock_tambah_jadwal.assert_called_once_with(2, 'Rabu', '13:00', '15:30')
+        html = response.get_data(as_text=True)
+        self.assertIn('Thêm lịch học thành công!', html)
+
+    @patch('database.tambah_jadwal')
+    def test_jadwal_tambah_post_with_buoi_bat_dau(self, mock_tambah_jadwal):
+        mock_tambah_jadwal.return_value = 12
+        post_data = {
+            'kelas_id': '1',
+            'matakuliah_id': '2',
+            'hari': 'Kamis',
+            'jam_mulai': '07:00',
+            'jam_selesai': '09:30',
+            'buoi_bat_dau': '5'
+        }
+        response = self.client.post('/jadwal/tambah', data=post_data, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        mock_tambah_jadwal.assert_called_once_with(2, 'Kamis', '07:00', '09:30', buoi_bat_dau=5)
         html = response.get_data(as_text=True)
         self.assertIn('Thêm lịch học thành công!', html)
 

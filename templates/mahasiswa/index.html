@@ -14,12 +14,15 @@
 </div>
 
 <!-- Filter bar -->
-<div class="bg-surface-container-low border border-outline-variant rounded-xl p-card-padding mb-6">
-    <form method="GET" class="flex flex-col lg:flex-row gap-4 items-end lg:items-center justify-between">
-        <div class="flex flex-wrap gap-4 w-full lg:w-auto">
-            <div class="flex flex-col gap-1.5 min-w-[200px]">
-                <label class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest px-1">Lọc theo lớp</label>
-                <select name="kelas_id" onchange="this.form.submit()" class="bg-surface border border-outline-variant text-on-surface rounded-lg py-2 px-3 font-body-sm focus:ring-primary focus:border-primary w-full">
+<div class="bg-surface-container-low border border-outline-variant rounded-xl px-5 py-3 mb-6">
+    <form method="GET" class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <label for="filter_kelas" class="font-label-caps text-[11px] text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px] text-primary">filter_list</span>
+                LỌC THEO:
+            </label>
+            <div class="min-w-[240px]">
+                <select id="filter_kelas" name="kelas_id" onchange="this.form.submit()" class="bg-surface border border-outline-variant text-on-surface rounded-lg py-1.5 px-3 font-body-sm focus:ring-primary focus:border-primary w-full text-sm cursor-pointer hover:border-primary/50 transition-colors">
                     <option value="">Tất cả lớp</option>
                     {% for k in daftar_kelas %}
                     <option value="{{ k.id }}" {% if filter_kelas == k.id %}selected{% endif %}>{{ k.nama_kelas }} ({{ k.angkatan }})</option>
@@ -27,6 +30,12 @@
                 </select>
             </div>
         </div>
+        {% if filter_kelas %}
+        <a href="{{ url_for('mahasiswa_index') }}" class="text-[12px] text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">close</span>
+            Bỏ lọc
+        </a>
+        {% endif %}
     </form>
 </div>
 
@@ -36,17 +45,23 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-surface-variant/30 border-b border-outline-variant">
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Sinh viên</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Mã sinh viên</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Lớp</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Trạng thái sinh trắc học</th>
+                    <th class="px-5 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase text-center w-16 border-r border-outline-variant/30">STT</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase border-r border-outline-variant/30">Sinh viên</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase border-r border-outline-variant/30">Mã sinh viên</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase border-r border-outline-variant/30">Lớp</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase border-r border-outline-variant/30">Trạng thái sinh trắc học</th>
                     <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase text-right">Thao tác</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant/30">
                 {% for mhs in daftar_mahasiswa %}
                 <tr class="hover:bg-surface-variant/20 transition-colors group">
-                    <td class="px-6 py-4">
+                    <td class="px-5 py-4 text-center border-r border-outline-variant/30">
+                        <span class="inline-flex items-center justify-center min-w-[36px] h-8 px-2 rounded-lg bg-surface-variant/50 border border-outline-variant/40 font-title-sm text-sm font-bold text-white">
+                            {{ '%02d' % loop.index }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 border-r border-outline-variant/30">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-variant border border-outline-variant flex items-center justify-center">
                                 {% if mhs.foto_count and mhs.foto_count > 0 %}
@@ -56,43 +71,43 @@
                                 {% endif %}
                             </div>
                             <div>
-                                <p class="font-body-md text-body-md text-on-surface font-semibold">{{ mhs.nama }}</p>
+                                <p class="font-title-sm text-[15px] text-on-surface font-semibold">{{ mhs.nama }}</p>
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 font-body-sm text-body-sm text-on-surface-variant font-mono">{{ mhs.nim }}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-2.5 py-0.5 rounded-full bg-secondary-container/30 text-secondary text-[12px] font-semibold border border-secondary/20">{{ mhs.nama_kelas or '-' }}</span>
+                    <td class="px-6 py-4 font-title-sm text-[14px] text-on-surface font-semibold tracking-wide border-r border-outline-variant/30">{{ mhs.nim }}</td>
+                    <td class="px-6 py-4 border-r border-outline-variant/30">
+                        <span class="font-title-sm text-[14px] text-on-surface-variant font-medium">{{ mhs.nama_kelas or '-' }}</span>
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 border-r border-outline-variant/30">
                         {% if mhs.biometric_state == 'ready' %}
                         <div class="flex items-center gap-1.5 text-emerald-400">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span class="text-[12px] font-semibold">Sẵn sàng ({{ mhs.foto_count }} ảnh)</span>
+                            <span class="font-title-sm text-[13px] font-semibold">Sẵn sàng ({{ mhs.foto_count }} ảnh)</span>
                         </div>
                         {% elif mhs.biometric_state == 'pending_gallery' %}
                         <div class="flex items-center gap-1.5 text-sky-400">
                             <span class="w-2 h-2 rounded-full bg-sky-500"></span>
-                            <span class="text-[12px] font-semibold">Chờ cập nhật gallery</span>
+                            <span class="font-title-sm text-[13px] font-semibold">Chờ cập nhật gallery</span>
                         </div>
                         {% elif mhs.biometric_state == 'incomplete' %}
                         <div class="flex items-center gap-1.5 text-orange-400">
                             <span class="w-2 h-2 rounded-full bg-orange-500"></span>
-                            <span class="text-[12px] font-semibold">Đăng ký chưa hoàn tất</span>
+                            <span class="font-title-sm text-[13px] font-semibold">Đăng ký chưa hoàn tất</span>
                         </div>
                         {% else %}
                         <div class="flex items-center gap-1.5 text-amber-400">
                             <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                            <span class="text-[12px] font-semibold">Chưa đăng ký</span>
+                            <span class="font-title-sm text-[13px] font-semibold">Chưa đăng ký</span>
                         </div>
                         {% endif %}
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <a href="{{ url_for('mahasiswa_edit', id=mhs.id) }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all">
+                        <div class="flex items-center justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                            <a href="{{ url_for('mahasiswa_edit', id=mhs.id) }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all" title="Chỉnh sửa">
                                 <span class="material-symbols-outlined text-[20px]">edit</span>
                             </a>
-                            <button onclick='konfirmasiHapus({{ mhs.id }}, {{ mhs.nama|tojson }})' class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-error/10 hover:text-error transition-all">
+                            <button onclick='konfirmasiHapus({{ mhs.id }}, {{ mhs.nama|tojson }})' class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-error/10 hover:text-error transition-all" title="Xóa sinh viên">
                                 <span class="material-symbols-outlined text-[20px]">delete</span>
                             </button>
                         </div>
@@ -100,7 +115,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="5" class="px-6 py-16 text-center">
+                    <td colspan="6" class="px-6 py-16 text-center">
                         <span class="material-symbols-outlined text-4xl text-on-surface-variant/20 mb-2">group</span>
                         <p class="font-body-sm text-on-surface-variant">Chưa có sinh viên nào đăng ký.</p>
                     </td>

@@ -1,0 +1,1519 @@
+{
+  "meta": {
+    "schema_version": 1,
+    "extractor_version": "1.0.0",
+    "generated_at": "1970-01-01T00:00:00.000Z",
+    "root": "docs",
+    "node_count": 20,
+    "edge_count": 78,
+    "coverage": {
+      "docs_total": 17,
+      "docs_parsed": 8,
+      "unparsed_docs": [
+        {
+          "path": "docs/absensi/KE_HOACH_YOLO_ARCFACE_REALTIME.md",
+          "reason": "no-frontmatter-and-no-known-shape"
+        },
+        {
+          "path": "docs/absensi/REVIEW_YOLO_ARCFACE.md",
+          "reason": "no-frontmatter-and-no-known-shape"
+        },
+        {
+          "path": "docs/absensi/VAN_HANH_MODEL_ONNX.md",
+          "reason": "no-frontmatter-and-no-known-shape"
+        },
+        {
+          "path": "docs/absensi/html-wireframe/enrollment-wireframe-html-index.md",
+          "reason": "no-frontmatter-and-no-known-shape"
+        },
+        {
+          "path": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+          "reason": "no-frontmatter-and-no-known-shape"
+        },
+        {
+          "path": "docs/absensi/jadwal-uiux-review-spec.md",
+          "reason": "no-frontmatter-and-no-known-shape"
+        },
+        {
+          "path": "docs/absensi/test/api/api-tests.md",
+          "reason": "no-frontmatter-and-no-known-shape"
+        },
+        {
+          "path": "docs/absensi/test/checklist/absensi-checklist-index.md",
+          "reason": "no-frontmatter-and-no-known-shape"
+        },
+        {
+          "path": "docs/absensi/test/testcases/absensi-testcase-index.md",
+          "reason": "no-frontmatter-and-no-known-shape"
+        }
+      ],
+      "unresolved_refs": [
+        {
+          "ref": "CHK-api-001",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 14
+          }
+        },
+        {
+          "ref": "CHK-api-002",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 15
+          }
+        },
+        {
+          "ref": "CHK-api-003",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 16
+          }
+        },
+        {
+          "ref": "CHK-api-004",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 17
+          }
+        },
+        {
+          "ref": "CHK-api-010",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 23
+          }
+        },
+        {
+          "ref": "CHK-api-011",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 24
+          }
+        },
+        {
+          "ref": "CHK-api-012",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 25
+          }
+        },
+        {
+          "ref": "CHK-api-013",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 26
+          }
+        },
+        {
+          "ref": "CHK-api-014",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 27
+          }
+        },
+        {
+          "ref": "CHK-api-015",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 28
+          }
+        },
+        {
+          "ref": "CHK-api-016",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 29
+          }
+        },
+        {
+          "ref": "CHK-api-017",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 30
+          }
+        },
+        {
+          "ref": "CHK-api-020",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 36
+          }
+        },
+        {
+          "ref": "CHK-api-021",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 37
+          }
+        },
+        {
+          "ref": "CHK-api-022",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 38
+          }
+        },
+        {
+          "ref": "CHK-api-023",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 39
+          }
+        },
+        {
+          "ref": "CHK-api-030",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 45
+          }
+        },
+        {
+          "ref": "CHK-api-031",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 46
+          }
+        },
+        {
+          "ref": "CHK-api-032",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 47
+          }
+        },
+        {
+          "ref": "CHK-api-033",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 48
+          }
+        },
+        {
+          "ref": "CHK-api-034",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 49
+          }
+        },
+        {
+          "ref": "E-att-001",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 25
+          }
+        },
+        {
+          "ref": "E-att-002",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 27
+          }
+        },
+        {
+          "ref": "E-enr-001",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 46
+          }
+        },
+        {
+          "ref": "E-srch-001",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 39
+          }
+        },
+        {
+          "ref": "E-trn-001",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 48
+          }
+        },
+        {
+          "ref": "FR-att-001",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 23
+          }
+        },
+        {
+          "ref": "FR-att-002",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 24
+          }
+        },
+        {
+          "ref": "FR-att-003",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 26
+          }
+        },
+        {
+          "ref": "FR-auth-001",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 14
+          }
+        },
+        {
+          "ref": "FR-auth-002",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 15
+          }
+        },
+        {
+          "ref": "FR-auth-003",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 16
+          }
+        },
+        {
+          "ref": "FR-auth-004",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 17
+          }
+        },
+        {
+          "ref": "FR-cam-001",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 28
+          }
+        },
+        {
+          "ref": "FR-cam-002",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 29
+          }
+        },
+        {
+          "ref": "FR-cam-003",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 30
+          }
+        },
+        {
+          "ref": "FR-enr-001",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 45
+          }
+        },
+        {
+          "ref": "FR-mhs-001",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 37
+          }
+        },
+        {
+          "ref": "FR-sch-001",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 36
+          }
+        },
+        {
+          "ref": "FR-srch-001",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 38
+          }
+        },
+        {
+          "ref": "FR-trn-001",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 47
+          }
+        },
+        {
+          "ref": "FR-trn-002",
+          "source": {
+            "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+            "line": 49
+          }
+        }
+      ],
+      "uncataloged_content": [],
+      "partial_parse_docs": [
+        {
+          "path": "docs/absensi/html-wireframe/enrollment-wireframe-html-index.md",
+          "reason": "parseWireframeHtmlIndex trích được 0 item — format lệch?"
+        },
+        {
+          "path": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+          "reason": "parseWireframeHtmlIndex trích được 0 item — format lệch?"
+        },
+        {
+          "path": "docs/absensi/srs/enrollment-userflow.md",
+          "reason": "parseUserFlow trích được 0 item — format lệch?"
+        },
+        {
+          "path": "docs/absensi/srs/jadwal-userflow.md",
+          "reason": "parseUserFlow trích được 0 item — format lệch?"
+        },
+        {
+          "path": "docs/absensi/test/api/api-tests.md",
+          "reason": "parseApiTests trích được 0 item — format lệch?"
+        },
+        {
+          "path": "docs/absensi/test/checklist/absensi-checklist-index.md",
+          "reason": "parseTestIndex trích được 0 item — format lệch?"
+        },
+        {
+          "path": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+          "reason": "parseChecklistContent trích được 0 item — format lệch?"
+        },
+        {
+          "path": "docs/absensi/test/checklist/checklist-enrollment-quality.md",
+          "reason": "parseChecklistContent trích được 0 item — format lệch?"
+        },
+        {
+          "path": "docs/absensi/test/checklist/checklist-regression.md",
+          "reason": "parseChecklistContent trích được 0 item — format lệch?"
+        },
+        {
+          "path": "docs/absensi/test/checklist/checklist-yolo-arcface-realtime.md",
+          "reason": "parseChecklistContent trích được 0 item — format lệch?"
+        },
+        {
+          "path": "docs/absensi/test/testcases/absensi-testcase-index.md",
+          "reason": "parseTestIndex trích được 0 item — format lệch?"
+        },
+        {
+          "path": "docs/absensi/test/testcases/testcases-enrollment-quality.md",
+          "reason": "TC block bắt đầu line 1 thiếu Checklist hợp lệ; parseTestCaseContent trích được 0 item — format lệch?"
+        },
+        {
+          "path": "docs/absensi/test/testcases/testcases-regression.md",
+          "reason": "TC block bắt đầu line 1 thiếu Checklist hợp lệ; parseTestCaseContent trích được 0 item — format lệch?"
+        }
+      ],
+      "notes": [
+        ".claude/state/atlassian/sync-state.yaml vắng — bỏ qua nguồn Jira/Confluence canonical",
+        "docs/absensi/html-wireframe/enrollment-wireframe-html-index.md: shape parseWireframeHtmlIndex trích được 0 item — format lệch?",
+        "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md: shape parseWireframeHtmlIndex trích được 0 item — format lệch?",
+        "docs/absensi/srs/enrollment-userflow.md: frontmatter feature 'enrollment' ≠ folder 'absensi' — rename feature nửa vời?",
+        "docs/absensi/srs/enrollment-userflow.md: shape parseUserFlow trích được 0 item — format lệch?",
+        "docs/absensi/srs/jadwal-userflow.md: frontmatter feature 'jadwal' ≠ folder 'absensi' — rename feature nửa vời?",
+        "docs/absensi/srs/jadwal-userflow.md: shape parseUserFlow trích được 0 item — format lệch?",
+        "docs/absensi/test/api/api-tests.md: shape parseApiTests trích được 0 item — format lệch?",
+        "docs/absensi/test/checklist/absensi-checklist-index.md: shape parseTestIndex trích được 0 item — format lệch?",
+        "docs/absensi/test/checklist/checklist-api-endpoints.md: shape parseChecklistContent trích được 0 item — format lệch?",
+        "docs/absensi/test/checklist/checklist-enrollment-quality.md: shape parseChecklistContent trích được 0 item — format lệch?",
+        "docs/absensi/test/checklist/checklist-regression.md: shape parseChecklistContent trích được 0 item — format lệch?",
+        "docs/absensi/test/checklist/checklist-yolo-arcface-realtime.md: shape parseChecklistContent trích được 0 item — format lệch?",
+        "docs/absensi/test/testcases/absensi-testcase-index.md: shape parseTestIndex trích được 0 item — format lệch?",
+        "docs/absensi/test/testcases/testcases-enrollment-quality.md: shape parseTestCaseContent trích được 0 item — format lệch?",
+        "docs/absensi/test/testcases/testcases-regression.md: shape parseTestCaseContent trích được 0 item — format lệch?"
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "key": "docs/absensi/KE_HOACH_YOLO_ARCFACE_REALTIME.md",
+      "type": "doc",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "Kế hoạch build: YOLOv8n-Face + ArcFace realtime",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/KE_HOACH_YOLO_ARCFACE_REALTIME.md",
+        "line": 1
+      },
+      "props": {
+        "doc_type": "unknown"
+      }
+    },
+    {
+      "key": "docs/absensi/REVIEW_YOLO_ARCFACE.md",
+      "type": "doc",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "Review implementation: YOLO + ArcFace realtime",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/REVIEW_YOLO_ARCFACE.md",
+        "line": 1
+      },
+      "props": {
+        "doc_type": "unknown"
+      }
+    },
+    {
+      "key": "docs/absensi/VAN_HANH_MODEL_ONNX.md",
+      "type": "doc",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "Van hanh model ONNX",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/VAN_HANH_MODEL_ONNX.md",
+        "line": 1
+      },
+      "props": {
+        "doc_type": "unknown"
+      }
+    },
+    {
+      "key": "docs/absensi/html-wireframe/enrollment-wireframe-html-index.md",
+      "type": "doc",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "MASTER INDEX WIREFRAME HTML — ĐĂNG KÝ KHUÔN MẶT HUD (/enrollment)",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/html-wireframe/enrollment-wireframe-html-index.md",
+        "line": 1
+      },
+      "props": {
+        "doc_type": "unknown"
+      }
+    },
+    {
+      "key": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+      "type": "doc",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "MASTER INDEX WIREFRAME HTML — QUẢN LÝ LỊCH HỌC (/jadwal)",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+        "line": 1
+      },
+      "props": {
+        "doc_type": "unknown"
+      }
+    },
+    {
+      "key": "docs/absensi/jadwal-uiux-review-spec.md",
+      "type": "doc",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "ĐẶC TẢ YÊU CẦU NÂNG CẤP UI/UX TRANG QUẢN LÝ LỊCH HỌC (/jadwal)",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/jadwal-uiux-review-spec.md",
+        "line": 1
+      },
+      "props": {
+        "doc_type": "unknown"
+      }
+    },
+    {
+      "key": "docs/absensi/srs/enrollment-userflow.md",
+      "type": "doc",
+      "subtype": null,
+      "feature": "enrollment",
+      "title": "User Flow — Đăng ký khuôn mặt (/enrollment)",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/srs/enrollment-userflow.md",
+        "line": 8
+      },
+      "props": {
+        "doc_type": "unknown"
+      }
+    },
+    {
+      "key": "docs/absensi/srs/jadwal-userflow.md",
+      "type": "doc",
+      "subtype": null,
+      "feature": "jadwal",
+      "title": "User Flow — Quản lý lịch học (/jadwal)",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/srs/jadwal-userflow.md",
+        "line": 8
+      },
+      "props": {
+        "doc_type": "unknown"
+      }
+    },
+    {
+      "key": "docs/absensi/test/api/api-tests.md",
+      "type": "doc",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "Đặc Tả Kiểm Thử API Absensi & Kết Quả Thực Thi",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/test/api/api-tests.md",
+        "line": 1
+      },
+      "props": {
+        "doc_type": "unknown"
+      }
+    },
+    {
+      "key": "docs/absensi/test/checklist/absensi-checklist-index.md",
+      "type": "doc",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "Chỉ mục checklist kiểm thử Absensi",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/test/checklist/absensi-checklist-index.md",
+        "line": 1
+      },
+      "props": {
+        "doc_type": "unknown"
+      }
+    },
+    {
+      "key": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "type": "doc",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "Checklist Kiểm Thử API Endpoints — Hệ Thống Điểm Danh Sinh Trắc Học Absensi",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 1
+      },
+      "props": {
+        "doc_type": "test_checklist_content"
+      }
+    },
+    {
+      "key": "docs/absensi/test/checklist/checklist-enrollment-quality.md",
+      "type": "doc",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "Checklist chất lượng đăng ký khuôn mặt và gallery realtime",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-enrollment-quality.md",
+        "line": 1
+      },
+      "props": {
+        "doc_type": "test_checklist_content"
+      }
+    },
+    {
+      "key": "docs/absensi/test/checklist/checklist-regression.md",
+      "type": "doc",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "Checklist regression và API Absensi",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-regression.md",
+        "line": 1
+      },
+      "props": {
+        "doc_type": "test_checklist_content"
+      }
+    },
+    {
+      "key": "docs/absensi/test/checklist/checklist-yolo-arcface-realtime.md",
+      "type": "doc",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "Checklist test YOLO + ArcFace realtime",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-yolo-arcface-realtime.md",
+        "line": 1
+      },
+      "props": {
+        "doc_type": "test_checklist_content"
+      }
+    },
+    {
+      "key": "docs/absensi/test/testcases/absensi-testcase-index.md",
+      "type": "doc",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "Chỉ mục test case Absensi",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/test/testcases/absensi-testcase-index.md",
+        "line": 1
+      },
+      "props": {
+        "doc_type": "unknown"
+      }
+    },
+    {
+      "key": "docs/absensi/test/testcases/testcases-enrollment-quality.md",
+      "type": "test_case",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "Test case chất lượng đăng ký khuôn mặt và gallery realtime",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/test/testcases/testcases-enrollment-quality.md",
+        "line": 1
+      },
+      "props": {
+        "doc_type": "test_case"
+      }
+    },
+    {
+      "key": "docs/absensi/test/testcases/testcases-regression.md",
+      "type": "test_case",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "Test case regression Absensi",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/test/testcases/testcases-regression.md",
+        "line": 1
+      },
+      "props": {
+        "doc_type": "test_case"
+      }
+    },
+    {
+      "key": "feature:absensi",
+      "type": "feature",
+      "subtype": null,
+      "feature": "absensi",
+      "title": "absensi",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/KE_HOACH_YOLO_ARCFACE_REALTIME.md",
+        "line": 1
+      },
+      "props": {}
+    },
+    {
+      "key": "feature:enrollment",
+      "type": "feature",
+      "subtype": null,
+      "feature": "enrollment",
+      "title": "enrollment",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/srs/enrollment-userflow.md",
+        "line": 1
+      },
+      "props": {}
+    },
+    {
+      "key": "feature:jadwal",
+      "type": "feature",
+      "subtype": null,
+      "feature": "jadwal",
+      "title": "jadwal",
+      "status": null,
+      "updated": null,
+      "source": {
+        "file": "docs/absensi/srs/jadwal-userflow.md",
+        "line": 1
+      },
+      "props": {}
+    }
+  ],
+  "edges": [
+    {
+      "from": "docs/absensi/html-wireframe/enrollment-wireframe-html-index.md",
+      "to": "docs/absensi/html-wireframe/file:/e:/TMU%20UNIVERSITY/MACHINE%20LEARNING/SOURCE%201_%C6%AFU%20TI%C3%8AN/Absensi/docs/absensi/html-wireframe/enrollment-wireframe.html",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/html-wireframe/enrollment-wireframe-html-index.md",
+        "line": 6
+      }
+    },
+    {
+      "from": "docs/absensi/html-wireframe/enrollment-wireframe-html-index.md",
+      "to": "docs/absensi/html-wireframe/file:/e:/TMU%20UNIVERSITY/MACHINE%20LEARNING/SOURCE%201_%C6%AFU%20TI%C3%8AN/Absensi/docs/absensi/html-wireframe/scan-face-hud.html",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/html-wireframe/enrollment-wireframe-html-index.md",
+        "line": 15
+      }
+    },
+    {
+      "from": "docs/absensi/html-wireframe/enrollment-wireframe-html-index.md",
+      "to": "docs/absensi/html-wireframe/file:/e:/TMU%20UNIVERSITY/MACHINE%20LEARNING/SOURCE%201_%C6%AFU%20TI%C3%8AN/Absensi/docs/absensi/srs/enrollment-userflow.md",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/html-wireframe/enrollment-wireframe-html-index.md",
+        "line": 20
+      }
+    },
+    {
+      "from": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+      "to": "docs/absensi/html-wireframe/file:/e:/TMU%20UNIVERSITY/MACHINE%20LEARNING/SOURCE%201_%C6%AFU%20TI%C3%8AN/Absensi/docs/absensi/html-wireframe/danh-sach-jadwal.html",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+        "line": 15
+      }
+    },
+    {
+      "from": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+      "to": "docs/absensi/html-wireframe/file:/e:/TMU%20UNIVERSITY/MACHINE%20LEARNING/SOURCE%201_%C6%AFU%20TI%C3%8AN/Absensi/docs/absensi/html-wireframe/jadwal-wireframe.html",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+        "line": 6
+      }
+    },
+    {
+      "from": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+      "to": "docs/absensi/html-wireframe/file:/e:/TMU%20UNIVERSITY/MACHINE%20LEARNING/SOURCE%201_%C6%AFU%20TI%C3%8AN/Absensi/docs/absensi/html-wireframe/them-sua-jadwal.html",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+        "line": 16
+      }
+    },
+    {
+      "from": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+      "to": "docs/absensi/html-wireframe/file:/e:/TMU%20UNIVERSITY/MACHINE%20LEARNING/SOURCE%201_%C6%AFU%20TI%C3%8AN/Absensi/docs/absensi/html-wireframe/xoa-jadwal.html",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+        "line": 17
+      }
+    },
+    {
+      "from": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+      "to": "docs/absensi/html-wireframe/file:/e:/TMU%20UNIVERSITY/MACHINE%20LEARNING/SOURCE%201_%C6%AFU%20TI%C3%8AN/Absensi/docs/absensi/jadwal-uiux-review-spec.md",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+        "line": 22
+      }
+    },
+    {
+      "from": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+      "to": "docs/absensi/html-wireframe/file:/e:/TMU%20UNIVERSITY/MACHINE%20LEARNING/SOURCE%201_%C6%AFU%20TI%C3%8AN/Absensi/docs/absensi/srs/jadwal-userflow.md",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+        "line": 23
+      }
+    },
+    {
+      "from": "docs/absensi/jadwal-uiux-review-spec.md",
+      "to": "docs/absensi/file:/e:/TMU%20UNIVERSITY/MACHINE%20LEARNING/SOURCE%201_%C6%AFU%20TI%C3%8AN/Absensi/templates/jadwal/form.html",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/jadwal-uiux-review-spec.md",
+        "line": 67
+      }
+    },
+    {
+      "from": "docs/absensi/jadwal-uiux-review-spec.md",
+      "to": "docs/absensi/file:/e:/TMU%20UNIVERSITY/MACHINE%20LEARNING/SOURCE%201_%C6%AFU%20TI%C3%8AN/Absensi/templates/jadwal/index.html",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/jadwal-uiux-review-spec.md",
+        "line": 66
+      }
+    },
+    {
+      "from": "docs/absensi/jadwal-uiux-review-spec.md",
+      "to": "docs/absensi/file:/e:/TMU%20UNIVERSITY/MACHINE%20LEARNING/SOURCE%201_%C6%AFU%20TI%C3%8AN/Absensi/templates/stitch/manajemen_jadwal_sistem_absensi/code.html",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/jadwal-uiux-review-spec.md",
+        "line": 68
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/absensi-checklist-index.md",
+      "to": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/absensi-checklist-index.md",
+        "line": 3
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/absensi-checklist-index.md",
+      "to": "docs/absensi/test/checklist/checklist-enrollment-quality.md",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/absensi-checklist-index.md",
+        "line": 9
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/absensi-checklist-index.md",
+      "to": "docs/absensi/test/checklist/checklist-regression.md",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/absensi-checklist-index.md",
+        "line": 4
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-001",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 14
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-002",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 15
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-003",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 16
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-004",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 17
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-010",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 23
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-011",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 24
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-012",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 25
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-013",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 26
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-014",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 27
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-015",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 28
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-016",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 29
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-017",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 30
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-020",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 36
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-021",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 37
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-022",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 38
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-023",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 39
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-030",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 45
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-031",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 46
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-032",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 47
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-033",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 48
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "CHK-api-034",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 49
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "E-att-001",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 25
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "E-att-002",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 27
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "E-enr-001",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 46
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "E-srch-001",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 39
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "E-trn-001",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 48
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-att-001",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 23
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-att-002",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 24
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-att-003",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 26
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-auth-001",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 14
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-auth-002",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 15
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-auth-003",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 16
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-auth-004",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 17
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-cam-001",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 28
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-cam-002",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 29
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-cam-003",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 30
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-enr-001",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 45
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-mhs-001",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 37
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-sch-001",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 36
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-srch-001",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 38
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-trn-001",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 47
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "to": "FR-trn-002",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 49
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-enrollment-quality.md",
+      "to": "docs/absensi/test/checklist/file:/E:/TMU%20UNIVERSITY/MACHINE%20LEARNING/SOURCE%201_%C6%AFU%20TI%C3%8AN/Absensi/face/enrollment.py",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-enrollment-quality.md",
+        "line": 56
+      }
+    },
+    {
+      "from": "docs/absensi/test/checklist/checklist-enrollment-quality.md",
+      "to": "docs/absensi/test/checklist/file:/E:/TMU%20UNIVERSITY/MACHINE%20LEARNING/SOURCE%201_%C6%AFU%20TI%C3%8AN/Absensi/tests/test_enrollment_pipeline.py",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-enrollment-quality.md",
+        "line": 59
+      }
+    },
+    {
+      "from": "docs/absensi/test/testcases/absensi-testcase-index.md",
+      "to": "docs/absensi/test/testcases/testcases-enrollment-quality.md",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/testcases/absensi-testcase-index.md",
+        "line": 7
+      }
+    },
+    {
+      "from": "docs/absensi/test/testcases/absensi-testcase-index.md",
+      "to": "docs/absensi/test/testcases/testcases-regression.md",
+      "type": "REFERENCES",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/testcases/absensi-testcase-index.md",
+        "line": 3
+      }
+    },
+    {
+      "from": "feature:absensi",
+      "to": "docs/absensi/KE_HOACH_YOLO_ARCFACE_REALTIME.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/KE_HOACH_YOLO_ARCFACE_REALTIME.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:absensi",
+      "to": "docs/absensi/REVIEW_YOLO_ARCFACE.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/REVIEW_YOLO_ARCFACE.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:absensi",
+      "to": "docs/absensi/VAN_HANH_MODEL_ONNX.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/VAN_HANH_MODEL_ONNX.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:absensi",
+      "to": "docs/absensi/html-wireframe/enrollment-wireframe-html-index.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/html-wireframe/enrollment-wireframe-html-index.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:absensi",
+      "to": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/html-wireframe/jadwal-wireframe-html-index.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:absensi",
+      "to": "docs/absensi/jadwal-uiux-review-spec.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/jadwal-uiux-review-spec.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:absensi",
+      "to": "docs/absensi/test/api/api-tests.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/api/api-tests.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:absensi",
+      "to": "docs/absensi/test/checklist/absensi-checklist-index.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/absensi-checklist-index.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:absensi",
+      "to": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-api-endpoints.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:absensi",
+      "to": "docs/absensi/test/checklist/checklist-enrollment-quality.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-enrollment-quality.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:absensi",
+      "to": "docs/absensi/test/checklist/checklist-regression.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-regression.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:absensi",
+      "to": "docs/absensi/test/checklist/checklist-yolo-arcface-realtime.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/checklist/checklist-yolo-arcface-realtime.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:absensi",
+      "to": "docs/absensi/test/testcases/absensi-testcase-index.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/testcases/absensi-testcase-index.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:absensi",
+      "to": "docs/absensi/test/testcases/testcases-enrollment-quality.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/testcases/testcases-enrollment-quality.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:absensi",
+      "to": "docs/absensi/test/testcases/testcases-regression.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/test/testcases/testcases-regression.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:enrollment",
+      "to": "docs/absensi/srs/enrollment-userflow.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/srs/enrollment-userflow.md",
+        "line": 1
+      }
+    },
+    {
+      "from": "feature:jadwal",
+      "to": "docs/absensi/srs/jadwal-userflow.md",
+      "type": "CONTAINS",
+      "provenance": "heuristic",
+      "source": {
+        "file": "docs/absensi/srs/jadwal-userflow.md",
+        "line": 1
+      }
+    }
+  ]
+}

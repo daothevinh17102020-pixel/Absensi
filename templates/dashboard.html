@@ -3,24 +3,27 @@
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+    /* Stealth Split Resizer: Bình thường trong suốt, rê chuột/kéo hiện line cam neon 2px */
+    #split-resizer:hover #resizer-line {
+        background: #ff5500 !important;
+        box-shadow: 0 0 8px rgba(255, 85, 0, 0.7) !important;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<!-- Section 1: Kamera + Absensi Hari Ini (Được đưa lên đầu) -->
-<section class="grid grid-cols-12 gap-8 mb-8">
-    <!-- Kamera Absensi (live feed) -->
-    <div
-        class="col-span-12 lg:col-span-7 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col h-[500px]">
-        <div class="p-gutter border-b border-outline-variant flex justify-between items-center">
+<!-- Section 1: Kamera + Absensi Hari Ini (Bố cục Split View Co Giãn Linh Hoạt với Rãnh Tàng Hình 10px) -->
+<section id="dash-split-container" class="flex flex-col lg:flex-row items-stretch mb-8 relative w-full h-auto lg:h-[530px]">
+    <!-- Bảng 1 (Trái): Camera Điểm Danh (Card bo tròn độc lập) -->
+    <div id="pane-camera"
+        class="w-full lg:w-[58%] min-w-0 lg:min-w-[340px] bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col h-[500px] lg:h-full shadow-lg relative transition-[width] duration-75 ease-out">
+        <div class="p-gutter border-b border-outline-variant flex justify-between items-center bg-surface-container-high/40 flex-shrink-0">
             <div class="flex items-center gap-3">
                 <span class="material-symbols-outlined text-primary">videocam</span>
                 <h4 class="font-title-sm text-title-sm text-on-surface">Camera điểm danh</h4>
             </div>
             <div class="flex items-center gap-2">
-                <button id="btn-fullscreen-cam" type="button" title="Toàn màn hình camera"
-                    class="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors border border-outline-variant/50 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-[18px]">fullscreen</span>
-                </button>
                 <div class="flex items-center gap-2 bg-emerald-500/10 px-3 py-1 rounded-full">
                     <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                     <span id="connection-status" class="text-body-sm font-semibold text-emerald-500">Đang kết nối...</span>
@@ -28,7 +31,7 @@
             </div>
         </div>
         <!-- Container kamera dengan video feed -->
-        <div id="camera-container" class="flex-1 bg-surface-container-lowest relative flex items-center justify-center">
+        <div id="camera-container" class="flex-1 bg-surface-container-lowest relative flex items-center justify-center overflow-hidden">
             <!-- Video element untuk webcam -->
             <video id="camera-feed" autoplay playsinline muted></video>
 
@@ -50,7 +53,6 @@
                 </div>
                 <p class="text-on-surface font-body-md font-semibold mb-1">Cảm biến thị giác AI sẵn sàng</p>
                 <p class="text-on-surface-variant font-body-sm">Nhấn nút "Bật camera" để kích hoạt nhận diện khuôn mặt GRIT.AI</p>
-                <p class="text-outline text-[11px] mt-1">Thuật toán chống giả mạo sinh trắc học thời gian thực sẽ tự động hoạt động</p>
             </div>
 
             <!-- Anti-spoofing indicator -->
@@ -79,72 +81,76 @@
         </div>
     </div>
 
-    <!-- Absensi Hari Ini -->
-    <div
-        class="col-span-12 lg:col-span-5 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col h-[500px]">
-        <div
-            class="p-gutter border-b border-outline-variant flex justify-between items-center bg-surface-container-high/50">
-            <h4 class="font-title-sm text-title-sm text-on-surface">Điểm danh hôm nay</h4>
-            <div class="flex items-center gap-2">
+    <!-- Khoảng trống giữa 2 bảng: Stealth Split Resizer (10px, trong suốt ở trạng thái tĩnh, rê chuột hiện line cam 2px) -->
+    <div id="split-resizer" class="hidden lg:flex w-[10px] items-center justify-center cursor-col-resize select-none relative z-30 flex-shrink-0 bg-transparent">
+        <div id="resizer-line" class="w-[2px] h-full bg-transparent rounded-full transition-all duration-150"></div>
+    </div>
+
+    <!-- Bảng 2 (Phải): Điểm Danh Hôm Nay (Card bo tròn độc lập & Co giãn thích ứng thông minh) -->
+    <div id="pane-attendance"
+        class="w-full lg:flex-1 min-w-0 lg:min-w-[280px] bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col h-[500px] lg:h-full shadow-lg relative mt-4 lg:mt-0">
+        <div id="attend-header"
+            class="p-gutter border-b border-outline-variant flex justify-between items-center bg-surface-container-high/50 flex-shrink-0 gap-2">
+            <h4 class="font-title-sm text-title-sm text-on-surface truncate">Điểm danh hôm nay</h4>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                {% if session.get('role') != 'guest' %}
                 <button id="btn-absen-manual"
-                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[12px] font-bold hover:bg-primary/20 transition-colors border border-primary/20">
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[12px] font-bold hover:bg-primary/20 transition-colors border border-primary/20 whitespace-nowrap">
                     <span class="material-symbols-outlined text-[16px]">edit_note</span>
-                    Điểm danh thủ công
+                    <span id="manual-attend-label">Điểm danh thủ công</span>
                 </button>
                 <a href="{{ url_for('absensi_rekap') }}"
-                    class="text-primary text-body-sm font-semibold hover:underline">Xem tất cả</a>
+                    class="text-primary text-body-sm font-semibold hover:underline whitespace-nowrap">Xem tất cả</a>
+                {% endif %}
             </div>
         </div>
-        <div class="flex-1 overflow-y-auto">
-            <table class="w-full text-left border-collapse">
+        <div id="attend-table-container" class="flex-1 overflow-y-auto overflow-x-hidden">
+            <table class="w-full text-left border-collapse table-fixed">
                 <thead class="sticky top-0 bg-surface-container-low z-10">
                     <tr>
-                        <th
-                            class="px-4 py-3 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant">
+                        <th class="px-4 py-3 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant truncate">
                             Sinh viên</th>
-                        <th
-                            class="px-4 py-3 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant">
+                        <th class="px-3 py-3 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant whitespace-nowrap w-[90px] text-center">
                             Thời gian</th>
-                        <th
-                            class="px-4 py-3 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant">
+                        <th class="px-3 py-3 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant whitespace-nowrap w-[95px] text-right">
                             Trạng thái</th>
                     </tr>
                 </thead>
                 <tbody id="absensi-tbody" class="divide-y divide-outline-variant">
                     {% for a in absensi_hari_ini %}
                     <tr class="hover:bg-surface-container-high transition-colors absensi-item-row cursor-context-menu" data-id="{{ a.id }}" data-nama="{{ a.nama }}" data-status="{{ a.status }}">
-                        <td class="px-4 py-2.5">
-                            <div class="flex items-center gap-2.5">
+                        <td class="px-4 py-2.5 min-w-0">
+                            <div class="flex items-center gap-2.5 min-w-0">
                                 <div
                                     class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center flex-shrink-0">
                                     <span class="material-symbols-outlined text-secondary text-[18px]">person</span>
                                 </div>
-                                <div class="min-w-0">
-                                    <p class="font-body-sm text-on-surface font-semibold truncate">{{ a.nama }}</p>
-                                    <p class="text-[11px] text-on-surface-variant truncate">{{ a.nim }} — {{ a.nama_kelas }}</p>
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-body-sm text-on-surface font-semibold truncate leading-snug">{{ a.nama }}</p>
+                                    <p class="text-[11px] text-on-surface-variant truncate leading-none mt-0.5">{{ a.nim }} — {{ a.nama_kelas }}</p>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-4 py-2.5 text-body-sm text-on-surface-variant whitespace-nowrap">{{ a.waktu_absen }}</td>
-                        <td class="px-4 py-2.5 whitespace-nowrap">
+                        <td class="px-3 py-2.5 text-body-sm text-on-surface-variant whitespace-nowrap text-center font-mono text-[12.5px]">{{ a.waktu_absen }}</td>
+                        <td class="px-3 py-2.5 whitespace-nowrap text-right">
                             {% if a.status == 'hadir' %}
                             <span
-                                class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 text-[11px] font-bold">Có
+                                class="inline-block px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 text-[11px] font-bold">Có
                                 mặt</span>
                             {% elif a.status == 'terlambat' %}
-                            <span class="px-2.5 py-0.5 rounded-full bg-tertiary/15 text-tertiary text-[11px] font-bold">Đi
+                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-tertiary/15 text-tertiary text-[11px] font-bold">Đi
                                 muộn</span>
                             {% elif a.status == 'alpha' %}
-                            <span class="px-2.5 py-0.5 rounded-full bg-error/15 text-error text-[11px] font-bold">Vắng không
+                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-error/15 text-error text-[11px] font-bold">Vắng không
                                 phép</span>
                             {% elif a.status == 'izin' %}
-                            <span class="px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 text-[11px] font-bold" {%
+                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 text-[11px] font-bold" {%
                                 if a.alasan %}title="Lý do: {{ a.alasan }}" {% endif %}>Vắng có phép</span>
                             {% elif a.status == 'sakit' %}
-                            <span class="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 text-[11px] font-bold" {%
+                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 text-[11px] font-bold" {%
                                 if a.alasan %}title="Lý do: {{ a.alasan }}" {% endif %}>Nghỉ ốm</span>
                             {% else %}
-                            <span class="px-2.5 py-0.5 rounded-full bg-secondary/15 text-secondary text-[11px] font-bold">{{
+                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-secondary/15 text-secondary text-[11px] font-bold">{{
                                 a.status|capitalize }}</span>
                             {% endif %}
                         </td>
@@ -333,7 +339,8 @@
 <!-- Toast container cho thông báo -->
 <div id="toast-container"></div>
 
-<!-- Context Menu Xóa Điểm Danh Khi Chuột Phải -->
+{% if session.get('role') != 'guest' %}
+<!-- Context Menu Xóa Điểm Danh Khi Chuột Phải (Chỉ dành cho Quản trị viên) -->
 <div id="attendance-ctx-menu" class="hidden fixed z-[9999] bg-surface-container-high border border-outline-variant rounded-xl p-1.5 shadow-2xl min-w-[220px] backdrop-blur-md">
     <div id="ctx-student-info" class="text-[11px] font-bold text-on-surface-variant px-3 py-1.5 border-b border-outline-variant/40 flex items-center gap-1.5">
         <span class="material-symbols-outlined text-[14px] text-primary">account_circle</span>
@@ -344,6 +351,7 @@
         <span>Xóa để điểm danh lại</span>
     </button>
 </div>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
@@ -662,6 +670,119 @@
                     </tr>
                 `;
             }
+        }
+    })();
+
+    // Script điều phối thanh kéo thu phóng 2 bảng (Stealth Split Resizer)
+    (function () {
+        const container = document.getElementById('dash-split-container');
+        const leftPane = document.getElementById('pane-camera');
+        const rightPane = document.getElementById('pane-attendance');
+        const resizer = document.getElementById('split-resizer');
+        const line = document.getElementById('resizer-line');
+        const manualLabel = document.getElementById('manual-attend-label');
+        if (!container || !leftPane || !rightPane || !resizer || !line) return;
+
+        let isDragging = false;
+        let activePointerId = null;
+
+        function updateAdaptive(rWidth) {
+            if (manualLabel) {
+                manualLabel.style.display = rWidth < 360 ? 'none' : 'inline';
+            }
+        }
+
+        function applyRatio(pct) {
+            leftPane.style.width = pct.toFixed(1) + '%';
+            leftPane.style.flex = `0 0 ${pct.toFixed(1)}%`;
+            setTimeout(function () {
+                if (rightPane) updateAdaptive(rightPane.offsetWidth);
+            }, 10);
+        }
+
+        function handlePointerDown(e) {
+            if (window.innerWidth < 1024) return;
+            isDragging = true;
+            activePointerId = e.pointerId;
+
+            // Bắt chặt pointer theo chuẩn W3C để không trượt khi chuột văng nhanh
+            if (e.pointerId && resizer.setPointerCapture) {
+                try { resizer.setPointerCapture(e.pointerId); } catch (_) {}
+            }
+
+            // Tắt transition khi kéo để tracking tức thời 60fps, không bị lag/rơ
+            leftPane.style.transition = 'none';
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            line.style.background = '#ff5500';
+            line.style.boxShadow = '0 0 8px rgba(255, 85, 0, 0.7)';
+
+            window.addEventListener('pointermove', handlePointerMove);
+            window.addEventListener('pointerup', handlePointerUp);
+        }
+
+        function handlePointerMove(e) {
+            if (!isDragging) return;
+            const rect = container.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+            if (!clientX) return;
+
+            // Khống chế min-width động bằng pixel: Camera >= 320px, Bảng >= 280px
+            const minLeftPx = 320;
+            const minRightPx = 280;
+            const containerW = rect.width;
+            const minPct = (minLeftPx / containerW) * 100;
+            const maxPct = ((containerW - minRightPx) / containerW) * 100;
+
+            let offsetX = clientX - rect.left;
+            let pct = (offsetX / containerW) * 100;
+            if (pct < minPct) pct = minPct;
+            if (pct > maxPct) pct = maxPct;
+
+            applyRatio(pct);
+        }
+
+        function handlePointerUp(e) {
+            if (!isDragging) return;
+            isDragging = false;
+
+            if (activePointerId && resizer.releasePointerCapture) {
+                try { resizer.releasePointerCapture(activePointerId); } catch (_) {}
+            }
+            activePointerId = null;
+
+            // Khôi phục transition để khi double-click hoặc đổi tỷ lệ có animation mượt mà
+            leftPane.style.transition = '';
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            line.style.background = 'transparent';
+            line.style.boxShadow = 'none';
+
+            window.removeEventListener('pointermove', handlePointerMove);
+            window.removeEventListener('pointerup', handlePointerUp);
+        }
+
+        resizer.addEventListener('pointerdown', handlePointerDown);
+        resizer.addEventListener('dblclick', function () {
+            applyRatio(58);
+        });
+
+        resizer.addEventListener('mouseenter', function () {
+            if (!isDragging) {
+                line.style.background = '#ff5500';
+                line.style.boxShadow = '0 0 8px rgba(255, 85, 0, 0.7)';
+            }
+        });
+        resizer.addEventListener('mouseleave', function () {
+            if (!isDragging) {
+                line.style.background = 'transparent';
+                line.style.boxShadow = 'none';
+            }
+        });
+
+        // Tự động kiểm tra co giãn ban đầu
+        if (window.innerWidth >= 1024) {
+            applyRatio(58);
         }
     })();
 </script>

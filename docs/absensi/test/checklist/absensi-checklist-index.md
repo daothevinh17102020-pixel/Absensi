@@ -1,5 +1,6 @@
 # Chỉ mục checklist kiểm thử Absensi
 
+- [Checklist API Endpoints đầy đủ](checklist-api-endpoints.md)
 - [Checklist regression và API](checklist-regression.md)
 - Phạm vi: xác thực, quản lý học vụ, đăng ký ảnh, điểm danh, nhận diện, camera, báo cáo/export và hợp đồng Việt hóa.
 - Ngoài phạm vi chạy thật: database production, camera vật lý, ESP32 và đo độ chính xác mô hình khi không có fixture được phê duyệt.

@@ -596,11 +596,84 @@ def mahasiswa_hapus(id):
 # TAHAP 8: REKAP ABSENSI + EXPORT
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
+def _lay_du_lieu_ma_tran_rekap(kelas_id=None, filter_dari=None, filter_sampai=None, matakuliah_id=None):
+    """Trích xuất và định dạng ma trận điểm danh 15 buổi học đồng nhất cho cả màn hình xem và xuất Excel."""
+    raw_rekap = db.get_rekap_absensi(kelas_id, filter_dari, filter_sampai, matakuliah_id)
+    ringkasan = db.get_ringkasan_rekap(kelas_id, filter_dari, filter_sampai, matakuliah_id)
+
+    # Lấy danh sách lịch học để mapping kelas_id -> jadwal_id
+    schedules = db.get_semua_jadwal()
+    schedule_by_class = {}
+    for s in schedules:
+        k_id = s.get('kelas_id')
+        if k_id and k_id not in schedule_by_class:
+            schedule_by_class[k_id] = s.get('id')
+
+    # Nhóm bản ghi điểm danh theo user_id: {user_id: {buoi_so: status}}
+    attendance_by_user = {}
+    user_schedules = {}
+    for r in raw_rekap:
+        uid = r.get('user_id')
+        if uid not in attendance_by_user:
+            attendance_by_user[uid] = {}
+        b_so = r.get('buoi_so') or 1
+        attendance_by_user[uid][b_so] = r.get('status')
+        if r.get('jadwal_id'):
+            user_schedules[uid] = r.get('jadwal_id')
+
+    # Danh sách sinh viên đồng nhất
+    if kelas_id:
+        student_list = db.get_users_by_kelas(kelas_id)
+    else:
+        student_list = db.get_semua_user()
+        if not student_list and raw_rekap:
+            seen_uids = set()
+            student_list = []
+            for r in raw_rekap:
+                if r.get('user_id') not in seen_uids:
+                    seen_uids.add(r['user_id'])
+                    student_list.append({
+                        'id': r['user_id'], 'nama': r['nama'], 'nim': r['nim'],
+                        'kelas_id': r.get('kelas_id'), 'nama_kelas': r.get('nama_kelas')
+                    })
+
+    rekap = []
+    for s in student_list:
+        uid = s.get('id')
+        k_id = s.get('kelas_id')
+        j_id = user_schedules.get(uid) or schedule_by_class.get(k_id)
+
+        folder = os.path.join(DATASET_PATH, str(uid)) if uid else None
+        has_photo = bool(folder and os.path.isdir(folder) and [f for f in os.listdir(folder) if f.lower().endswith('.jpg')])
+
+        user_sess = attendance_by_user.get(uid, {})
+        sessions_map = {}
+        for b in range(1, 16):
+            sessions_map[b] = user_sess.get(b)
+
+        rekap.append({
+            'id': uid,
+            'user_id': uid,
+            'stt': s.get('stt'),
+            'nama': s.get('nama'),
+            'nim': s.get('nim'),
+            'kelas_id': k_id,
+            'nama_kelas': s.get('nama_kelas'),
+            'jadwal_id': j_id,
+            'has_photo': has_photo,
+            'status': sessions_map.get(1),
+            'sessions': sessions_map
+        })
+
+    # Sắp xếp đồng nhất theo Mã SV (NIM)
+    rekap = sorted(rekap, key=lambda x: str(x.get('nim') or ''))
+    return rekap, ringkasan, raw_rekap
+
+
 @app.route('/absensi/rekap')
 @login_required
 def absensi_rekap():
-    """Rekap absensi dengan filter kelas, MK, dan rentang tanggal."""
-    # Ambil parameter filter dari query string
+    """Rekap absensi với bảng ma trận 15 buổi học, hỗ trợ xem và sửa thủ công."""
     kelas_id     = request.args.get('kelas_id', type=int)
     matakuliah_id = request.args.get('matakuliah_id', type=int)
     filter_dari  = request.args.get('dari') or None
@@ -610,11 +683,9 @@ def absensi_rekap():
     daftar_kelas = db.get_semua_kelas()
     daftar_mk    = db.get_semua_matakuliah()
 
-    # Ambil rekap + ringkasan berdasarkan filter
-    rekap    = db.get_rekap_absensi(kelas_id, filter_dari, filter_sampai, matakuliah_id)
-    ringkasan = db.get_ringkasan_rekap(kelas_id, filter_dari, filter_sampai, matakuliah_id)
+    rekap, ringkasan, _ = _lay_du_lieu_ma_tran_rekap(kelas_id, filter_dari, filter_sampai, matakuliah_id)
 
-    # Bangun query string untuk link export (teruskan filter yang sama)
+    # Bangun query string để link export (teruskan filter yang sama)
     _params = []
     if kelas_id:      _params.append(f'kelas_id={kelas_id}')
     if matakuliah_id: _params.append(f'matakuliah_id={matakuliah_id}')
@@ -638,10 +709,7 @@ def absensi_rekap():
 @app.route('/absensi/export')
 @login_required
 def absensi_export():
-    """Export rekap absensi ke CSV atau Excel (.xlsx).
-
-    Query params: format=csv|xlsx, kelas_id, matakuliah_id, dari, sampai
-    """
+    """Export rekap absensi ke CSV hoặc Excel (.xlsx) đồng nhất 100% với bảng hiển thị."""
     import io
     fmt           = request.args.get('format', 'csv').lower()
     kelas_id      = request.args.get('kelas_id', type=int)
@@ -649,93 +717,182 @@ def absensi_export():
     filter_dari   = request.args.get('dari') or None
     filter_sampai = request.args.get('sampai') or None
 
-    rekap = db.get_rekap_absensi(kelas_id, filter_dari, filter_sampai, matakuliah_id)
+    rekap_matrix, _, raw_rekap = _lay_du_lieu_ma_tran_rekap(kelas_id, filter_dari, filter_sampai, matakuliah_id)
 
-    # â”€â”€ Header kolom â”€â”€
-    headers = ['Há» vÃ  tÃªn', 'MÃ£ sinh viÃªn', 'Lá»›p', 'MÃ´n há»c', 'MÃ£ mÃ´n há»c',
-               'Thá»©', 'NgÃ y', 'Thá»i gian Ä‘iá»ƒm danh', 'Tráº¡ng thÃ¡i', 'Ghi chÃº']
-
-    def _row(a):
-        return [
-            a.get('nama', ''), a.get('nim', ''), a.get('nama_kelas', ''),
-            a.get('nama_mk', ''), a.get('kode_mk', ''), a.get('hari', ''),
-            str(a.get('tanggal', '')), str(a.get('waktu_absen', '') or '-'),
-            a.get('status', ''), a.get('alasan', '') or '-'
-        ]
+    status_vi_map = {
+        'hadir': 'Có mặt', 'terlambat': 'Đi muộn', 'izin': 'Có phép',
+        'sakit': 'Có phép', 'alpha': 'Vắng'
+    }
 
     timestamp = now_wib().strftime('%Y%m%d_%H%M%S')
 
     if fmt == 'xlsx':
-        # â”€â”€ Export Excel â”€â”€
+        # ── Xuất Excel: Đồng nhất 100% bảng 19 cột (STT, Sinh viên, Mã SV, Lớp, Buổi 1..15) ──
         try:
             import openpyxl
-            from openpyxl.styles import Font, PatternFill, Alignment
+            from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+            from openpyxl.utils import get_column_letter
             from flask import send_file
 
             wb = openpyxl.Workbook()
             ws = wb.active
-            ws.title = 'Tá»•ng há»£p Ä‘iá»ƒm danh'
+            ws.title = 'Tổng hợp điểm danh'
 
-            # Header baris 1: judul
-            ws.merge_cells('A1:J1')
-            ws['A1'] = 'Tá»”NG Há»¢P ÄIá»‚M DANH â€” Há»† THá»NG ÄIá»‚M DANH'
-            ws['A1'].font = Font(bold=True, size=14)
-            ws['A1'].alignment = Alignment(horizontal='center')
+            # 19 cột tương ứng 100% với bảng trên giao diện
+            headers = ['STT', 'Sinh viên', 'Mã SV', 'Lớp'] + [f'Buổi {b}' for b in range(1, 16)]
 
-            # Header baris 2: kolom
-            header_fill = PatternFill('solid', fgColor='1B2024')
-            for col, h in enumerate(headers, 1):
-                cell = ws.cell(row=2, column=col, value=h)
-                cell.font = Font(bold=True, color='8ED5FF')
+            # Dòng 1: Tiêu đề lớn
+            ws.merge_cells('A1:S1')
+            ws['A1'] = 'TỔNG HỢP ĐIỂM DANH — HỆ THỐNG ĐIỂM DANH'
+            ws['A1'].font = Font(name='Arial', bold=True, size=13, color='0F172A')
+            ws['A1'].fill = PatternFill('solid', fgColor='F1F5F9')
+            ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws.row_dimensions[1].height = 28
+
+            # Dòng 2: Header cột
+            header_fill = PatternFill('solid', fgColor='0F172A')
+            thin_border = Border(
+                left=Side(style='thin', color='CBD5E1'),
+                right=Side(style='thin', color='CBD5E1'),
+                top=Side(style='thin', color='CBD5E1'),
+                bottom=Side(style='thin', color='CBD5E1')
+            )
+
+            for col_idx, h in enumerate(headers, 1):
+                cell = ws.cell(row=2, column=col_idx, value=h)
+                cell.font = Font(name='Arial', bold=True, color='FFFFFF', size=10)
                 cell.fill = header_fill
-                cell.alignment = Alignment(horizontal='center')
+                cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+                cell.border = thin_border
+            ws.row_dimensions[2].height = 25
 
-            # Data
-            STATUS_COLOR = {
-                'hadir': 'D1FAE5', 'terlambat': 'FEF3C7',
-                'izin': 'DBEAFE', 'sakit': 'FEF3C7', 'alpha': 'FEE2E2'
+            # Màu sắc ô trạng thái tương ứng UI AI4BA
+            STATUS_FILLS = {
+                'hadir': PatternFill('solid', fgColor='D1FAE5'),     # Xanh lục nhạt
+                'terlambat': PatternFill('solid', fgColor='FEF3C7'), # Vàng hổ phách nhạt
+                'alpha': PatternFill('solid', fgColor='FEE2E2'),     # Đỏ nhạt
+                'izin': PatternFill('solid', fgColor='DBEAFE'),      # Xanh dương nhạt
+                'sakit': PatternFill('solid', fgColor='DBEAFE')
             }
-            for row_idx, a in enumerate(rekap, 3):
-                row_data = _row(a)
-                for col_idx, val in enumerate(row_data, 1):
-                    cell = ws.cell(row=row_idx, column=col_idx, value=val)
-                    status = a.get('status', '')
-                    # Warnai status (kolom ke-9)
-                    if col_idx == 9 and status in STATUS_COLOR:
-                        cell.fill = PatternFill('solid', fgColor=STATUS_COLOR[status])
+            STATUS_FONTS = {
+                'hadir': Font(name='Arial', bold=True, size=10, color='065F46'),
+                'terlambat': Font(name='Arial', bold=True, size=10, color='92400E'),
+                'alpha': Font(name='Arial', bold=True, size=10, color='991B1B'),
+                'izin': Font(name='Arial', bold=True, size=10, color='1E40AF'),
+                'sakit': Font(name='Arial', bold=True, size=10, color='1E40AF')
+            }
+            FONT_DEFAULT = Font(name='Arial', size=10, color='0F172A')
+            FONT_GRAY = Font(name='Arial', size=10, color='94A3B8')
 
-            # Lebar kolom otomatis
-            col_widths = [25, 15, 12, 25, 12, 10, 12, 14, 12, 25]
-            for i, w in enumerate(col_widths, 1):
-                ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
+            # Dữ liệu từng sinh viên
+            for row_offset, a in enumerate(rekap_matrix, 3):
+                idx_str = f"{row_offset - 2:02d}"
+                nama = a.get('nama', '')
+                nim = a.get('nim', '')
+                lop = a.get('nama_kelas', '-') or '-'
+                sess_map = a.get('sessions', {})
+
+                # Cột A: STT
+                c_stt = ws.cell(row=row_offset, column=1, value=idx_str)
+                c_stt.font = Font(name='Arial', bold=True, size=10, color='334155')
+                c_stt.alignment = Alignment(horizontal='center', vertical='center')
+                c_stt.border = thin_border
+
+                # Cột B: Sinh viên
+                c_sv = ws.cell(row=row_offset, column=2, value=nama)
+                c_sv.font = Font(name='Arial', bold=True, size=10, color='0F172A')
+                c_sv.alignment = Alignment(horizontal='left', vertical='center')
+                c_sv.border = thin_border
+
+                # Cột C: Mã SV
+                c_nim = ws.cell(row=row_offset, column=3, value=nim)
+                c_nim.font = Font(name='Arial', bold=True, size=10, color='334155')
+                c_nim.alignment = Alignment(horizontal='center', vertical='center')
+                c_nim.border = thin_border
+
+                # Cột D: Lớp
+                c_lop = ws.cell(row=row_offset, column=4, value=lop)
+                c_lop.font = FONT_DEFAULT
+                c_lop.alignment = Alignment(horizontal='center', vertical='center')
+                c_lop.border = thin_border
+
+                # Cột E..S: Buổi 1 -> 15
+                for b in range(1, 16):
+                    col_b = 4 + b
+                    st = sess_map.get(b)
+                    val_text = status_vi_map.get(st, '-') if st else '-'
+                    c_b = ws.cell(row=row_offset, column=col_b, value=val_text)
+                    c_b.border = thin_border
+                    c_b.alignment = Alignment(horizontal='center', vertical='center')
+
+                    if st in STATUS_FILLS:
+                        c_b.fill = STATUS_FILLS[st]
+                        c_b.font = STATUS_FONTS[st]
+                    else:
+                        c_b.font = FONT_GRAY
+
+                ws.row_dimensions[row_offset].height = 22
+
+            # Độ rộng các cột chuẩn
+            col_widths = {
+                1: 7,   # STT
+                2: 25,  # Sinh viên
+                3: 14,  # Mã SV
+                4: 12,  # Lớp
+            }
+            for b in range(1, 16):
+                col_widths[4 + b] = 11  # Buổi 1..15
+
+            for c_idx, width in col_widths.items():
+                ws.column_dimensions[get_column_letter(c_idx)].width = width
 
             buf = io.BytesIO()
             wb.save(buf)
             buf.seek(0)
             return send_file(buf, as_attachment=True,
-                             download_name=f'rekap_absensi_{timestamp}.xlsx',
+                             download_name=f'tong_hop_diem_danh_{timestamp}.xlsx',
                              mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         except ImportError:
-            flash('ChÆ°a cÃ i Ä‘áº·t openpyxl. Vui lÃ²ng xuáº¥t dá»¯ liá»‡u dÆ°á»›i dáº¡ng CSV.', 'error')
+            flash('Chưa cài đặt openpyxl. Vui lòng xuất dữ liệu dưới dạng CSV.', 'error')
             return redirect(url_for('absensi_rekap'))
 
     else:
-        # â”€â”€ Export CSV â”€â”€
+        # ── Xuất CSV: Duy trì bảng giao dịch UTF-8 BOM cho tương thích hệ thống ──
         import csv
         from flask import Response
 
+        headers_csv = ['Họ và tên', 'Mã sinh viên', 'Lớp', 'Môn học', 'Mã môn học',
+                       'Thứ', 'Ngày', 'Thời gian điểm danh', 'Trạng thái', 'Ghi chú']
+
+        status_vi_map_csv = {
+            'hadir': 'Có mặt', 'terlambat': 'Đi muộn', 'izin': 'Vắng có phép',
+            'sakit': 'Nghỉ ốm', 'alpha': 'Vắng không phép'
+        }
+
+        def _row(a):
+            return [
+                a.get('nama', ''), a.get('nim', ''), a.get('nama_kelas', ''),
+                a.get('nama_mk', ''), a.get('kode_mk', ''),
+                _get_ten_thu_hien_thi(a.get('hari', '')),
+                str(a.get('tanggal', '')), str(a.get('waktu_absen', '') or '-'),
+                status_vi_map_csv.get(a.get('status', ''), a.get('status', '')),
+                a.get('alasan', '') or '-'
+            ]
+
         def generate_csv():
             buf = io.StringIO()
+            # Thêm UTF-8 BOM để Microsoft Excel trên Windows tự động nhận diện font tiếng Việt (GAP-07)
+            buf.write('\ufeff')
             writer = csv.writer(buf)
-            writer.writerow(headers)
-            for a in rekap:
+            writer.writerow(headers_csv)
+            for a in raw_rekap:
                 writer.writerow(_row(a))
             return buf.getvalue()
 
         return Response(
             generate_csv(),
-            mimetype='text/csv',
-            headers={'Content-Disposition': f'attachment; filename=rekap_absensi_{timestamp}.csv'}
+            mimetype='text/csv; charset=utf-8',
+            headers={'Content-Disposition': f'attachment; filename=tong_hop_diem_danh_{timestamp}.csv'}
         )
 
 
@@ -888,6 +1045,87 @@ def api_absensi_hapus(absensi_id):
             conn.close()
 
 
+@app.route('/api/buoi-hoc/info')
+@login_required
+def api_buoi_hoc_info():
+    """Lấy thông tin chi tiết ca học hôm nay cho Popup Topbar.
+    Hỗ trợ đọc giá trị override từ session nếu giảng viên đã sửa thủ công.
+    """
+    try:
+        ngay_hien_tai = now_wib().date()
+        info = db.get_thong_tin_buoi_hoc_hom_nay(ngay_hien_tai)
+
+        # Kiểm tra xem có cấu hình override trong session của admin không
+        custom_buoi = session.get('custom_buoi_so')
+        custom_ngay = session.get('custom_tanggal')
+
+        if custom_buoi is not None:
+            try:
+                info['buoi_so'] = int(custom_buoi)
+                info['has_override_buoi'] = True
+            except Exception:
+                pass
+
+        if custom_ngay:
+            info['tanggal'] = custom_ngay
+            try:
+                dt_obj = datetime.strptime(custom_ngay, '%Y-%m-%d')
+                info['tanggal_vn'] = dt_obj.strftime('%d/%m/%Y')
+                thu_map = {
+                    0: 'Thứ Hai', 1: 'Thứ Ba', 2: 'Thứ Tư',
+                    3: 'Thứ Năm', 4: 'Thứ Sáu', 5: 'Thứ Bảy', 6: 'Chủ Nhật'
+                }
+                info['thu'] = thu_map.get(dt_obj.weekday(), info['thu'])
+                info['has_override_ngay'] = True
+            except Exception:
+                pass
+
+        return jsonify({'status': 'ok', 'data': info})
+    except Exception as e:
+        print(f"[API] Lỗi khi lấy thông tin buổi học: {e}")
+        return jsonify({'status': 'error', 'pesan': f'Không thể lấy thông tin buổi học: {str(e)}'}), 500
+
+
+@app.route('/api/buoi-hoc/update', methods=['POST'])
+@login_required
+def api_buoi_hoc_update():
+    """Lưu chỉnh sửa thủ công Cột Buổi và Ngày từ Popup.
+    - Lưu vào session để áp dụng trực tiếp cho các lượt quét điểm danh tiếp theo.
+    - Hoàn toàn KHÔNG sửa đổi bảng jadwal trong Quản lý lịch học.
+    """
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({'status': 'error', 'pesan': 'Dữ liệu không hợp lệ.'}), 400
+
+    buoi_so = data.get('buoi_so')
+    tanggal = data.get('tanggal', '').strip()
+
+    try:
+        buoi_so_int = max(1, min(60, int(buoi_so)))
+    except (ValueError, TypeError):
+        return jsonify({'status': 'error', 'pesan': 'Số buổi không hợp lệ (phải từ 1 đến 60).'}), 400
+
+    if tanggal:
+        try:
+            datetime.strptime(tanggal, '%Y-%m-%d')
+        except ValueError:
+            return jsonify({'status': 'error', 'pesan': 'Định dạng ngày không hợp lệ (YYYY-MM-DD).'}), 400
+    else:
+        tanggal = now_wib().date().strftime('%Y-%m-%d')
+
+    session['custom_buoi_so'] = buoi_so_int
+    session['custom_tanggal'] = tanggal
+
+    return jsonify({
+        'status': 'ok',
+        'pesan': f'Đã lưu thành công: Buổi {buoi_so_int} ngày {tanggal}. Các lượt quét điểm danh tiếp theo sẽ tự động ghi nhận theo thông tin này.',
+        'data': {
+            'buoi_so': buoi_so_int,
+            'tanggal': tanggal
+        }
+    })
+
+
 @app.route('/api/absensi/manual', methods=['POST'])
 @login_required
 def api_absensi_manual():
@@ -953,6 +1191,66 @@ def api_absensi_manual():
         return jsonify({'status': 'ok', 'pesan': pesan, 'data': hasil})
     else:
         return jsonify({'status': 'error', 'pesan': 'KhÃ´ng thá»ƒ ghi nháº­n Ä‘iá»ƒm danh.'}), 500
+
+
+@app.route('/api/absensi/cap-nhat-buoi', methods=['POST'])
+@login_required
+def api_absensi_cap_nhat_buoi():
+    """Cập nhật hoặc xóa bản ghi điểm danh cho 1 sinh viên theo buổi học (1-15) từ click chuột phải."""
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({'status': 'error', 'pesan': 'Dữ liệu không hợp lệ.'}), 400
+
+    user_id = data.get('user_id')
+    jadwal_id = data.get('jadwal_id')
+    buoi_so = data.get('buoi_so')
+    status = data.get('status', '')
+
+    try:
+        user_id = int(user_id)
+        buoi_so = int(buoi_so)
+        if jadwal_id:
+            jadwal_id = int(jadwal_id)
+    except (TypeError, ValueError):
+        return jsonify({'status': 'error', 'pesan': 'Tham số không hợp lệ.'}), 400
+
+    if buoi_so < 1 or buoi_so > 15:
+        return jsonify({'status': 'error', 'pesan': 'Buổi học phải từ 1 đến 15.'}), 400
+
+    user = db.get_user_by_id(user_id)
+    if not user:
+        return jsonify({'status': 'error', 'pesan': 'Không tìm thấy sinh viên.'}), 404
+
+    # Tự động gán jadwal_id nếu client chưa truyền
+    if not jadwal_id:
+        if user.get('kelas_id'):
+            schedules = db.get_semua_jadwal()
+            for s in schedules:
+                if s.get('kelas_id') == user['kelas_id']:
+                    jadwal_id = s['id']
+                    break
+            if not jadwal_id and schedules:
+                jadwal_id = schedules[0]['id']
+
+    if not jadwal_id:
+        return jsonify({'status': 'error', 'pesan': 'Không tìm thấy lịch học cho sinh viên này.'}), 400
+
+    status = str(status).strip()
+    if status and status not in ('hadir', 'terlambat', 'alpha', 'izin', 'sakit'):
+        return jsonify({'status': 'error', 'pesan': 'Trạng thái điểm danh không hợp lệ.'}), 400
+
+    hasil = db.cap_nhat_absensi_buoi(user_id, jadwal_id, buoi_so, status)
+    if hasil:
+        status_labels = {
+            'hadir': 'Có mặt', 'terlambat': 'Đi muộn', 'alpha': 'Vắng',
+            'izin': 'Có phép', 'sakit': 'Nghỉ ốm', '': 'Chưa điểm danh'
+        }
+        lbl = status_labels.get(status, status) if status else 'Chưa điểm danh'
+        pesan = f"Đã cập nhật Buổi {buoi_so} của {user['nama']} thành '{lbl}'."
+        print(f"[MANUAL-BUOI] {pesan}")
+        return jsonify({'status': 'ok', 'pesan': pesan, 'data': hasil})
+    else:
+        return jsonify({'status': 'error', 'pesan': 'Không thể cập nhật điểm danh buổi này.'}), 500
 
 
 @app.route('/api/mahasiswa/list')
@@ -1894,28 +2192,41 @@ def _proses_recognition_single(frame, tracker_key='default'):
             'spoofing': spoof_result
         }
 
-    # â”€â”€ 6. Tentukan status: hadir atau terlambat â”€â”€
-    batas_str = str(jadwal['batas_terlambat'])
-    # Konversi timedelta ke string waktu jika perlu
-    if isinstance(jadwal['batas_terlambat'], timedelta):
-        total_sec = int(jadwal['batas_terlambat'].total_seconds())
-        h, m, s = total_sec // 3600, (total_sec % 3600) // 60, total_sec % 60
-        batas_str = f'{h:02d}:{m:02d}:{s:02d}'
+    # ── 6. Xác định Buổi và Ngày áp dụng cho ca học ──
+    override_buoi = session.get('custom_buoi_so')
+    if override_buoi is not None:
+        try:
+            buoi_so_ghi = int(override_buoi)
+        except Exception:
+            buoi_so_ghi = None
+    else:
+        buoi_so_ghi = db.get_buoi_hoc_hien_tai_cua_lop(jadwal['id'], jadwal.get('kelas_id'), tanggal_hari_ini)
 
-    status_absensi = 'hadir' if waktu_sekarang <= batas_str else 'terlambat'
+    override_ngay = session.get('custom_tanggal')
+    if override_ngay:
+        try:
+            tanggal_ghi = datetime.strptime(override_ngay, '%Y-%m-%d').date()
+        except Exception:
+            tanggal_ghi = tanggal_hari_ini
+    else:
+        tanggal_ghi = tanggal_hari_ini
 
-    # â”€â”€ 7. Simpan snapshot bukti absensi â”€â”€
+    # Quy tắc nghiệp vụ: Không có hạn đi muộn -> Mọi sinh viên quét hợp lệ đều được ghi nhận Có mặt (hadir)
+    status_absensi = 'hadir'
+
+    # ── 7. Simpan snapshot bukti absensi ──
     snapshot_path = _simpan_snapshot(frame, user_id)
 
-    # â”€â”€ 8. Catat absensi ke database â”€â”€
+    # ── 8. Catat absensi ke database ──
     try:
         absensi_id = _db_call_strict(
             db.catat_absensi,
             user_id=user_id,
             jadwal_id=jadwal['id'],
-            tanggal=tanggal_hari_ini,
+            tanggal=tanggal_ghi,
             waktu_absen=waktu_sekarang,
             status=status_absensi,
+            buoi_so=buoi_so_ghi,
             snapshot_path=snapshot_path,
             dibuat_manual=False
         )
@@ -2030,12 +2341,27 @@ def _process_verified_prediction(
             'spoofing': spoof_result
         }
 
-    batas_str = str(jadwal['batas_terlambat'])
-    if isinstance(jadwal['batas_terlambat'], timedelta):
-        total_sec = int(jadwal['batas_terlambat'].total_seconds())
-        h, m, s = total_sec // 3600, (total_sec % 3600) // 60, total_sec % 60
-        batas_str = f'{h:02d}:{m:02d}:{s:02d}'
-    status_absensi = 'hadir' if waktu_sekarang <= batas_str else 'terlambat'
+    # ── Xác định Buổi và Ngày áp dụng cho ca học ──
+    override_buoi = session.get('custom_buoi_so')
+    if override_buoi is not None:
+        try:
+            buoi_so_ghi = int(override_buoi)
+        except Exception:
+            buoi_so_ghi = None
+    else:
+        buoi_so_ghi = db.get_buoi_hoc_hien_tai_cua_lop(jadwal['id'], jadwal.get('kelas_id'), tanggal_hari_ini)
+
+    override_ngay = session.get('custom_tanggal')
+    if override_ngay:
+        try:
+            tanggal_ghi = datetime.strptime(override_ngay, '%Y-%m-%d').date()
+        except Exception:
+            tanggal_ghi = tanggal_hari_ini
+    else:
+        tanggal_ghi = tanggal_hari_ini
+
+    # Quy tắc nghiệp vụ: Không có hạn đi muộn -> Ghi nhận Có mặt (hadir)
+    status_absensi = 'hadir'
 
     snapshot_path = _simpan_snapshot(frame, user_id)
     try:
@@ -2043,9 +2369,10 @@ def _process_verified_prediction(
             db.catat_absensi,
             user_id=user_id,
             jadwal_id=jadwal['id'],
-            tanggal=tanggal_hari_ini,
+            tanggal=tanggal_ghi,
             waktu_absen=waktu_sekarang,
             status=status_absensi,
+            buoi_so=buoi_so_ghi,
             snapshot_path=snapshot_path,
             dibuat_manual=False
         )

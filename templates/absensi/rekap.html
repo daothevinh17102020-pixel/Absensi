@@ -21,96 +21,69 @@
     </div>
 </div>
 
-<section class="bg-surface-container-low border border-outline-variant rounded-xl p-card-padding mb-8">
-    <div class="flex items-center gap-2 mb-5">
-        <span class="material-symbols-outlined text-primary">filter_list</span>
-        <h3 class="font-title-sm text-title-sm text-on-surface">Lọc dữ liệu</h3>
+<section class="bg-surface-container-low border border-outline-variant rounded-xl p-4 md:p-5 mb-6">
+    <!-- HÀNG 1: BỘ LỌC CHÍNH (BẬC 1) - DROPDOWN TRUNG TÂM TÍCH HỢP CẢ LỚP VÀ LỌC THEO NGÀY -->
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <label for="main_filter_select" class="font-label-caps text-xs md:text-sm text-on-surface uppercase tracking-wider font-bold whitespace-nowrap flex items-center gap-2">
+                <span class="material-symbols-outlined text-[20px] text-primary">filter_list</span>
+                <span>LỌC THEO:</span>
+            </label>
+            <div class="min-w-[260px] sm:min-w-[340px]">
+                <select id="main_filter_select" onchange="handleMainFilterSelect(this)"
+                        class="bg-surface border border-outline-variant text-on-surface rounded-xl py-2 px-4 font-body-md font-semibold text-sm md:text-base focus:ring-2 focus:ring-primary/40 focus:border-primary w-full cursor-pointer hover:border-primary/60 transition-all shadow-sm">
+                    <option value="" {% if not filter_kelas and not (filter_dari or filter_sampai) %}selected{% endif %}>Tất cả lớp</option>
+                    {% for k in daftar_kelas %}
+                    <option value="kelas_{{ k.id }}" {% if filter_kelas == k.id and not (filter_dari or filter_sampai) %}selected{% endif %}>{{ k.nama_kelas }} ({{ k.angkatan }})</option>
+                    {% endfor %}
+                    <option disabled class="text-outline">──────────</option>
+                    <option value="by_date" {% if filter_dari or filter_sampai %}selected{% endif %}>Lọc theo ngày...</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Nút Bỏ lọc (Hiển thị khi đang có bộ lọc Lớp hoặc Ngày hoạt động) -->
+        {% if filter_kelas or filter_dari or filter_sampai %}
+        <div>
+            <a href="{{ url_for('absensi_rekap') }}" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-outline-variant/70 text-on-surface-variant hover:text-primary hover:border-primary/40 hover:bg-surface-variant/30 transition-all text-xs font-medium" title="Xóa toàn bộ bộ lọc">
+                <span class="material-symbols-outlined text-[16px]">close</span>
+                <span>Bỏ lọc</span>
+            </a>
+        </div>
+        {% endif %}
     </div>
-    <form method="GET" class="space-y-4">
-        <!-- Baris 1: Kelas & MK -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="space-y-2">
-                <label class="font-label-caps text-label-caps text-on-surface-variant">Lớp</label>
-                <select name="kelas_id" class="w-full bg-surface-dim border border-outline-variant rounded-lg px-4 py-2 text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none">
+
+    <!-- HÀNG 2: BỘ LỌC BẬC 2 (TÙY CHỌN) - MỞ RA KHI CHỌN "LỌC THEO NGÀY..." TRONG DROPDOWN -->
+    <div id="dateFilterPanel" class="{% if not (filter_dari or filter_sampai) %}hidden{% endif %} pt-4 mt-3 border-t border-outline-variant/30">
+        <form method="GET" action="{{ url_for('absensi_rekap') }}" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+            <div class="space-y-1.5">
+                <label class="font-label-caps text-[11px] uppercase tracking-wider text-on-surface-variant font-semibold">Lớp học phần (Tùy chọn)</label>
+                <select name="kelas_id" class="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-body-sm text-on-surface focus:border-primary outline-none cursor-pointer">
                     <option value="">Tất cả lớp</option>
                     {% for k in daftar_kelas %}
                     <option value="{{ k.id }}" {% if filter_kelas == k.id %}selected{% endif %}>{{ k.nama_kelas }} ({{ k.angkatan }})</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="space-y-2">
-                <label class="font-label-caps text-label-caps text-on-surface-variant">Môn học</label>
-                <select name="matakuliah_id" class="w-full bg-surface-dim border border-outline-variant rounded-lg px-4 py-2 text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none">
-                    <option value="">Tất cả môn học</option>
-                    {% for mk in daftar_mk %}
-                    <option value="{{ mk.id }}" {% if filter_mk == mk.id %}selected{% endif %}>{{ mk.nama_mk }}</option>
-                    {% endfor %}
-                </select>
+            <div class="space-y-1.5">
+                <label class="font-label-caps text-[11px] uppercase tracking-wider text-on-surface-variant font-semibold">Từ ngày</label>
+                <input type="date" name="dari" id="filter_dari_input" value="{{ filter_dari or '' }}"
+                       class="w-full bg-surface border border-outline-variant rounded-lg px-3.5 py-2 text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none transition-all"/>
             </div>
-        </div>
-        <!-- Baris 2: Tanggal + Tombol -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-            <div class="space-y-2">
-                <label class="font-label-caps text-label-caps text-on-surface-variant">Từ ngày</label>
-                <input type="date" name="dari" value="{{ filter_dari or '' }}"
-                       class="w-full bg-surface-dim border border-outline-variant rounded-lg px-4 py-2 text-body-sm focus:border-primary outline-none"/>
-            </div>
-            <div class="space-y-2">
-                <label class="font-label-caps text-label-caps text-on-surface-variant">Đến ngày</label>
-                <input type="date" name="sampai" value="{{ filter_sampai or '' }}"
-                       class="w-full bg-surface-dim border border-outline-variant rounded-lg px-4 py-2 text-body-sm focus:border-primary outline-none"/>
+            <div class="space-y-1.5">
+                <label class="font-label-caps text-[11px] uppercase tracking-wider text-on-surface-variant font-semibold">Đến ngày</label>
+                <input type="date" name="sampai" id="filter_sampai_input" value="{{ filter_sampai or '' }}"
+                       class="w-full bg-surface border border-outline-variant rounded-lg px-3.5 py-2 text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none transition-all"/>
             </div>
             <div class="flex gap-2">
-                <button type="submit" class="bg-primary-container text-on-primary-container px-5 py-2 rounded-lg font-title-sm hover:brightness-110 transition-all flex-1 flex items-center justify-center gap-2">
+                <button type="submit" class="bg-primary-container text-on-primary-container px-5 py-2 rounded-lg font-title-sm hover:brightness-110 transition-all flex-1 flex items-center justify-center gap-2 shadow-sm">
                     <span class="material-symbols-outlined text-[18px]">filter_alt</span> Lọc
                 </button>
-                <a href="{{ url_for('absensi_rekap') }}" class="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors flex items-center" title="Đặt lại bộ lọc">
-                    <span class="material-symbols-outlined text-[18px]">refresh</span>
-                </a>
+                <button type="button" onclick="cancelDateFilter()" class="px-3 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors flex items-center" title="Đóng lọc ngày">
+                    <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
             </div>
-        </div>
-    </form>
-</section>
-
-<!-- Summary Cards -->
-
-
-<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-surface-container border border-outline-variant p-card-padding rounded-xl group hover:border-primary/50 transition-colors">
-        <div class="flex justify-between items-start mb-4">
-            <div class="p-2 bg-primary/10 rounded-lg text-primary">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-            </div>
-            <span class="text-primary font-bold text-headline-md">{{ ringkasan.hadir }}</span>
-        </div>
-        <h4 class="font-label-caps text-label-caps text-on-surface-variant">Có mặt</h4>
-    </div>
-    <div class="bg-surface-container border border-outline-variant p-card-padding rounded-xl group hover:border-tertiary/50 transition-colors">
-        <div class="flex justify-between items-start mb-4">
-            <div class="p-2 bg-tertiary/10 rounded-lg text-tertiary">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">schedule</span>
-            </div>
-            <span class="text-tertiary font-bold text-headline-md">{{ ringkasan.terlambat }}</span>
-        </div>
-        <h4 class="font-label-caps text-label-caps text-on-surface-variant">Đi muộn</h4>
-    </div>
-    <div class="bg-surface-container border border-outline-variant p-card-padding rounded-xl group hover:border-secondary/50 transition-colors">
-        <div class="flex justify-between items-start mb-4">
-            <div class="p-2 bg-secondary/10 rounded-lg text-secondary">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">info</span>
-            </div>
-            <span class="text-secondary font-bold text-headline-md">{{ ringkasan.izin }}</span>
-        </div>
-        <h4 class="font-label-caps text-label-caps text-on-surface-variant">Vắng có phép</h4>
-    </div>
-    <div class="bg-surface-container border border-outline-variant p-card-padding rounded-xl group hover:border-error/50 transition-colors">
-        <div class="flex justify-between items-start mb-4">
-            <div class="p-2 bg-error/10 rounded-lg text-error">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">cancel</span>
-            </div>
-            <span class="text-error font-bold text-headline-md">{{ ringkasan.alpha }}</span>
-        </div>
-        <h4 class="font-label-caps text-label-caps text-on-surface-variant">Vắng không phép</h4>
+        </form>
     </div>
 </section>
 
@@ -122,70 +95,79 @@
             Hiển thị <span class="text-on-surface font-semibold">{{ rekap|length }}</span> bản ghi
         </span>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+    <div class="overflow-x-auto overscroll-x-contain relative">
+        <table class="w-full text-left border-collapse min-w-[1280px]">
             <thead>
-                <tr class="bg-surface-container-high/50">
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Sinh viên</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Mã sinh viên</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Môn học</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Thời gian</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Trạng thái</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">Ảnh chụp</th>
+                <tr class="bg-surface-container-high/90 border-b border-outline-variant">
+                    <th class="sticky left-0 z-30 bg-surface-container-high px-2 py-3 font-label-caps text-[11px] text-on-surface-variant uppercase text-center w-[50px] min-w-[50px] max-w-[50px] border-r border-outline-variant/30">STT</th>
+                    <th class="sticky left-[50px] z-30 bg-surface-container-high px-3 py-3 font-label-caps text-[11px] text-on-surface-variant uppercase w-[190px] min-w-[190px] max-w-[190px] border-r border-outline-variant/30 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.6)]">Sinh viên</th>
+                    <th class="px-3 py-3 font-label-caps text-[11px] text-on-surface-variant uppercase border-r border-outline-variant/30 whitespace-nowrap w-[105px] min-w-[105px] max-w-[105px]">Mã SV</th>
+                    <th class="px-3 py-3 font-label-caps text-[11px] text-on-surface-variant uppercase border-r border-outline-variant/30 whitespace-nowrap w-[85px] min-w-[85px] max-w-[85px]">Lớp</th>
+                    {% for b in range(1, 16) %}
+                    <th class="px-1 py-3 font-label-caps text-[11px] text-on-surface-variant uppercase text-center border-r border-outline-variant/30 whitespace-nowrap w-[58px] min-w-[58px] max-w-[62px] {% if loop.last %}border-r-0{% endif %}">Buổi {{ b }}</th>
+                    {% endfor %}
                 </tr>
             </thead>
-            <tbody class="divide-y divide-outline-variant">
-                {% for a in rekap %}
-                <tr class="hover:bg-surface-variant/20 transition-colors">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-secondary-container/20 flex items-center justify-center text-secondary font-bold text-xs">
-                                {{ a.nama[:2]|upper }}
+            <tbody class="divide-y divide-outline-variant/30">
+                {% for a in rekap|sort(attribute='nim') %}
+                <tr class="hover:bg-surface-variant/20 transition-colors group">
+                    <td class="sticky left-0 z-20 bg-surface-container group-hover:bg-[#1a1a1a] transition-colors px-2 py-2.5 text-center border-r border-outline-variant/30 w-[50px] min-w-[50px] max-w-[50px]">
+                        <span class="inline-flex items-center justify-center min-w-[30px] h-7 px-1.5 rounded-lg bg-surface-variant/50 border border-outline-variant/40 font-title-sm text-xs font-bold text-white">
+                            {{ '%02d' % loop.index }}
+                        </span>
+                    </td>
+                    <td class="sticky left-[50px] z-20 bg-surface-container group-hover:bg-[#1a1a1a] transition-colors px-3 py-2.5 border-r border-outline-variant/30 w-[190px] min-w-[190px] max-w-[190px] shadow-[4px_0_12px_-2px_rgba(0,0,0,0.6)]">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg overflow-hidden bg-surface-variant border border-outline-variant flex items-center justify-center relative shrink-0">
+                                <img src="{{ url_for('serve_student_photo', user_id=a.user_id) }}" class="w-full h-full object-cover" alt="{{ a.nama }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"/>
+                                <span class="material-symbols-outlined text-[18px] text-on-surface-variant" style="display: none;">person</span>
                             </div>
-                            <div>
-                                <span class="font-body-md text-on-surface">{{ a.nama }}</span>
-                                <p class="text-[11px] text-on-surface-variant">{{ a.nama_kelas }}</p>
+                            <div class="min-w-0">
+                                <p class="font-title-sm text-[13px] text-on-surface font-semibold whitespace-nowrap truncate" title="{{ a.nama }}">{{ a.nama }}</p>
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-body-sm text-on-surface-variant font-mono">{{ a.nim }}</td>
-                    {% set hari_vi = {'Senin': 'Thứ Hai', 'Selasa': 'Thứ Ba', 'Rabu': 'Thứ Tư', 'Kamis': 'Thứ Năm', 'Jumat': 'Thứ Sáu', 'Sabtu': 'Thứ Bảy', 'Minggu': 'Chủ Nhật'} %}
-                    <td class="px-6 py-4 text-body-sm text-on-surface-variant">{{ a.nama_mk }}<br/><span class="text-[10px] text-outline">{{ hari_vi.get(a.hari, a.hari) }} · {{ a.tanggal }}</span></td>
-                    <td class="px-6 py-4 text-body-sm text-on-surface">{{ a.waktu_absen or '-' }}</td>
-                    <td class="px-6 py-4">
-                        {% if a.status == 'hadir' %}
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">Có mặt</span>
-                        {% elif a.status == 'terlambat' %}
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-tertiary/10 text-tertiary border border-tertiary/20">Đi muộn</span>
-                        {% elif a.status == 'izin' %}
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-secondary/10 text-secondary border border-secondary/20" {% if a.alasan %}title="Lý do: {{ a.alasan }}"{% endif %}>Vắng có phép</span>
-                        {% elif a.status == 'sakit' %}
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-amber-500/15 text-amber-400 border border-amber-500/30" {% if a.alasan %}title="Lý do: {{ a.alasan }}"{% endif %}>Nghỉ ốm</span>
-                        {% elif a.status == 'alpha' %}
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-error/10 text-error border border-error/20">Vắng không phép</span>
-                        {% else %}
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-outline/10 text-outline border border-outline/20">{{ a.status|capitalize }}</span>
-                        {% endif %}
-                        {% if a.alasan %}
-                        <p class="text-[11px] text-on-surface-variant/80 mt-1 italic font-sans" title="Lý do: {{ a.alasan }}">Ghi chú: {{ a.alasan }}</p>
-                        {% endif %}
+                    <td class="px-3 py-2.5 font-title-sm text-[13px] text-on-surface font-semibold tracking-wide border-r border-outline-variant/30 whitespace-nowrap w-[105px] min-w-[105px] max-w-[105px]">{{ a.nim }}</td>
+                    <td class="px-3 py-2.5 border-r border-outline-variant/30 whitespace-nowrap w-[85px] min-w-[85px] max-w-[85px]">
+                        <span class="font-title-sm text-[13px] text-on-surface-variant font-medium">{{ a.nama_kelas or '-' }}</span>
                     </td>
-                    <td class="px-6 py-4">
-                        {% if a.snapshot_path %}
-                        {% set snap_filename = a.snapshot_path.replace('\\', '/').split('/')[-1] %}
-                        <button onclick="openSnapshotModal('{{ url_for('serve_snapshot', filename=snap_filename) }}', '{{ a.nama }}', '{{ a.waktu_absen }}', '{{ a.status }}')"
-                                class="flex items-center gap-1 text-primary hover:underline text-body-sm cursor-pointer">
-                            <span class="material-symbols-outlined text-[16px]">visibility</span>
-                            <span>Xem trước</span>
-                        </button>
-                        {% else %}
-                        <span class="text-outline italic text-[11px]">Không có ảnh chụp</span>
-                        {% endif %}
+                    {% for b in range(1, 16) %}
+                    {% set st = (a.sessions.get(b) if a.sessions is defined else None) %}
+                    <td class="session-cell px-1 py-2 text-center border-r border-outline-variant/30 font-title-sm whitespace-nowrap w-[58px] min-w-[58px] max-w-[62px] cursor-context-menu hover:bg-surface-variant/30 transition-colors select-none {% if loop.last %}border-r-0{% endif %}"
+                        data-user-id="{{ a.user_id }}"
+                        data-user-nama="{{ a.nama }}"
+                        data-jadwal-id="{{ a.jadwal_id or '' }}"
+                        data-buoi="{{ b }}"
+                        data-status="{{ st or '' }}"
+                        oncontextmenu="openAttendanceContextMenu(event, this)"
+                        title="Chuột phải để chỉnh sửa Buổi {{ b }}">
+                        <div id="badge-{{ a.user_id }}-{{ b }}">
+                            {% if st == 'hadir' %}
+                            <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-semibold">
+                                Có mặt
+                            </span>
+                            {% elif st == 'terlambat' %}
+                            <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[11px] font-semibold">
+                                Đi muộn
+                            </span>
+                            {% elif st == 'alpha' %}
+                            <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-[11px] font-semibold">
+                                Vắng
+                            </span>
+                            {% elif st in ['izin', 'sakit'] %}
+                            <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[11px] font-semibold">
+                                Có phép
+                            </span>
+                            {% else %}
+                            <span class="text-on-surface-variant/30 font-mono text-xs">-</span>
+                            {% endif %}
+                        </div>
                     </td>
+                    {% endfor %}
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" class="px-6 py-16 text-center">
+                    <td colspan="19" class="px-6 py-16 text-center">
                         <span class="material-symbols-outlined text-4xl text-on-surface-variant/20 mb-2">event_busy</span>
                         <p class="text-body-sm text-on-surface-variant">Không có dữ liệu điểm danh phù hợp với bộ lọc.</p>
                         <p class="text-[11px] text-outline mt-1">Hãy thử thay đổi bộ lọc hoặc khoảng ngày.</p>
@@ -240,6 +222,55 @@
     }
 </style>
 
+<!-- Context Menu Chỉnh sửa Điểm Danh Thủ Công Chuẩn AI4BA -->
+<div id="attendance-context-menu" class="fixed z-[9999] hidden bg-[#141414]/95 backdrop-blur-md border border-outline-variant/60 rounded-xl shadow-[0_12px_36px_rgba(0,0,0,0.85)] p-1.5 min-w-[170px] text-xs font-title-sm select-none" style="animation: modalFadeIn 0.15s ease-out;">
+    <!-- Bước 1: Hiện nút "Chỉnh sửa" -->
+    <div id="context-step-1">
+        <div class="px-2.5 py-1 text-[10.5px] uppercase tracking-wider text-on-surface-variant/80 font-bold border-b border-outline-variant/30 mb-1 flex items-center justify-between">
+            <span id="context-info-buoi">Buổi 1</span>
+            <span id="context-info-sv" class="truncate max-w-[90px] text-on-surface font-semibold"></span>
+        </div>
+        <button type="button" onclick="showAttendanceOptions()" class="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg text-on-surface hover:bg-surface-variant hover:text-primary transition-all text-left font-semibold group">
+            <span class="material-symbols-outlined text-[17px] text-primary group-hover:rotate-12 transition-transform">edit</span>
+            <span>Chỉnh sửa</span>
+            <span class="material-symbols-outlined text-[15px] ml-auto text-on-surface-variant group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+        </button>
+    </div>
+
+    <!-- Bước 2: Hiện 4 giá trị điểm danh thủ công -->
+    <div id="context-step-2" class="hidden">
+        <div class="flex items-center justify-between px-2 py-1 text-[10.5px] uppercase tracking-wider text-on-surface-variant font-bold border-b border-outline-variant/30 mb-1">
+            <span>Chọn trạng thái</span>
+            <button type="button" onclick="backToStep1()" class="text-on-surface-variant hover:text-on-surface p-0.5 rounded transition-colors" title="Quay lại">
+                <span class="material-symbols-outlined text-[15px]">arrow_back</span>
+            </button>
+        </div>
+        <div class="space-y-0.5">
+            <button type="button" onclick="selectAttendanceStatus('hadir')" class="flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg hover:bg-emerald-500/10 text-emerald-400 font-semibold transition-colors text-left">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                <span>Có mặt</span>
+            </button>
+            <button type="button" onclick="selectAttendanceStatus('terlambat')" class="flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg hover:bg-amber-500/10 text-amber-400 font-semibold transition-colors text-left">
+                <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+                <span>Đi muộn</span>
+            </button>
+            <button type="button" onclick="selectAttendanceStatus('alpha')" class="flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 text-red-400 font-semibold transition-colors text-left">
+                <span class="w-2 h-2 rounded-full bg-red-400 shrink-0"></span>
+                <span>Vắng</span>
+            </button>
+            <button type="button" onclick="selectAttendanceStatus('izin')" class="flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg hover:bg-sky-500/10 text-sky-400 font-semibold transition-colors text-left">
+                <span class="w-2 h-2 rounded-full bg-sky-400 shrink-0"></span>
+                <span>Có phép</span>
+            </button>
+            <div class="border-t border-outline-variant/30 my-1"></div>
+            <button type="button" onclick="selectAttendanceStatus('')" class="flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg hover:bg-surface-variant text-on-surface-variant/70 hover:text-on-surface font-medium transition-colors text-left text-[11px]">
+                <span class="material-symbols-outlined text-[14px]">restart_alt</span>
+                <span>Chưa điểm danh (-)</span>
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     // Buka modal preview snapshot
     function openSnapshotModal(imgSrc, nama, waktu, status) {
@@ -268,9 +299,224 @@
         if (e.target === this) closeSnapshotModal();
     });
 
-    // Tutup modal dengan tombol Escape
+    // Đóng modal snapshot khi bấm phím Escape (ESC)
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeSnapshotModal();
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            var modal = document.getElementById('snapshot-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                closeSnapshotModal();
+            }
+        }
     });
+
+    // Xử lý chọn bộ lọc trong dropdown LỌC THEO:
+    function handleMainFilterSelect(selectEl) {
+        var val = selectEl.value;
+        var panel = document.getElementById('dateFilterPanel');
+        if (val === 'by_date') {
+            // Mở panel lọc khoảng ngày
+            if (panel) {
+                panel.classList.remove('hidden');
+                var dariInput = document.getElementById('filter_dari_input');
+                if (dariInput) {
+                    dariInput.focus();
+                    try { dariInput.showPicker(); } catch(e) {}
+                }
+            }
+        } else if (val.startsWith('kelas_')) {
+            // Lọc trực tiếp theo lớp được chọn
+            if (panel) panel.classList.add('hidden');
+            var kId = val.replace('kelas_', '');
+            window.location.href = "{{ url_for('absensi_rekap') }}?kelas_id=" + kId;
+        } else {
+            // Chọn "Tất cả lớp"
+            if (panel) panel.classList.add('hidden');
+            window.location.href = "{{ url_for('absensi_rekap') }}";
+        }
+    }
+
+    // Đóng panel lọc ngày
+    function cancelDateFilter() {
+        var panel = document.getElementById('dateFilterPanel');
+        if (panel) panel.classList.add('hidden');
+        var select = document.getElementById('main_filter_select');
+        if (select) {
+            select.value = "{{ ('kelas_' ~ filter_kelas) if filter_kelas else '' }}";
+        }
+        {% if filter_dari or filter_sampai %}
+        // Nếu trước đó đang áp dụng lọc ngày thì quay lại trạng thái lớp hiện tại (bỏ lọc ngày)
+        window.location.href = "{{ url_for('absensi_rekap', kelas_id=filter_kelas if filter_kelas else None) }}";
+        {% endif %}
+    }
+
+    // ── Xử lý Chuột phải -> Hiện nút Chỉnh sửa -> Chọn 4 giá trị điểm danh ──
+    var activeContextTarget = null;
+
+    function renderBadgeHtml(status) {
+        if (status === 'hadir') {
+            return '<span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-semibold">Có mặt</span>';
+        } else if (status === 'terlambat') {
+            return '<span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[11px] font-semibold">Đi muộn</span>';
+        } else if (status === 'alpha') {
+            return '<span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-[11px] font-semibold">Vắng</span>';
+        } else if (status === 'izin' || status === 'sakit') {
+            return '<span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[11px] font-semibold">Có phép</span>';
+        } else {
+            return '<span class="text-on-surface-variant/30 font-mono text-xs">-</span>';
+        }
+    }
+
+    function openAttendanceContextMenu(e, cellEl) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        activeContextTarget = {
+            userId: cellEl.getAttribute('data-user-id'),
+            userNama: cellEl.getAttribute('data-user-nama'),
+            jadwalId: cellEl.getAttribute('data-jadwal-id'),
+            buoi: cellEl.getAttribute('data-buoi'),
+            status: cellEl.getAttribute('data-status') || '',
+            cellEl: cellEl
+        };
+
+        var menu = document.getElementById('attendance-context-menu');
+        var step1 = document.getElementById('context-step-1');
+        var step2 = document.getElementById('context-step-2');
+        var infoBuoi = document.getElementById('context-info-buoi');
+        var infoSv = document.getElementById('context-info-sv');
+
+        if (infoBuoi) infoBuoi.textContent = 'Buổi ' + activeContextTarget.buoi;
+        if (infoSv) infoSv.textContent = activeContextTarget.userNama || '';
+
+        // Reset về bước 1 (hiện nút "Chỉnh sửa")
+        step1.classList.remove('hidden');
+        step2.classList.add('hidden');
+
+        // Định vị menu ngay tại toạ độ con trỏ chuột
+        menu.classList.remove('hidden');
+        var mouseX = e.clientX;
+        var mouseY = e.clientY;
+        var menuWidth = 180;
+        var menuHeight = 110;
+
+        // Tránh tràn viền màn hình
+        if (mouseX + menuWidth > window.innerWidth) {
+            mouseX = window.innerWidth - menuWidth - 12;
+        }
+        if (mouseY + menuHeight > window.innerHeight) {
+            mouseY = window.innerHeight - menuHeight - 12;
+        }
+
+        menu.style.left = mouseX + 'px';
+        menu.style.top = mouseY + 'px';
+    }
+
+    function closeAttendanceContextMenu() {
+        var menu = document.getElementById('attendance-context-menu');
+        if (menu) menu.classList.add('hidden');
+        activeContextTarget = null;
+    }
+
+    function showAttendanceOptions() {
+        var step1 = document.getElementById('context-step-1');
+        var step2 = document.getElementById('context-step-2');
+        if (step1) step1.classList.add('hidden');
+        if (step2) step2.classList.remove('hidden');
+    }
+
+    function backToStep1() {
+        var step1 = document.getElementById('context-step-1');
+        var step2 = document.getElementById('context-step-2');
+        if (step1) step1.classList.remove('hidden');
+        if (step2) step2.classList.add('hidden');
+    }
+
+    function selectAttendanceStatus(newStatus) {
+        if (!activeContextTarget) return;
+
+        var target = activeContextTarget;
+        var userId = target.userId;
+        var jadwalId = target.jadwalId;
+        var buoi = target.buoi;
+        var cellEl = target.cellEl;
+        var oldStatus = target.status;
+
+        // Optimistic UI: Cập nhật badge trong ô bảng ngay lập tức
+        var badgeContainer = document.getElementById('badge-' + userId + '-' + buoi);
+        if (badgeContainer) {
+            badgeContainer.innerHTML = renderBadgeHtml(newStatus);
+        }
+        cellEl.setAttribute('data-status', newStatus);
+
+        // Đóng menu ngay
+        closeAttendanceContextMenu();
+
+        // Gửi API cập nhật điểm danh
+        fetch('/api/absensi/cap-nhat-buoi', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                user_id: parseInt(userId),
+                jadwal_id: jadwalId ? parseInt(jadwalId) : null,
+                buoi_so: parseInt(buoi),
+                status: newStatus
+            })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.status === 'ok') {
+                showToastNotification(data.pesan || 'Cập nhật thành công', 'success');
+            } else {
+                // Phục hồi lại badge cũ nếu có lỗi
+                if (badgeContainer) badgeContainer.innerHTML = renderBadgeHtml(oldStatus);
+                cellEl.setAttribute('data-status', oldStatus);
+                showToastNotification(data.pesan || 'Không thể cập nhật điểm danh', 'error');
+            }
+        })
+        .catch(function(err) {
+            if (badgeContainer) badgeContainer.innerHTML = renderBadgeHtml(oldStatus);
+            cellEl.setAttribute('data-status', oldStatus);
+            showToastNotification('Lỗi kết nối máy chủ', 'error');
+        });
+    }
+
+    // Đóng context menu khi click ra ngoài hoặc bấm Escape
+    document.addEventListener('click', function(e) {
+        var menu = document.getElementById('attendance-context-menu');
+        if (menu && !menu.contains(e.target)) {
+            closeAttendanceContextMenu();
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            closeAttendanceContextMenu();
+        }
+    });
+
+    // Thông báo Toast AI4BA
+    function showToastNotification(msg, type) {
+        var toast = document.getElementById('attendance-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'attendance-toast';
+            toast.className = 'fixed bottom-6 right-6 z-[9999] px-4 py-2.5 rounded-xl shadow-2xl font-title-sm text-xs font-semibold flex items-center gap-2 transition-all duration-300 pointer-events-none transform translate-y-4 opacity-0';
+            document.body.appendChild(toast);
+        }
+        if (type === 'error') {
+            toast.className = 'fixed bottom-6 right-6 z-[9999] px-4 py-2.5 rounded-xl shadow-2xl font-title-sm text-xs font-semibold flex items-center gap-2 transition-all duration-300 pointer-events-none transform translate-y-0 opacity-100 bg-red-950/90 text-red-300 border border-red-800 backdrop-blur-sm';
+            toast.innerHTML = '<span class="material-symbols-outlined text-[18px]">error</span> ' + msg;
+        } else {
+            toast.className = 'fixed bottom-6 right-6 z-[9999] px-4 py-2.5 rounded-xl shadow-2xl font-title-sm text-xs font-semibold flex items-center gap-2 transition-all duration-300 pointer-events-none transform translate-y-0 opacity-100 bg-emerald-950/90 text-emerald-300 border border-emerald-800 backdrop-blur-sm';
+            toast.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span> ' + msg;
+        }
+        clearTimeout(window._toastTimeout);
+        window._toastTimeout = setTimeout(function() {
+            toast.className = toast.className.replace('translate-y-0 opacity-100', 'translate-y-4 opacity-0');
+        }, 3000);
+    }
 </script>
 {% endblock %}

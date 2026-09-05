@@ -1,8 +1,21 @@
 <!DOCTYPE html>
-<html class="dark" lang="vi">
+{% set sidebar_keep = request.cookies.get('grit_sidebar_keep') == '1' %}
+<html class="dark {% if sidebar_keep %}sidebar-keep-expanded sidebar-preload-expanded{% endif %}" lang="vi">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <script>
+        (function() {
+            try {
+                var keep = document.cookie.indexOf('grit_sidebar_keep=1') !== -1 || 
+                           sessionStorage.getItem('grit_sidebar_keep') === '1' || 
+                           localStorage.getItem('grit_sidebar_keep') === '1';
+                if (keep && window.innerWidth >= 1024) {
+                    document.documentElement.classList.add('sidebar-keep-expanded', 'sidebar-preload-expanded');
+                }
+            } catch(e) {}
+        })();
+    </script>
     <title>{% block title %}GRIT.AI — Hệ thống điểm danh sinh trắc học{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo_grit_ai_icon.svg') }}"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -207,11 +220,21 @@
         ::-webkit-scrollbar-thumb { background: #363636; }
         ::-webkit-scrollbar-thumb:hover { background: #ff5500; }
         @media (min-width: 1024px) {
+            /* Tắt hoàn toàn transition khi tải trang mới có preload mở rộng để triệt tiêu hiện tượng co giật 0.3s */
+            html.sidebar-preload-expanded .app-sidebar,
+            html.sidebar-preload-expanded .app-sidebar * {
+                transition: none !important;
+                animation: none !important;
+            }
+
             .app-sidebar {
                 width: 72px !important;
                 transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s ease !important;
             }
-            .app-sidebar:hover {
+            .app-sidebar:hover,
+            .app-sidebar.sidebar-expanded,
+            .app-sidebar.is-expanded,
+            html.sidebar-keep-expanded .app-sidebar {
                 width: 260px !important;
                 box-shadow: 18px 0 45px rgba(0, 0, 0, 0.85), 0 0 20px rgba(255, 85, 0, 0.1) !important;
             }
@@ -244,9 +267,71 @@
             from { transform: translateY(-20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
-        @keyframes flashFadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
+        /* Hiệu ứng chữ GRIT cam bóng ánh sáng chiếu */
+        .grit-text-gloss {
+            background: linear-gradient(135deg, #fff2e6 0%, #ffc694 14%, #ff731a 38%, #ff5500 66%, #d43b00 86%, #ff8533 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+            filter: drop-shadow(0 1px 2px rgba(200, 50, 0, 0.5)) drop-shadow(0 0 10px rgba(255, 85, 0, 0.35));
+            font-weight: 900;
+            letter-spacing: -0.3px;
+            display: inline-block;
+        }
+
+        /* Khi mở rộng Sidebar: Ẩn Logo, hiện Tên app căn sát sang lề trái */
+        @media (min-width: 1024px) {
+            .app-sidebar:hover .app-brand-header,
+            .app-sidebar.sidebar-expanded .app-brand-header,
+            .app-sidebar.is-expanded .app-brand-header,
+            html.sidebar-keep-expanded .app-sidebar .app-brand-header {
+                padding-left: 20px !important;
+                gap: 0 !important;
+            }
+            .app-sidebar:hover .brand-logo-container,
+            .app-sidebar.sidebar-expanded .brand-logo-container,
+            .app-sidebar.is-expanded .brand-logo-container,
+            html.sidebar-keep-expanded .app-sidebar .brand-logo-container {
+                width: 0 !important;
+                min-width: 0 !important;
+                max-width: 0 !important;
+                opacity: 0 !important;
+                overflow: hidden !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .app-sidebar:hover .brand-text-container,
+            .app-sidebar.sidebar-expanded .brand-text-container,
+            .app-sidebar.is-expanded .brand-text-container,
+            html.sidebar-keep-expanded .app-sidebar .brand-text-container {
+                opacity: 1 !important;
+                max-width: 220px !important;
+            }
+            .app-sidebar:hover [class*="max-w-0"],
+            .app-sidebar.sidebar-expanded [class*="max-w-0"],
+            .app-sidebar.is-expanded [class*="max-w-0"],
+            html.sidebar-keep-expanded .app-sidebar [class*="max-w-0"] {
+                opacity: 1 !important;
+                max-width: 180px !important;
+            }
+        }
+        @media (max-width: 1023px) {
+            .app-sidebar.is-open .app-brand-header {
+                padding-left: 20px !important;
+                gap: 0 !important;
+            }
+            .app-sidebar.is-open .brand-logo-container {
+                width: 0 !important;
+                min-width: 0 !important;
+                max-width: 0 !important;
+                opacity: 0 !important;
+                display: none !important;
+            }
+            .app-sidebar.is-open .brand-text-container {
+                opacity: 1 !important;
+                max-width: 220px !important;
+            }
         }
     </style>
     {% block styles %}{% endblock %}
@@ -534,10 +619,11 @@
 <!-- Sidebar Navigasi (Tự động thu gọn 72px khi không rê chuột, mở rộng 260px khi hover) -->
 <div id="sidebar-backdrop" class="hidden fixed inset-0 bg-black/70 z-40 lg:hidden" aria-hidden="true"></div>
 <aside id="app-sidebar" class="app-sidebar group fixed left-0 top-0 h-screen w-[72px] lg:w-[72px] hover:w-[260px] bg-surface-container dark:bg-surface-container-low backdrop-blur-md bg-opacity-95 border-r border-outline-variant dark:border-outline-variant flex flex-col z-50 transition-all duration-300 ease-in-out overflow-hidden">
-    <!-- Brand Header với Logo GRIT.AI Form 04 chính thức (Chiều cao cố định 64px ngang hàng tuyệt đối với Top Navbar) -->
-    <div class="h-16 min-h-[64px] max-h-[64px] flex items-center px-3.5 gap-3 border-b border-outline-variant/30 shrink-0 box-border">
-        <div class="w-11 h-11 min-w-[44px] rounded-xl bg-primary-container/15 border border-primary/30 flex items-center justify-center p-1 shrink-0 shadow-lg shadow-primary/20">
-            <svg class="w-8 h-8" viewBox="20 40 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Brand Header: Khi đóng chỉ hiện Logo cam đậm 36px căn giữa; khi mở ẩn Logo và chỉ hiện Tên GRIT.AI căn sát lề trái -->
+    <div class="app-brand-header h-16 min-h-[64px] max-h-[64px] flex items-center px-3.5 gap-3 border-b border-outline-variant/30 shrink-0 box-border transition-all duration-300 ease-in-out overflow-hidden">
+        <!-- Logo SVG: Không viền, không nền; hiện khi thu gọn 72px, ẩn hoàn toàn khi hover mở rộng 260px -->
+        <div class="brand-logo-container w-11 h-11 min-w-[44px] flex items-center justify-center shrink-0 transition-all duration-300 ease-in-out">
+            <svg class="w-9 h-9 transition-transform duration-300" viewBox="20 40 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 6px rgba(255, 85, 0, 0.45));">
                 <defs>
                     <linearGradient id="sb-grit-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stop-color="#ff7a3d"/>
@@ -550,10 +636,12 @@
                 <path d="M 124 182 L 320 182 L 320 200 A 120 120 0 0 1 81.36 218 L 117.95 218 A 84 84 0 0 0 282.05 218 L 124 218 Z" fill="url(#sb-grit-grad)"/>
             </svg>
         </div>
-        <!-- Chữ thương hiệu: Ẩn khi thu gọn 72px, hiện ra mượt mà khi hover mở rộng -->
-        <div class="flex flex-col whitespace-nowrap overflow-hidden opacity-0 max-w-0 group-hover:opacity-100 group-hover:max-w-[180px] transition-all duration-300 ease-in-out">
-            <h1 class="font-display-lg text-[22px] leading-tight text-primary dark:text-primary font-black tracking-tight">GRIT<span class="text-on-surface">.AI</span></h1>
-            <p class="font-label-caps text-[9px] text-on-surface-variant uppercase tracking-[.18em] mt-0.5 font-bold">Hệ thống sinh trắc học</p>
+        <!-- Chữ thương hiệu: Ẩn khi thu gọn 72px, hiện ra và căn sang trái khi hover mở rộng -->
+        <div class="brand-text-container flex flex-col justify-center whitespace-nowrap overflow-hidden opacity-0 max-w-0 transition-all duration-300 ease-in-out">
+            <h1 class="font-display-lg text-[22px] leading-tight font-black tracking-tight flex items-baseline gap-0.5">
+                <span class="grit-text-gloss">GRIT</span><span class="text-white">.AI</span>
+            </h1>
+            <p class="font-label-caps text-[9.5px] text-[#94a3b8] uppercase tracking-[.18em] mt-0.5 font-bold">Hệ thống sinh trắc học</p>
         </div>
     </div>
     <!-- Menu Navigasi -->
@@ -566,6 +654,7 @@
             <span class="material-symbols-outlined shrink-0 text-[24px]" {% if active_page == 'dashboard' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>dashboard</span>
             <span class="font-body-md text-body-md whitespace-nowrap overflow-hidden opacity-0 max-w-0 group-hover:opacity-100 group-hover:max-w-[180px] transition-all duration-200 ease-in-out">Tổng quan</span>
         </a>
+        {% if session.get('role') != 'guest' %}
         <a class="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ease-in-out relative group/item
             {% if active_page == 'mahasiswa' %}text-primary font-bold border-l-4 border-primary bg-primary-container/15
             {% else %}text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface{% endif %}"
@@ -576,9 +665,9 @@
         <a class="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ease-in-out relative group/item
             {% if active_page == 'kelas' %}text-primary font-bold border-l-4 border-primary bg-primary-container/15
             {% else %}text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface{% endif %}"
-           href="{{ url_for('kelas_index') }}" title="Lớp & Môn học">
+           href="{{ url_for('kelas_index') }}" title="Quản lý lớp">
             <span class="material-symbols-outlined shrink-0 text-[24px]" {% if active_page == 'kelas' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>school</span>
-            <span class="font-body-md text-body-md whitespace-nowrap overflow-hidden opacity-0 max-w-0 group-hover:opacity-100 group-hover:max-w-[180px] transition-all duration-200 ease-in-out">Lớp &amp; Môn học</span>
+            <span class="font-body-md text-body-md whitespace-nowrap overflow-hidden opacity-0 max-w-0 group-hover:opacity-100 group-hover:max-w-[180px] transition-all duration-200 ease-in-out">Quản lý lớp</span>
         </a>
         <a class="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ease-in-out relative group/item
             {% if active_page == 'jadwal' %}text-primary font-bold border-l-4 border-primary bg-primary-container/15
@@ -601,15 +690,16 @@
             <span class="material-symbols-outlined shrink-0 text-[24px]" {% if active_page == 'laporan' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>assessment</span>
             <span class="font-body-md text-body-md whitespace-nowrap overflow-hidden opacity-0 max-w-0 group-hover:opacity-100 group-hover:max-w-[180px] transition-all duration-200 ease-in-out">Báo cáo</span>
         </a>
+        {% endif %}
     </nav>
     <!-- Profil Admin di bawah sidebar (Ẩn tên và logout khi thu gọn 72px, hiện khi hover) -->
     <div class="mt-auto h-16 min-h-[64px] max-h-[64px] border-t border-outline-variant/30 px-3.5 flex items-center gap-3 shrink-0 overflow-hidden box-border">
-        <div class="w-10 h-10 min-w-[40px] rounded-full bg-secondary-container flex items-center justify-center text-secondary overflow-hidden shrink-0" title="Quản trị viên">
+        <div class="w-10 h-10 min-w-[40px] rounded-full bg-secondary-container flex items-center justify-center text-secondary overflow-hidden shrink-0" title="{% if session.get('role') == 'guest' %}Khách điểm danh{% else %}Quản trị viên{% endif %}">
             <span class="material-symbols-outlined text-[24px]">account_circle</span>
         </div>
         <div class="flex flex-col whitespace-nowrap overflow-hidden opacity-0 max-w-0 group-hover:opacity-100 group-hover:max-w-[130px] transition-all duration-300 ease-in-out">
             <span class="font-label-caps text-label-caps text-on-surface font-bold truncate">{{ session.get('username', 'Admin') }}</span>
-            <span class="font-body-sm text-[11px] text-on-surface-variant truncate">Quản trị viên hệ thống</span>
+            <span class="font-body-sm text-[11px] text-on-surface-variant truncate">{% if session.get('role') == 'guest' %}Chế độ điểm danh{% else %}Quản trị viên hệ thống{% endif %}</span>
         </div>
         <a href="{{ url_for('logout') }}" class="ml-auto text-on-surface-variant hover:text-primary transition-all duration-200 opacity-0 max-w-0 overflow-hidden group-hover:opacity-100 group-hover:max-w-[32px] shrink-0 flex items-center justify-center p-1" title="Đăng xuất">
             <span class="material-symbols-outlined text-[22px]">logout</span>
@@ -637,13 +727,40 @@
             </div>
         </div>
     </div>
-    <div class="flex items-center gap-2">
-        <div class="flex items-center gap-1">
-            <button class="relative p-2 text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors rounded-lg" title="Thông báo">
-                <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-                <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary shadow-sm shadow-primary"></span>
-            </button>
-        </div>
+    <div class="flex items-center gap-3">
+        <!-- Nút Thông Báo (Không nền, không viền) -->
+        <button type="button" class="relative p-2 text-on-surface-variant hover:text-primary transition-colors bg-transparent border-none flex items-center justify-center cursor-pointer" title="Thông báo" onclick="if(window.showFlash) showFlash('Hệ thống nhận diện sẵn sàng cho ca học hôm nay.', 'info')">
+            <span class="material-symbols-outlined text-[22px]" data-icon="notifications">notifications</span>
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary shadow-sm shadow-primary"></span>
+        </button>
+
+        <!-- Nút Thông Tin Buổi Học (Cao 40px, nền #141414 đồng bộ ô tìm kiếm, hover viền cam, thuần chữ) -->
+        <style>
+            #topbar-btn-buoihoc {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                height: 40px;
+                background: #141414;
+                border: 1px solid #343434;
+                color: #e2e8f0;
+                padding: 0 16px;
+                border-radius: 8px;
+                font-size: 13.5px;
+                font-weight: 600;
+                cursor: pointer;
+                box-sizing: border-box;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            #topbar-btn-buoihoc:hover {
+                border-color: #ff5500 !important;
+                color: #ffffff !important;
+                box-shadow: 0 0 14px rgba(255, 85, 0, 0.35) !important;
+            }
+        </style>
+        <button type="button" id="topbar-btn-buoihoc" onclick="openBuoiHocModal()" title="Nhấp để xem và chỉnh sửa thông tin buổi học hôm nay">
+            <span>Thông tin buổi học</span>
+        </button>
     </div>
 </header>
 
@@ -670,7 +787,83 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (sidebarToggle) sidebarToggle.addEventListener('click', function() { setSidebar(!sidebar.classList.contains('is-open')); });
     if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', function() { setSidebar(false); });
-    document.querySelectorAll('#app-sidebar a').forEach(function(link) { link.addEventListener('click', function() { setSidebar(false); }); });
+    
+    // Quản lý trạng thái Hover & Chuyển Tab cho Sidebar (Desktop & Mobile)
+    let isNavigating = false;
+
+    function setSidebarKeep(keep) {
+        if (keep) {
+            document.cookie = "grit_sidebar_keep=1; path=/; max-age=86400; SameSite=Lax";
+            try {
+                sessionStorage.setItem('grit_sidebar_keep', '1');
+                localStorage.setItem('grit_sidebar_keep', '1');
+            } catch(e) {}
+            document.documentElement.classList.add('sidebar-keep-expanded');
+            if (sidebar) sidebar.classList.add('is-expanded');
+        } else {
+            if (isNavigating) return; // Bảo vệ: Không xóa trạng thái khi đang chuyển tab
+            document.cookie = "grit_sidebar_keep=0; path=/; max-age=0; SameSite=Lax";
+            try {
+                sessionStorage.removeItem('grit_sidebar_keep');
+                localStorage.removeItem('grit_sidebar_keep');
+            } catch(e) {}
+            document.documentElement.classList.remove('sidebar-keep-expanded', 'sidebar-preload-expanded');
+            if (sidebar) sidebar.classList.remove('is-expanded', 'sidebar-expanded');
+        }
+    }
+
+    // Gỡ bỏ preload transition lock sau 200ms để kích hoạt lại hover transition mượt mà
+    setTimeout(function() {
+        document.documentElement.classList.remove('sidebar-preload-expanded');
+    }, 200);
+
+    if (sidebar) {
+        // Khi di chuột vào Sidebar -> Mở rộng & Lưu Cookie/Storage
+        sidebar.addEventListener('mouseenter', function() {
+            if (window.innerWidth >= 1024) {
+                setSidebarKeep(true);
+            }
+        });
+
+        // Khi di chuột ra ngoài Sidebar
+        sidebar.addEventListener('mouseleave', function(e) {
+            if (window.innerWidth >= 1024 && !isNavigating) {
+                if (e.clientX >= 250 || e.clientX <= 0 || e.clientY <= 0 || e.clientY >= window.innerHeight) {
+                    setSidebarKeep(false);
+                }
+            }
+        });
+    }
+
+    // Khi click tab chuyển trang
+    document.querySelectorAll('#app-sidebar a').forEach(function(link) {
+        link.addEventListener('click', function() {
+            if (window.innerWidth < 1024) {
+                setSidebar(false);
+            } else {
+                // Trên desktop: Khóa trạng thái điều hướng ngay lập tức
+                isNavigating = true;
+                setSidebarKeep(true);
+                link.classList.add('opacity-75', 'bg-primary/20');
+            }
+        });
+    });
+
+    // Lắng nghe di chuyển chuột: nếu di chuyển ra ngoài tọa độ Sidebar (> 265px) và không trong lúc chuyển trang thì thu gọn
+    document.addEventListener('mousemove', function(e) {
+        if (isNavigating) return;
+        if (window.innerWidth >= 1024 && document.documentElement.classList.contains('sidebar-keep-expanded')) {
+            if (e.clientX > 265) {
+                setSidebarKeep(false);
+            }
+        }
+    });
+
+    window.addEventListener('beforeunload', function() {
+        if (isNavigating) {
+            document.cookie = "grit_sidebar_keep=1; path=/; max-age=86400; SameSite=Lax";
+        }
+    });
 
     const searchInput = document.getElementById('global-search-input');
     const searchDropdown = document.getElementById('search-dropdown');
@@ -902,6 +1095,198 @@ document.addEventListener('DOMContentLoaded', function() {
             closeDropdown();
         }
     });
+});
+</script>
+
+<!-- =========================================================================
+     POPUP MODAL THÔNG TIN BUỔI HỌC (CHUẨN WIREFRAME ĐÃ DUYỆT)
+     Nổi giữa màn hình với backdrop mờ và viền cam neon #ff5500
+     Chỉ gồm Tiêu đề & Nội dung theo yêu cầu, loại bỏ toàn bộ hint/badge phụ
+     ========================================================================= -->
+<div id="modal-buoihoc-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] hidden items-center justify-center p-4 transition-all duration-200" onclick="onModalOverlayClick(event)">
+    <div id="modal-buoihoc-box" class="w-full max-w-[520px] bg-[#0e1118] border-[1.5px] border-[#ff5500] rounded-xl shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(255,85,0,0.35)] overflow-hidden" onclick="event.stopPropagation()">
+        
+        <!-- Header Popup: Chỉ tiêu đề và nút đóng (Thuần chữ) -->
+        <div class="bg-[#141724] border-b border-[#232c3f] px-5 py-3.5 flex items-center justify-between">
+            <h3 class="text-[15px] font-bold text-white m-0">Thông tin buổi học</h3>
+            <button type="button" onclick="closeBuoiHocModal()" class="w-7 h-7 rounded-md bg-[#1b2230] border border-[#2b364d] text-[#94a3b8] hover:text-[#ff5500] hover:border-[#ff5500] flex items-center justify-center transition-colors text-sm font-semibold" title="Đóng popup">✕</button>
+        </div>
+
+        <!-- Body Popup: Chỉ Tiêu Đề và Nội Dung (Đã loại bỏ toàn bộ hint) -->
+        <div class="p-5 flex flex-col gap-3.5">
+            
+            <!-- Mục 1: Thứ & Ngày -->
+            <div class="grid grid-cols-[110px_1fr] gap-3">
+                <div>
+                    <label class="block text-[11.5px] font-bold text-[#94a3b8] mb-1">Thứ</label>
+                    <input type="text" id="buoihoc-input-thu" value="Thứ Sáu" readonly class="w-full bg-[#0d1117] border border-[#232c3f] rounded-md px-3 py-2 text-[13px] font-bold text-[#f8fafc] outline-none cursor-default" />
+                </div>
+                <div>
+                    <label class="block text-[11.5px] font-bold text-[#94a3b8] mb-1">Ngày</label>
+                    <input type="date" id="buoihoc-input-date" onchange="onBuoiHocDateChange(this.value)" class="w-full bg-[#0d1117] border border-[#232c3f] rounded-md px-3 py-2 text-[13px] font-bold text-[#f8fafc] outline-none focus:border-[#ff5500] transition-colors cursor-pointer" />
+                </div>
+            </div>
+
+            <!-- Mục 2: Lớp học phần -->
+            <div>
+                <label class="block text-[11.5px] font-bold text-[#94a3b8] mb-1">Lớp học phần</label>
+                <input type="text" id="buoihoc-input-lop" value="Đang tải..." readonly class="w-full bg-[#0d1117] border border-[#232c3f] rounded-md px-3 py-2 text-[13px] font-bold text-[#f8fafc] outline-none cursor-default truncate" />
+            </div>
+
+            <!-- Mục 3: Giờ bắt đầu & Giờ kết thúc -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[11.5px] font-bold text-[#94a3b8] mb-1">Giờ bắt đầu</label>
+                    <input type="text" id="buoihoc-input-start" value="06:30" readonly class="w-full bg-[#0d1117] border border-[#232c3f] rounded-md px-3 py-2 text-[13px] font-bold text-[#f8fafc] outline-none cursor-default font-mono" />
+                </div>
+                <div>
+                    <label class="block text-[11.5px] font-bold text-[#94a3b8] mb-1">Giờ kết thúc</label>
+                    <input type="text" id="buoihoc-input-end" value="11:30" readonly class="w-full bg-[#0d1117] border border-[#232c3f] rounded-md px-3 py-2 text-[13px] font-bold text-[#f8fafc] outline-none cursor-default font-mono" />
+                </div>
+            </div>
+
+            <!-- Mục 4: Hạn đi muộn -->
+            <div>
+                <label class="block text-[11.5px] font-bold text-[#94a3b8] mb-1">Hạn đi muộn</label>
+                <input type="text" id="buoihoc-input-hanmuon" value="Không có hạn đi muộn" readonly class="w-full bg-[#0d1117] border border-[#232c3f] rounded-md px-3 py-2 text-[13px] font-bold text-[#10b981] outline-none cursor-default" />
+            </div>
+
+            <!-- Mục 5: Buổi -->
+            <div>
+                <label class="block text-[11.5px] font-bold text-[#94a3b8] mb-1">Buổi</label>
+                <div class="flex items-center gap-2 max-w-[150px]">
+                    <button type="button" onclick="adjustBuoiModal(-1)" class="w-8 h-8 rounded-md bg-[#1b2230] border border-[#232c3f] text-[#f8fafc] hover:border-[#ff5500] flex items-center justify-center text-base font-bold transition-colors cursor-pointer">-</button>
+                    <input type="number" id="buoihoc-input-buoi" value="1" min="1" max="60" class="w-14 h-8 bg-[#0d1117] border border-[#232c3f] rounded-md text-center text-[13.5px] font-bold text-[#ff5500] font-mono outline-none focus:border-[#ff5500]" />
+                    <button type="button" onclick="adjustBuoiModal(1)" class="w-8 h-8 rounded-md bg-[#1b2230] border border-[#232c3f] text-[#f8fafc] hover:border-[#ff5500] flex items-center justify-center text-base font-bold transition-colors cursor-pointer">+</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer Popup: Đóng & Lưu thay đổi -->
+        <div class="bg-[#141724] border-t border-[#232c3f] px-5 py-3 flex items-center justify-end gap-2.5">
+            <button type="button" onclick="closeBuoiHocModal()" class="px-4 py-2 rounded-md border border-[#2b364d] text-[#94a3b8] hover:text-white text-[12.5px] font-semibold transition-colors cursor-pointer bg-transparent">Đóng</button>
+            <button type="button" id="btn-save-buoihoc-modal" onclick="saveBuoiHocModal()" class="px-5 py-2 rounded-md bg-[#ff5500] hover:bg-[#ff6a20] text-white text-[12.5px] font-bold shadow-lg shadow-[#ff5500]/25 transition-all cursor-pointer">Lưu thay đổi</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// =========================================================
+// CONTROLLER CHO POPUP THÔNG TIN BUỔI HỌC
+// =========================================================
+function openBuoiHocModal() {
+    var overlay = document.getElementById('modal-buoihoc-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('hidden');
+    overlay.classList.add('flex');
+
+    // Gọi API lấy dữ liệu ca học mới nhất
+    fetch('/api/buoi-hoc/info')
+        .then(function(res) { return res.json(); })
+        .then(function(res) {
+            if (res.status === 'ok' && res.data) {
+                var d = res.data;
+                var thuEl = document.getElementById('buoihoc-input-thu');
+                var dateEl = document.getElementById('buoihoc-input-date');
+                var lopEl = document.getElementById('buoihoc-input-lop');
+                var startEl = document.getElementById('buoihoc-input-start');
+                var endEl = document.getElementById('buoihoc-input-end');
+                var buoiEl = document.getElementById('buoihoc-input-buoi');
+
+                if (thuEl) thuEl.value = d.thu || 'Thứ Sáu';
+                if (dateEl) dateEl.value = d.tanggal || '';
+                if (lopEl) lopEl.value = d.lop_hoc_phan || 'ML - 02 — Máy học ứng dụng';
+                if (startEl) startEl.value = d.jam_mulai || '06:30';
+                if (endEl) endEl.value = d.jam_selesai || '11:30';
+                if (buoiEl) buoiEl.value = d.buoi_so || 1;
+            }
+        })
+        .catch(function(err) {
+            console.error('Lỗi khi tải thông tin buổi học:', err);
+        });
+}
+
+function closeBuoiHocModal() {
+    var overlay = document.getElementById('modal-buoihoc-overlay');
+    if (overlay) {
+        overlay.classList.remove('flex');
+        overlay.classList.add('hidden');
+    }
+}
+
+function onModalOverlayClick(e) {
+    if (e.target && e.target.id === 'modal-buoihoc-overlay') {
+        closeBuoiHocModal();
+    }
+}
+
+function adjustBuoiModal(delta) {
+    var inp = document.getElementById('buoihoc-input-buoi');
+    if (!inp) return;
+    var val = parseInt(inp.value, 10) || 1;
+    val = Math.max(1, Math.min(60, val + delta));
+    inp.value = val;
+}
+
+function onBuoiHocDateChange(val) {
+    if (!val) return;
+    try {
+        var d = new Date(val + 'T00:00:00');
+        var dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+        var thuEl = document.getElementById('buoihoc-input-thu');
+        if (thuEl) thuEl.value = dayNames[d.getDay()] || 'Thứ Hai';
+    } catch(e) {}
+}
+
+function saveBuoiHocModal() {
+    var buoiEl = document.getElementById('buoihoc-input-buoi');
+    var dateEl = document.getElementById('buoihoc-input-date');
+    var btn = document.getElementById('btn-save-buoihoc-modal');
+
+    var buoiVal = parseInt(buoiEl ? buoiEl.value : '1', 10) || 1;
+    var dateVal = dateEl ? dateEl.value : '';
+
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Đang lưu...';
+    }
+
+    fetch('/api/buoi-hoc/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ buoi_so: buoiVal, tanggal: dateVal })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(res) {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Lưu thay đổi';
+        }
+        if (res.status === 'ok') {
+            closeBuoiHocModal();
+            if (window.showFlash) {
+                window.showFlash(res.pesan || 'Đã cập nhật thông tin buổi học thành công!', 'success');
+            }
+        } else {
+            alert(res.pesan || 'Không thể lưu thay đổi.');
+        }
+    })
+    .catch(function(err) {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Lưu thay đổi';
+        }
+        alert('Lỗi kết nối tới máy chủ khi lưu buổi học.');
+    });
+}
+
+// Đóng modal khi nhấn phím Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' || e.keyCode === 27) {
+        closeBuoiHocModal();
+    }
 });
 </script>
 

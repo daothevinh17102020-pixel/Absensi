@@ -8,20 +8,20 @@
         transform: scaleX(-1);
     }
 
-    /* Oval face guide – Spotlight Mask */
+    /* Oval face guide – Spotlight Mask (Chuẩn V2: Viền 5px, sẫm hẳn solid #13151b không thấy cam ngoài) */
     .face-oval-overlay {
-        border: 3px solid rgba(239, 68, 68, 0.95);
+        border: 5px solid rgba(239, 68, 68, 0.95);
         border-radius: 50% / 60% 60% 40% 40%;
-        width: 210px;
-        height: 270px;
+        width: 245px;
+        height: 310px;
         transition: border-color 0.18s ease, box-shadow 0.18s ease;
-        box-shadow: 0 0 24px rgba(239, 68, 68, 0.45), 0 0 0 9999px rgba(0, 0, 0, 0.68);
+        box-shadow: 0 0 24px rgba(239, 68, 68, 0.45), 0 0 0 9999px #13151b;
         pointer-events: none;
     }
 
     .face-oval-overlay.is-ready {
         border-color: #10b981;
-        box-shadow: 0 0 28px rgba(16, 185, 129, 0.65), 0 0 0 9999px rgba(0, 0, 0, 0.68);
+        box-shadow: 0 0 28px rgba(16, 185, 129, 0.65), 0 0 0 9999px #13151b;
     }
 
     #expressionLabel.is-ready {
@@ -58,18 +58,16 @@
 {% endblock %}
 
 {% block content %}
-<!-- Breadcrumb -->
-<nav class="flex text-on-surface-variant font-label-caps text-label-caps mb-6">
-    <ol class="inline-flex items-center space-x-2">
-        <li><a class="hover:text-primary" href="{{ url_for('mahasiswa_index') }}">Sinh viên</a></li>
-        <li><span class="material-symbols-outlined text-sm">chevron_right</span></li>
-        <li class="text-primary font-bold">Đăng ký mới</li>
-    </ol>
-</nav>
+<!-- Nút Quay lại trang trước -->
+<div class="mb-6">
+    <a href="{{ url_for('mahasiswa_index') }}" onclick="if(document.referrer){history.back();return false;}" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-surface-container border border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary/40 hover:bg-surface-container-high transition-all text-xs font-semibold group shadow-sm" title="Quay lại trang trước">
+        <span class="material-symbols-outlined text-[18px] group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+        <span>Quay lại</span>
+    </a>
+</div>
 
 <header class="mb-8">
     <h2 class="font-headline-md text-headline-md text-on-surface">Đăng ký sinh viên mới</h2>
-    <p class="font-body-md text-body-md text-on-surface-variant">Đăng ký hồ sơ khuôn mặt của sinh viên để tích hợp với hệ thống điểm danh tự động.</p>
 </header>
 
 {% if error %}
@@ -79,11 +77,50 @@
 </div>
 {% endif %}
 
-<!-- ── Main Form (centered, standalone) ── -->
-<div class="max-w-2xl mx-auto flex flex-col gap-6">
+<!-- Wizard Progress Stepper (Trực quan hóa luồng 3 bước End-to-End) -->
+<div class="max-w-xl mx-auto mb-8 flex items-center justify-between relative">
+    <div class="absolute top-[18px] left-[40px] right-[40px] h-[2px] bg-outline-variant z-0">
+        <div id="wizardLineFill" class="h-full w-0 bg-primary transition-all duration-300"></div>
+    </div>
+
+    <!-- Step 1 -->
+    <div id="wizStep1" class="relative z-10 flex flex-col items-center gap-1.5">
+        <div class="wiz-badge w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm shadow-lg shadow-primary/30">
+            1
+        </div>
+        <span class="wiz-label text-[11px] font-bold text-on-surface uppercase tracking-wider">1. Nhập thông tin</span>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="wizStep2" class="relative z-10 flex flex-col items-center gap-1.5">
+        <div class="wiz-badge w-9 h-9 rounded-full bg-surface-container-high border-2 border-outline-variant text-on-surface-variant flex items-center justify-center font-bold text-sm">
+            2
+        </div>
+        <span class="wiz-label text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">2. Quét 24 góc</span>
+    </div>
+
+    <!-- Step 3 -->
+    <div id="wizStep3" class="relative z-10 flex flex-col items-center gap-1.5">
+        <div class="wiz-badge w-9 h-9 rounded-full bg-surface-container-high border-2 border-outline-variant text-on-surface-variant flex items-center justify-center font-bold text-sm">
+            3
+        </div>
+        <span class="wiz-label text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">3. Hoàn tất</span>
+    </div>
+</div>
+
+<!-- ── Main Form (centered, max-w-xl) ── -->
+<div id="formContainer" class="max-w-xl mx-auto flex flex-col gap-6">
+
+    <!-- Client Error Banner (Dynamic feedback for camera/training errors) -->
+    <div id="clientErrorBanner" class="hidden bg-error-container/20 border border-error/30 rounded-xl p-4 flex items-start gap-3">
+        <span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">error</span>
+        <div class="flex-1">
+            <p class="font-body-sm text-body-sm text-on-error-container font-semibold" id="clientErrorText"></p>
+        </div>
+    </div>
 
     <!-- Form Card -->
-    <div class="bg-surface-container-high border border-outline-variant rounded-xl p-card-padding">
+    <div class="bg-surface-container-high border border-outline-variant rounded-xl p-card-padding shadow-xl">
         <div class="flex items-center gap-2 mb-6 text-primary">
             <span class="material-symbols-outlined">badge</span>
             <h3 class="font-title-sm text-title-sm font-bold uppercase tracking-wider">Thông tin cá nhân</h3>
@@ -101,7 +138,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="space-y-2">
                     <label class="font-label-caps text-label-caps text-on-surface-variant block uppercase" for="nim">Mã sinh viên</label>
-                    <input class="w-full bg-surface-container-low border border-outline-variant rounded-lg py-3 px-4 text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                    <input class="w-full bg-surface-container-low border border-outline-variant rounded-lg py-3 px-4 text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none font-mono"
                         id="nim" name="nim" placeholder="2024001002" type="text" required />
                 </div>
                 <div class="space-y-2">
@@ -162,6 +199,53 @@
     </div>
 </div>
 
+<!-- ── Step 3: Màn Hình Hoàn Tất Thành Công (End-to-End Resolution) ── -->
+<div id="regSuccessScreen" class="hidden max-w-xl mx-auto bg-surface-container-high border border-outline-variant rounded-2xl p-8 text-center shadow-2xl">
+    <div class="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500 text-emerald-400 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/20">
+        <span class="material-symbols-outlined text-[36px]">check</span>
+    </div>
+
+    <h3 class="font-title-md text-headline-sm font-bold text-on-surface mb-2">Đăng ký sinh viên thành công!</h3>
+    <p class="font-body-sm text-body-sm text-on-surface-variant mb-6 leading-relaxed">
+        Hồ sơ sinh trắc học và mô hình nhận diện khuôn mặt đã sẵn sàng hoạt động trên Camera Điểm Danh.
+    </p>
+
+    <!-- Summary result card -->
+    <div class="bg-surface-container-low border border-outline-variant rounded-xl p-5 text-left mb-6 flex flex-col gap-3 font-body-sm">
+        <div class="flex justify-between items-center">
+            <span class="text-on-surface-variant">Họ và tên:</span>
+            <strong class="text-on-surface font-semibold text-base" id="sumNama">-</strong>
+        </div>
+        <div class="flex justify-between items-center">
+            <span class="text-on-surface-variant">Mã sinh viên (NIM):</span>
+            <span class="font-mono text-primary font-bold text-sm" id="sumNim">-</span>
+        </div>
+        <div class="flex justify-between items-center">
+            <span class="text-on-surface-variant">Lớp học:</span>
+            <span class="text-on-surface" id="sumKelas">-</span>
+        </div>
+        <div class="flex justify-between items-center border-t border-outline-variant/40 pt-3 text-emerald-400 font-semibold">
+            <span>Sinh trắc học:</span>
+            <span class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[18px]">verified</span>
+                Đủ 24/24 góc quét ArcFace
+            </span>
+        </div>
+    </div>
+
+    <!-- 2 Call-to-action buttons to cleanly end the flow -->
+    <div class="flex flex-col gap-3">
+        <a href="{{ url_for('mahasiswa_index') }}" class="w-full bg-primary-container text-on-primary-container font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all">
+            <span class="material-symbols-outlined">list_alt</span>
+            Về danh sách sinh viên
+        </a>
+        <button type="button" onclick="resetFormForNewStudent()" class="w-full bg-surface-container border border-outline-variant text-on-surface font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-surface-container-highest transition-all text-xs">
+            <span class="material-symbols-outlined text-[18px]">person_add</span>
+            Tiếp tục đăng ký sinh viên khác
+        </button>
+    </div>
+</div>
+
 
 <!-- ════════════════════════════════════════
      CAMERA POPUP MODAL (centered overlay)
@@ -170,7 +254,7 @@
      class="fixed inset-0 z-[60] items-center justify-center bg-black/85 backdrop-blur-sm"
      style="display: none;">
 
-    <div class="modal-content relative bg-surface-container-high border border-outline-variant rounded-2xl overflow-hidden shadow-2xl w-full max-w-lg mx-4">
+    <div class="modal-content relative bg-surface-container-high border border-outline-variant rounded-2xl overflow-hidden shadow-2xl w-full max-w-[620px] mx-4">
 
         <!-- Modal Header -->
         <div class="px-4 py-3 border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
@@ -209,7 +293,7 @@
             <div class="absolute inset-0 flex items-center justify-center hidden overflow-hidden pointer-events-none" id="faceGuide">
 
                 <!-- Instruction banner – only UI source for user guidance -->
-                <div class="absolute top-2.5 inset-x-4 flex justify-center z-20">
+                <div class="absolute top-3.5 inset-x-4 flex justify-center z-20">
                     <div class="max-w-[calc(100%-1rem)] px-4 py-2 bg-neutral-900/95 backdrop-blur-md border-2 border-sky-400/70 rounded-2xl shadow-2xl text-center text-white font-bold text-sm leading-snug transition-colors duration-150"
                         id="expressionLabel" aria-live="polite">
                         😐 Căn khuôn mặt vào giữa khung
@@ -293,11 +377,97 @@
     function showModal() {
         cameraModal.setAttribute('data-open', 'true');
         cameraModal.style.display = 'flex';
+        setWizardStep(2);
     }
 
     function hideModal() {
         cameraModal.style.display = 'none';
         cameraModal.removeAttribute('data-open');
+        if (!enrollmentComplete) {
+            setWizardStep(1);
+        }
+    }
+
+    function setWizardStep(step) {
+        const fill = document.getElementById('wizardLineFill');
+        const s1 = document.getElementById('wizStep1');
+        const s2 = document.getElementById('wizStep2');
+        const s3 = document.getElementById('wizStep3');
+        if (!fill || !s1 || !s2 || !s3) return;
+
+        if (step === 1) {
+            fill.style.width = '0%';
+            s1.querySelector('.wiz-badge').className = 'wiz-badge w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm shadow-lg shadow-primary/30';
+            s1.querySelector('.wiz-label').className = 'wiz-label text-[11px] font-bold text-on-surface uppercase tracking-wider';
+
+            s2.querySelector('.wiz-badge').className = 'wiz-badge w-9 h-9 rounded-full bg-surface-container-high border-2 border-outline-variant text-on-surface-variant flex items-center justify-center font-bold text-sm';
+            s2.querySelector('.wiz-label').className = 'wiz-label text-[11px] font-bold text-on-surface-variant uppercase tracking-wider';
+
+            s3.querySelector('.wiz-badge').className = 'wiz-badge w-9 h-9 rounded-full bg-surface-container-high border-2 border-outline-variant text-on-surface-variant flex items-center justify-center font-bold text-sm';
+            s3.querySelector('.wiz-label').className = 'wiz-label text-[11px] font-bold text-on-surface-variant uppercase tracking-wider';
+        } else if (step === 2) {
+            fill.style.width = '50%';
+            s2.querySelector('.wiz-badge').className = 'wiz-badge w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm shadow-lg shadow-primary/30';
+            s2.querySelector('.wiz-label').className = 'wiz-label text-[11px] font-bold text-on-surface uppercase tracking-wider';
+        } else if (step === 3) {
+            fill.style.width = '100%';
+            s2.querySelector('.wiz-badge').className = 'wiz-badge w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm';
+            s2.querySelector('.wiz-label').className = 'wiz-label text-[11px] font-bold text-emerald-400 uppercase tracking-wider';
+
+            s3.querySelector('.wiz-badge').className = 'wiz-badge w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-emerald-500/30';
+            s3.querySelector('.wiz-label').className = 'wiz-label text-[11px] font-bold text-emerald-400 uppercase tracking-wider';
+        }
+    }
+
+    function showSuccessScreen() {
+        document.getElementById('formContainer').classList.add('hidden');
+        document.getElementById('regSuccessScreen').classList.remove('hidden');
+        setWizardStep(3);
+
+        const nama = document.getElementById('nama').value.trim();
+        const nim = document.getElementById('nim').value.trim();
+        const kelasSelect = document.getElementById('kelas_id');
+        const kelasText = (kelasSelect && kelasSelect.selectedIndex >= 0 && kelasSelect.options[kelasSelect.selectedIndex])
+            ? kelasSelect.options[kelasSelect.selectedIndex].text
+            : '-';
+
+        document.getElementById('sumNama').textContent = nama || '-';
+        document.getElementById('sumNim').textContent = nim || '-';
+        document.getElementById('sumKelas').textContent = kelasText;
+    }
+
+    function showClientError(msg) {
+        const banner = document.getElementById('clientErrorBanner');
+        const text = document.getElementById('clientErrorText');
+        if (banner && text) {
+            text.textContent = msg;
+            banner.classList.remove('hidden');
+        }
+    }
+
+    function hideClientError() {
+        const banner = document.getElementById('clientErrorBanner');
+        if (banner) banner.classList.add('hidden');
+    }
+
+    function resetFormForNewStudent() {
+        document.getElementById('formMahasiswa').reset();
+        jumlahFoto = 0;
+        fotoCount.textContent = '0';
+        progressBar.style.width = '0%';
+        progressBarDisplay.style.width = '0%';
+        captureStatusCard.classList.add('hidden');
+        enrollmentComplete = false;
+        galleryBuildInProgress = false;
+        transientFailureCount = 0;
+        resetLegacyMode = false;
+        hideClientError();
+
+        document.getElementById('regSuccessScreen').classList.add('hidden');
+        document.getElementById('formContainer').classList.remove('hidden');
+        btnMulai.disabled = false;
+        btnMulai.innerHTML = '<span class="material-symbols-outlined">camera</span> Bắt đầu chụp ảnh';
+        setWizardStep(1);
     }
 
     function showBuildPhase() {
@@ -408,13 +578,22 @@
         statusText.className = 'text-[11px] font-semibold text-on-surface-variant uppercase tracking-tighter';
 
         hideModal();
+        showClientError(message || 'Không thể chụp ảnh. Hãy kiểm tra dữ liệu và thử lại.');
     }
 
     // ── Start capture ─────────────────────────────────────────
     async function muliaCapture() {
+        if (btnMulai.disabled) return;
+        btnMulai.disabled = true;
+        hideClientError();
         showModal();
         const ok = await bukaKamera();
-        if (!ok) { hideModal(); return; }
+        if (!ok) {
+            btnMulai.disabled = false;
+            hideModal();
+            return;
+        }
+        btnMulai.disabled = false;
 
         jumlahFoto = 0;
         enrollmentComplete = false;
@@ -656,29 +835,35 @@
                 if (data.status === 'ok') {
                     pollGalleryBuild(data.data && data.data.build_id);
                 } else {
-                    buildStatusEl.textContent = data.pesan || 'Không thể cập nhật gallery.';
+                    const errPesan = data.pesan || 'Không thể cập nhật gallery.';
+                    buildStatusEl.textContent = errPesan;
                     galleryBuildInProgress = false;
                     btnMulai.disabled = false;
                     btnMulai.innerHTML = '<span class="material-symbols-outlined">refresh</span> Thử cập nhật gallery';
                     hideModal();
+                    showClientError(errPesan);
                 }
             })
             .catch(err => {
                 console.error('Error training:', err);
-                buildStatusEl.textContent = 'Lỗi kết nối khi cập nhật gallery.';
+                const errMsg = 'Lỗi kết nối khi cập nhật gallery.';
+                buildStatusEl.textContent = errMsg;
                 galleryBuildInProgress = false;
                 btnMulai.disabled = false;
                 btnMulai.innerHTML = '<span class="material-symbols-outlined">refresh</span> Thử cập nhật gallery';
                 hideModal();
+                showClientError(errMsg);
             });
     }
 
     function pollGalleryBuild(buildId) {
         if (!buildId) {
-            buildStatusEl.textContent = 'Không nhận được mã cập nhật gallery.';
+            const errId = 'Không nhận được mã cập nhật gallery.';
+            buildStatusEl.textContent = errId;
             galleryBuildInProgress = false;
             btnMulai.disabled = false;
             hideModal();
+            showClientError(errId);
             return;
         }
         fetch('/api/training/status?build_id=' + encodeURIComponent(buildId))
@@ -687,8 +872,10 @@
                 const build = data.data || {};
                 if (data.status !== 'ok') throw new Error(data.pesan || 'Không thể kiểm tra gallery.');
                 if (build.state === 'succeeded') {
-                    buildStatusEl.textContent = 'Gallery đã sẵn sàng. Đang chuyển hướng...';
-                    window.location.href = "{{ url_for('mahasiswa_index') }}";
+                    buildStatusEl.textContent = 'Gallery đã sẵn sàng. Hoàn tất đăng ký!';
+                    hideModal();
+                    hideClientError();
+                    showSuccessScreen();
                     return;
                 }
                 if (build.state === 'failed') {
@@ -699,11 +886,13 @@
             })
             .catch(error => {
                 if (galleryPollTimer) clearTimeout(galleryPollTimer);
-                buildStatusEl.textContent = error.message || 'Cập nhật gallery thất bại.';
+                const errFinal = error.message || 'Cập nhật gallery thất bại.';
+                buildStatusEl.textContent = errFinal;
                 galleryBuildInProgress = false;
                 btnMulai.disabled = false;
                 btnMulai.innerHTML = '<span class="material-symbols-outlined">refresh</span> Thử cập nhật gallery';
                 hideModal();
+                showClientError(errFinal);
             });
     }
 </script>

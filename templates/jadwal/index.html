@@ -17,29 +17,27 @@
     <table class="w-full min-w-[920px] text-left border-collapse">
         <thead>
             <tr class="bg-surface-container-highest/50 border-b border-outline-variant">
-                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Thứ</th>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Môn học</th>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Lớp</th>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Giờ bắt đầu</th>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Giờ kết thúc</th>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Hạn đi muộn</th>
+                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase border-r border-outline-variant/30">Thứ</th>
+                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase border-r border-outline-variant/30">Lớp học phần</th>
+                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase border-r border-outline-variant/30">Giờ bắt đầu</th>
+                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase border-r border-outline-variant/30">Giờ kết thúc</th>
+                <th class="px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase border-r border-outline-variant/30">Hạn đi muộn</th>
                 <th class="sticky right-0 z-20 bg-surface-container-highest px-6 py-4 font-label-caps text-label-caps text-on-surface-variant uppercase text-right shadow-[-8px_0_16px_-12px_rgba(0,0,0,0.9)]">Thao tác</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-outline-variant/30">
             {% for j in daftar_jadwal %}
             <tr class="hover:bg-surface-variant/20 transition-colors group">
-                <td class="px-6 py-4">
-                    <span class="whitespace-nowrap px-2.5 py-1 rounded-full bg-primary-container/10 text-primary text-[12px] font-semibold border border-primary/20">{{ {'Senin': 'Thứ Hai', 'Selasa': 'Thứ Ba', 'Rabu': 'Thứ Tư', 'Kamis': 'Thứ Năm', 'Jumat': 'Thứ Sáu', 'Sabtu': 'Thứ Bảy', 'Minggu': 'Chủ Nhật'}.get(j.hari, j.hari) }}</span>
+                <td class="px-6 py-4 border-r border-outline-variant/30">
+                    <span class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-primary-container/10 text-primary font-title-sm text-sm font-semibold border border-primary/20">{{ {'Senin': 'Thứ Hai', 'Selasa': 'Thứ Ba', 'Rabu': 'Thứ Tư', 'Kamis': 'Thứ Năm', 'Jumat': 'Thứ Sáu', 'Sabtu': 'Thứ Bảy', 'Minggu': 'Chủ Nhật'}.get(j.hari, j.hari) }}</span>
                 </td>
-                <td class="px-6 py-4">
-                    <p class="font-body-md text-on-surface font-semibold">{{ j.nama_mk }}</p>
-                    <p class="whitespace-nowrap text-[11px] text-on-surface-variant">{{ j.kode_mk }}</p>
+                <td class="px-6 py-4 border-r border-outline-variant/30">
+                    <p class="font-title-sm text-[15px] text-on-surface font-semibold">{{ j.nama_kelas }}</p>
+                    <p class="whitespace-nowrap font-title-sm text-[13px] text-on-surface-variant mt-0.5">{{ j.nama_mk }}{% if j.kode_mk %} ({{ j.kode_mk }}){% endif %}{% if j.buoi_bat_dau and j.buoi_bat_dau > 1 %} · <span class="text-primary font-semibold">Bắt đầu: Buổi {{ j.buoi_bat_dau }}</span>{% endif %}</p>
                 </td>
-                <td class="whitespace-nowrap px-6 py-4 font-body-sm text-on-surface-variant">{{ j.nama_kelas }}</td>
-                <td class="whitespace-nowrap px-6 py-4 font-mono text-sm text-on-surface">{{ j.jam_mulai }}</td>
-                <td class="whitespace-nowrap px-6 py-4 font-mono text-sm text-on-surface">{{ j.jam_selesai }}</td>
-                <td class="whitespace-nowrap px-6 py-4 font-mono text-sm text-tertiary">{{ j.batas_terlambat }}</td>
+                <td class="whitespace-nowrap px-6 py-4 font-title-sm text-[14px] text-on-surface font-semibold border-r border-outline-variant/30">{{ j.jam_mulai }}</td>
+                <td class="whitespace-nowrap px-6 py-4 font-title-sm text-[14px] text-on-surface font-semibold border-r border-outline-variant/30">{{ j.jam_selesai }}</td>
+                <td class="whitespace-nowrap px-6 py-4 font-title-sm text-[14px] text-tertiary font-semibold border-r border-outline-variant/30">{{ j.batas_terlambat }}</td>
                 <td class="sticky right-0 z-10 bg-surface-container px-6 py-4 text-right shadow-[-8px_0_16px_-12px_rgba(0,0,0,0.9)] group-hover:bg-surface-variant">
                     {% set ngay_hien_thi = {'Senin': 'Thứ Hai', 'Selasa': 'Thứ Ba', 'Rabu': 'Thứ Tư', 'Kamis': 'Thứ Năm', 'Jumat': 'Thứ Sáu', 'Sabtu': 'Thứ Bảy', 'Minggu': 'Chủ Nhật'}.get(j.hari, j.hari) %}
                     <div class="flex items-center justify-end gap-1 whitespace-nowrap">

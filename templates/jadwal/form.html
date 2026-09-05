@@ -3,20 +3,16 @@
 {% block title %}{% if is_edit_mode %}Sửa lịch học{% else %}Thêm lịch học{% endif %} - Hệ thống điểm danh{% endblock %}
 
 {% block content %}
-<nav class="flex text-on-surface-variant font-label-caps text-label-caps mb-6">
-    <ol class="inline-flex items-center space-x-2">
-        <li><a class="hover:text-primary" href="{{ url_for('jadwal_index') }}">Lịch học</a></li>
-        <li><span class="material-symbols-outlined text-sm">chevron_right</span></li>
-        <li class="text-primary font-bold">{% if is_edit_mode %}Sửa lịch học{% else %}Thêm lịch học{% endif %}</li>
-    </ol>
-</nav>
+<!-- Nút Quay lại danh sách lịch học -->
+<div class="mb-4">
+    <a href="{{ url_for('jadwal_index') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant/80 bg-surface-container text-on-surface-variant hover:text-on-surface hover:border-primary/40 hover:bg-surface-variant/50 transition-all font-body-sm text-xs font-medium group shadow-sm">
+        <span class="material-symbols-outlined text-[16px] group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+        <span>Quay lại</span>
+    </a>
+</div>
 
 <div class="max-w-4xl">
-    <h2 class="font-headline-md text-headline-md text-on-surface mb-2">{% if is_edit_mode %}Sửa lịch học{% else %}Thêm lịch học mới{% endif %}</h2>
-    <p class="font-body-sm text-body-sm text-on-surface-variant mb-8">
-        Trước tiên hãy chọn lớp, sau đó chọn môn học của lớp đó.
-        Hạn đi muộn được tính tự động: giờ bắt đầu + 15 phút.
-    </p>
+    <h2 class="font-headline-md text-headline-md text-on-surface mb-6">{% if is_edit_mode %}Sửa lịch học{% else %}Thêm lịch học mới{% endif %}</h2>
 
     {% if error %}
     <div class="bg-error-container/20 border border-error/30 rounded-lg p-3 mb-6 flex items-center gap-2">
@@ -26,44 +22,28 @@
     {% endif %}
 
     {% set selected_kelas_id = request.form.get('kelas_id') if request.form.get('kelas_id') is not none and request.form.get('kelas_id') != '' else (jadwal.kelas_id if (jadwal is defined and jadwal and jadwal.kelas_id) else '') %}
-    {% set selected_mk_id = request.form.get('matakuliah_id') if request.form.get('matakuliah_id') is not none and request.form.get('matakuliah_id') != '' else (jadwal.matakuliah_id if (jadwal is defined and jadwal and jadwal.matakuliah_id) else '') %}
     {% set selected_hari = request.form.get('hari') if request.form.get('hari') is not none and request.form.get('hari') != '' else (jadwal.hari if (jadwal is defined and jadwal and jadwal.hari) else '') %}
     {% set selected_jam_mulai = request.form.get('jam_mulai') if request.form.get('jam_mulai') is not none and request.form.get('jam_mulai') != '' else (jadwal.jam_mulai if (jadwal is defined and jadwal and jadwal.jam_mulai) else '') %}
     {% set selected_jam_selesai = request.form.get('jam_selesai') if request.form.get('jam_selesai') is not none and request.form.get('jam_selesai') != '' else (jadwal.jam_selesai if (jadwal is defined and jadwal and jadwal.jam_selesai) else '') %}
+    {% set selected_batas_terlambat = request.form.get('batas_terlambat') if request.form.get('batas_terlambat') is not none and request.form.get('batas_terlambat') != '' else (jadwal.batas_terlambat if (jadwal is defined and jadwal and jadwal.batas_terlambat) else '') %}
+    {% set selected_buoi_bat_dau = request.form.get('buoi_bat_dau') if request.form.get('buoi_bat_dau') is not none and request.form.get('buoi_bat_dau') != '' else (jadwal.buoi_bat_dau if (jadwal is defined and jadwal and jadwal.buoi_bat_dau is defined and jadwal.buoi_bat_dau) else 1) %}
 
     <form method="POST" class="grid grid-cols-1 gap-6 md:grid-cols-2" id="formJadwal">
-        <!-- Pilih Kelas -->
+        <!-- Hàng 1 - Cột 1: Lớp học phần (1 Lớp = 1 Môn học) -->
         <div class="space-y-2">
-            <label class="font-label-caps text-label-caps text-on-surface-variant" for="kelas_id">LỚP</label>
+            <label class="font-label-caps text-label-caps text-on-surface-variant" for="kelas_id">LỚP HỌC PHẦN</label>
             <select class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
                     id="kelas_id" name="kelas_id" required>
-                <option value="">-- Chọn lớp --</option>
+                <option value="">-- Chọn lớp học phần --</option>
                 {% for k in daftar_kelas %}
                 <option value="{{ k.id }}" {% if selected_kelas_id|string == k.id|string %}selected{% endif %}>
-                    {{ k.nama_kelas }} ({{ k.angkatan }})
+                    {{ k.nama_kelas }} (Khóa {{ k.angkatan }})
                 </option>
                 {% endfor %}
             </select>
         </div>
 
-        <!-- Pilih MK (difilter dựa trên kelas qua JS) -->
-        <div class="space-y-2">
-            <label class="font-label-caps text-label-caps text-on-surface-variant" for="matakuliah_id">MÔN HỌC</label>
-            <select class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
-                    id="matakuliah_id" name="matakuliah_id" required>
-                <option value="">-- Vui lòng chọn lớp trước --</option>
-                {% for mk in daftar_mk %}
-                <option value="{{ mk.id }}"
-                        data-kelas="{{ mk.kelas_id }}"
-                        {% if selected_mk_id|string == mk.id|string %}selected{% endif %}
-                        class="mk-option">
-                    {{ mk.nama_mk }} ({{ mk.kode_mk }})
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <!-- Hari -->
+        <!-- Hàng 1 - Cột 2: Thứ (Đẩy lên ngang hàng với Lớp học phần) -->
         <div class="space-y-2">
             <label class="font-label-caps text-label-caps text-on-surface-variant" for="hari">THỨ</label>
             <select class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
@@ -75,28 +55,43 @@
             </select>
         </div>
 
-        <div class="space-y-2">
-            <p id="batas_terlambat_label" class="font-label-caps text-label-caps text-on-surface-variant">HẠN ĐI MUỘN</p>
-            <div id="batas_terlambat_preview" role="status" aria-live="polite" aria-labelledby="batas_terlambat_label" class="flex min-h-[48px] items-center justify-between rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 font-mono text-sm text-on-surface">
-                <span id="batas_terlambat_value">--:--</span>
-                <span class="font-label-caps text-label-caps text-primary">+15 phút</span>
-            </div>
-            <p class="font-body-sm text-[12px] text-on-surface-variant">Tự động tính từ giờ bắt đầu.</p>
-        </div>
-
+        <!-- Hàng 2 - Cột 1: Giờ bắt đầu (Đẩy lên hàng 2 song song với Giờ kết thúc) -->
         <div class="space-y-2">
             <label class="font-label-caps text-label-caps text-on-surface-variant" for="jam_mulai">GIỜ BẮT ĐẦU</label>
             <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
                    id="jam_mulai" name="jam_mulai" type="time" value="{{ (selected_jam_mulai|string)[:5] }}" required/>
         </div>
+
+        <!-- Hàng 2 - Cột 2: Giờ kết thúc -->
         <div class="space-y-2">
             <label class="font-label-caps text-label-caps text-on-surface-variant" for="jam_selesai">GIỜ KẾT THÚC</label>
             <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
                    id="jam_selesai" name="jam_selesai" type="time" value="{{ (selected_jam_selesai|string)[:5] }}" required/>
         </div>
 
-        <div class="flex flex-col gap-3 pt-2 sm:flex-row md:col-span-2">
-            <button type="submit" class="bg-primary-container text-on-primary-container px-6 py-3 rounded-lg font-title-sm flex items-center gap-2 hover:brightness-110 transition-all">
+        <!-- Hàng 3 - Cột 1: Hạn đi muộn (Mặc định tự động tính +15 phút từ giờ bắt đầu) -->
+        <div class="space-y-2">
+            <label class="font-label-caps text-label-caps text-on-surface-variant flex items-center justify-between" for="batas_terlambat">
+                <span>HẠN ĐI MUỘN</span>
+                <span class="text-[11px] text-on-surface-variant/70 font-normal lowercase tracking-normal">(tự động +15 phút từ giờ bắt đầu)</span>
+            </label>
+            <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
+                   id="batas_terlambat" name="batas_terlambat" type="time" value="{{ (selected_batas_terlambat|string)[:5] }}" required/>
+        </div>
+
+        <!-- Hàng 3 - Cột 2: Mốc buổi học bắt đầu (Phục vụ áp dụng giữa kỳ / báo cáo chuẩn giáo vụ) -->
+        <div class="space-y-2">
+            <label class="font-label-caps text-label-caps text-on-surface-variant flex items-center justify-between" for="buoi_bat_dau">
+                <span>BUỔI HỌC BẮT ĐẦU</span>
+                <span class="text-[11px] text-on-surface-variant/70 font-normal lowercase tracking-normal">(mặc định: Buổi 1)</span>
+            </label>
+            <input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md font-mono"
+                   id="buoi_bat_dau" name="buoi_bat_dau" type="number" min="1" max="60"
+                   value="{{ selected_buoi_bat_dau or 1 }}" placeholder="1" required/>
+        </div>
+
+        <div class="flex flex-col gap-3 pt-4 sm:flex-row md:col-span-2">
+            <button type="submit" class="bg-primary-container text-on-primary-container px-6 py-3 rounded-lg font-title-sm flex items-center gap-2 hover:brightness-110 transition-all shadow-lg shadow-primary-container/20">
                 <span class="material-symbols-outlined">{% if is_edit_mode %}save{% else %}add{% endif %}</span>
                 {% if is_edit_mode %}Cập nhật lịch học{% else %}Lưu lịch học{% endif %}
             </button>
@@ -106,67 +101,28 @@
 </div>
 
 <script>
-// Filter MK dựa trên lớp được chọn
 (function() {
-    var kelasSelect = document.getElementById('kelas_id');
-    var mkSelect    = document.getElementById('matakuliah_id');
     var jamMulai    = document.getElementById('jam_mulai');
-    var batasValue  = document.getElementById('batas_terlambat_value');
-    var allOptions  = Array.from(mkSelect.querySelectorAll('.mk-option'));
+    var batasInput  = document.getElementById('batas_terlambat');
 
-    function filterMK(preserveSelected) {
-        var selectedKelas = kelasSelect.value;
-        var currentMK = mkSelect.value;
-        // Reset MK
-        mkSelect.innerHTML = '<option value="">-- Chọn môn học --</option>';
-        if (!selectedKelas) return;
-        var found = false;
-        allOptions.forEach(function(opt) {
-            if (opt.dataset.kelas === selectedKelas) {
-                var clone = opt.cloneNode(true);
-                if (preserveSelected && clone.value === currentMK) {
-                    clone.selected = true;
-                }
-                mkSelect.appendChild(clone);
-                found = true;
-            }
-        });
-        if (!found) {
-            mkSelect.innerHTML = '<option value="">-- Lớp này chưa có môn học --</option>';
-        } else if (preserveSelected && currentMK) {
-            mkSelect.value = currentMK;
-        }
-    }
-
-    kelasSelect.addEventListener('change', function() {
-        filterMK(false);
-    });
-
-    // Run on load if class is selected (edit mode or POST error restore)
-    if (kelasSelect.value) {
-        filterMK(true);
-    }
-
-    function updateBatasTerlambat() {
-        if (!jamMulai.value) {
-            batasValue.textContent = '--:--';
+    function suggestBatasTerlambat() {
+        if (!jamMulai.value || batasInput.value) {
             return;
         }
-
         var timeParts = jamMulai.value.split(':');
-        if (timeParts.length < 2) {
-            batasValue.textContent = '--:--';
-            return;
-        }
+        if (timeParts.length < 2) return;
         var totalMinutes = (Number(timeParts[0]) * 60 + Number(timeParts[1]) + 15) % (24 * 60);
         var hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
         var minutes = String(totalMinutes % 60).padStart(2, '0');
-        batasValue.textContent = hours + ':' + minutes;
+        batasInput.value = hours + ':' + minutes;
     }
 
-    jamMulai.addEventListener('input', updateBatasTerlambat);
-    jamMulai.addEventListener('change', updateBatasTerlambat);
-    updateBatasTerlambat();
+    jamMulai.addEventListener('input', function() {
+        if (!batasInput.value) suggestBatasTerlambat();
+    });
+    jamMulai.addEventListener('change', function() {
+        if (!batasInput.value) suggestBatasTerlambat();
+    });
 })();
 </script>
 {% endblock %}

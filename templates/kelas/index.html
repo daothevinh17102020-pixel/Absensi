@@ -13,20 +13,18 @@
     </a>
 </div>
 
-<!-- Statistik ringkas -->
-<div class="grid grid-cols-12 gap-6">
-    <div class="col-span-12 bg-surface-container border border-outline-variant rounded-xl p-card-padding">
-        <div class="flex items-center justify-between mb-4">
-            <span class="material-symbols-outlined text-primary">group_work</span>
-        </div>
-        <div class="font-display-lg text-display-lg text-on-surface">{{ daftar_kelas|length }}</div>
-        <p class="text-on-surface-variant font-body-sm">Tổng số lớp đang hoạt động</p>
+<!-- Box thống kê tối giản: Bằng đúng chiều ngang card lớp ML-01, chữ trắng 15px, badge xám nhẹ -->
+<div class="grid grid-cols-12 gap-6 mb-6">
+    <div class="col-span-12 md:col-span-6 lg:col-span-4 bg-surface-container border border-outline-variant rounded-xl px-5 py-3.5 flex items-center justify-between shadow-sm transition-colors hover:border-primary/40">
+        <span class="text-white font-semibold text-[15px] tracking-wide">Tổng số lớp đang hoạt động</span>
+        <span class="bg-white/[0.08] border border-white/[0.16] text-[#ff5500] font-mono font-bold px-3 py-1 rounded-md text-[13.5px] tracking-wide shrink-0">
+            {{ daftar_kelas|length }} lớp
+        </span>
     </div>
+</div>
 
-    <!-- Judul section -->
-    <div class="col-span-12 mt-4">
-        <h3 class="font-title-sm text-title-sm text-on-surface">Danh sách lớp</h3>
-    </div>
+<!-- Lưới danh sách thẻ lớp (Loại bỏ dòng tiêu đề thừa để tối ưu không gian cuộn dọc) -->
+<div class="grid grid-cols-12 gap-6">
 
     <!-- Card kelas dari database -->
     {% for kelas in daftar_kelas %}
@@ -55,7 +53,7 @@
             </div>
             <div class="flex items-center justify-between pt-4 border-t border-outline-variant">
                 <a class="text-primary font-title-sm text-[14px] flex items-center gap-1 group-hover:gap-2 transition-all" href="{{ url_for('kelas_detail', id=kelas.id) }}">
-                    Xem môn học
+                    Xem danh sách sinh viên
                     <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                 </a>
             </div>
@@ -92,7 +90,7 @@
         <h3 class="font-title-sm text-title-sm text-on-surface mb-2">Xác nhận xóa</h3>
         <p class="font-body-sm text-body-sm text-on-surface-variant mb-6">
             Bạn có chắc chắn muốn xóa lớp <strong id="namaKelasHapus" class="text-on-surface"></strong> không?
-            Tất cả môn học và lịch học của lớp này cũng sẽ bị xóa.
+            Tất cả sinh viên và lịch học của lớp này cũng sẽ bị xóa.
         </p>
         <div class="flex justify-end gap-3">
             <button onclick="tutupModal()" class="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors font-body-sm">Hủy</button>

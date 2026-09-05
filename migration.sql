@@ -47,12 +47,14 @@ CREATE TABLE IF NOT EXISTS jadwal (
     jam_mulai       TIME NOT NULL,
     jam_selesai     TIME NOT NULL,
     batas_terlambat TIME NOT NULL,
+    buoi_bat_dau    INT DEFAULT 1,
     FOREIGN KEY (matakuliah_id) REFERENCES matakuliah(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- 5. users (mahasiswa)
 CREATE TABLE IF NOT EXISTS users (
     id         INT AUTO_INCREMENT PRIMARY KEY,
+    stt        INT DEFAULT NULL,
     nama       VARCHAR(100) NOT NULL,
     nim        VARCHAR(20)  UNIQUE NOT NULL,
     kelas_id   INT NOT NULL,

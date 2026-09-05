@@ -1,22 +1,31 @@
-# train_model.py — Melatih Model LBPH dari Dataset Wajah
+# train_model.py — Huấn luyện mô hình nhận diện khuôn mặt từ tập dữ liệu
 
 import cv2
 import numpy as np
 import os
+import sys
+
+if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
 from PIL import Image
 from config import DATASET_PATH, MODEL_PATH
 
 def ambil_data_training(dataset_path):
     """
-    Baca semua foto dari folder dataset.
-    Nama folder format: {user_id}_{nama}
-    Return: list wajah (numpy array) dan list ID
+    Đọc tất cả ảnh từ thư mục dataset.
+    Định dạng tên thư mục: {user_id}_{nama}
+    Trả về: danh sách khuôn mặt (numpy array) và danh sách ID
     """
     wajah_list = []
     id_list    = []
 
     if not os.path.exists(dataset_path):
-        print(f"[ERROR] Folder dataset tidak ditemukan: {dataset_path}")
+        print(f"[LỖI] Không tìm thấy thư mục dataset: {dataset_path}")
         return [], []
 
     for folder_name in os.listdir(dataset_path):
@@ -27,7 +36,7 @@ def ambil_data_training(dataset_path):
         try:
             user_id = int(folder_name.split("_")[0])
         except ValueError:
-            print(f"[SKIP] Folder tidak dikenali: {folder_name}")
+            print(f"[BỎ QUA] Thư mục không hợp lệ: {folder_name}")
             continue
 
         for file_name in os.listdir(folder_path):
@@ -41,39 +50,39 @@ def ambil_data_training(dataset_path):
                 wajah_list.append(img_np)
                 id_list.append(user_id)
             except Exception as e:
-                print(f"[SKIP] Gagal membaca {img_path}: {e}")
+                print(f"[BỎ QUA] Không thể đọc tệp ảnh {img_path}: {e}")
 
     return wajah_list, id_list
 
 def latih_model():
     print("=" * 45)
-    print("   TRAINING MODEL LBPH")
+    print("   HUẤN LUYỆN MÔ HÌNH NHẬN DIỆN (LBPH)")
     print("=" * 45)
 
-    print("\n[INFO] Membaca dataset wajah...")
+    print("\n[THÔNG TIN] Đang đọc dữ liệu ảnh khuôn mặt...")
     wajah_list, id_list = ambil_data_training(DATASET_PATH)
 
     if len(wajah_list) == 0:
-        print("[ERROR] Tidak ada data wajah ditemukan.")
-        print("[INFO]  Jalankan 'python face_register.py' terlebih dahulu.")
+        print("[LỖI] Không tìm thấy dữ liệu ảnh khuôn mặt nào.")
+        print("[THÔNG TIN]  Vui lòng chạy lệnh 'python face_register.py' để thu thập ảnh trước.")
         return
 
     jumlah_user = len(set(id_list))
-    print(f"[INFO] Total foto   : {len(wajah_list)}")
-    print(f"[INFO] Total user   : {jumlah_user}")
-    print(f"\n[INFO] Melatih model LBPH, harap tunggu...")
+    print(f"[THÔNG TIN] Tổng số ảnh       : {len(wajah_list)}")
+    print(f"[THÔNG TIN] Tổng số sinh viên : {jumlah_user}")
+    print(f"\n[THÔNG TIN] Đang huấn luyện mô hình LBPH, vui lòng đợi...")
 
     recognizer = cv2.face.LBPHFaceRecognizer_create()
     recognizer.train(wajah_list, np.array(id_list))
 
-    # Pastikan folder models ada
+    # Đảm bảo thư mục lưu trữ tồn tại
     os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
 
     recognizer.write(MODEL_PATH)
 
-    print(f"[SUKSES] Model berhasil disimpan ke: {MODEL_PATH}")
-    print(f"[INFO]   {jumlah_user} wajah berhasil dilatih.")
-    print(f"\n[INFO]   Jalankan 'python face_recognize.py' untuk mulai absensi.\n")
+    print(f"[THÀNH CÔNG] Đã lưu mô hình thành công vào: {MODEL_PATH}")
+    print(f"[THÔNG TIN]   Đã huấn luyện dữ liệu cho {jumlah_user} sinh viên.")
+    print(f"\n[THÔNG TIN]   Chạy lệnh 'python face_recognize.py' để bắt đầu điểm danh.\n")
 
 if __name__ == "__main__":
     latih_model()

@@ -1,54 +1,63 @@
-# face_register.py — Registrasi Wajah Pengguna Baru
+# face_register.py — Đăng ký khuôn mặt người dùng mới (Script CLI độc lập)
 
 import cv2
 import os
+import sys
+
+if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
 from database import tambah_user, nim_sudah_ada
 from config import DATASET_PATH, FOTO_PER_USER, CAMERA_INDEX
 
 def registrasi_wajah():
     print("=" * 45)
-    print("   REGISTRASI PENGGUNA BARU")
+    print("      ĐĂNG KÝ SINH VIÊN MỚI")
     print("=" * 45)
 
-    # Input data user
-    nama = input("Masukkan Nama Lengkap : ").strip()
-    nim  = input("Masukkan NIM          : ").strip()
+    # Nhập thông tin sinh viên
+    nama = input("Nhập họ và tên sinh viên : ").strip()
+    nim  = input("Nhập mã sinh viên (MSV)   : ").strip()
 
     if not nama or not nim:
-        print("[ERROR] Nama dan NIM tidak boleh kosong.")
+        print("[LỖI] Họ tên và mã sinh viên không được để trống.")
         return
 
     if nim_sudah_ada(nim):
-        print(f"[ERROR] NIM {nim} sudah terdaftar di database.")
+        print(f"[LỖI] Mã sinh viên {nim} đã tồn tại trong cơ sở dữ liệu.")
         return
 
-    # Simpan ke database, dapatkan ID
+    # Lưu vào database, lấy ID
     user_id = tambah_user(nama, nim)
-    print(f"\n[INFO] User terdaftar dengan ID: {user_id}")
+    print(f"\n[THÔNG TIN] Đã đăng ký sinh viên với ID: {user_id}")
 
-    # Buat folder dataset untuk user ini
+    # Tạo thư mục dataset cho sinh viên này
     folder_user = os.path.join(DATASET_PATH, f"{user_id}_{nama.replace(' ', '_')}")
     os.makedirs(folder_user, exist_ok=True)
 
-    # Muat detektor wajah Haar Cascade
+    # Tải bộ phát hiện khuôn mặt Haar Cascade
     face_cascade = cv2.CascadeClassifier(
         cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
     )
 
     cam = cv2.VideoCapture(CAMERA_INDEX)
-    cam.set(3, 640)  # lebar frame
-    cam.set(4, 480)  # tinggi frame
+    cam.set(3, 640)  # chiều rộng khung hình
+    cam.set(4, 480)  # chiều cao khung hình
 
-    print(f"\n[INFO] Kamera aktif. Mengambil {FOTO_PER_USER} foto wajah...")
-    print("[INFO] Hadapkan wajah ke kamera. Gerakkan sedikit ke kiri/kanan/atas/bawah.")
-    print("[INFO] Tekan 'Q' untuk membatalkan.\n")
+    print(f"\n[THÔNG TIN] Camera đang hoạt động. Bắt đầu chụp {FOTO_PER_USER} ảnh khuôn mặt...")
+    print("[THÔNG TIN] Hướng khuôn mặt vào camera. Xoay nhẹ sang trái/phải/lên/xuống.")
+    print("[THÔNG TIN] Nhấn phím 'Q' để hủy bỏ.\n")
 
     jumlah_foto = 0
 
     while jumlah_foto < FOTO_PER_USER:
         ret, frame = cam.read()
         if not ret:
-            print("[ERROR] Kamera tidak dapat membaca frame.")
+            print("[LỖI] Camera không thể đọc khung hình.")
             break
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -62,38 +71,38 @@ def registrasi_wajah():
         for (x, y, w, h) in faces:
             jumlah_foto += 1
 
-            # Simpan foto wajah (grayscale, di-crop)
+            # Lưu ảnh khuôn mặt (grayscale, cắt crop)
             wajah_crop = gray[y:y+h, x:x+w]
             nama_file  = os.path.join(folder_user, f"{jumlah_foto}.jpg")
             cv2.imwrite(nama_file, wajah_crop)
 
-            # Tampilkan kotak & progress di layar
+            # Vẽ khung chữ nhật và tiến trình lên màn hình
             cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-            cv2.putText(frame, f"Foto: {jumlah_foto}/{FOTO_PER_USER}",
+            cv2.putText(frame, f"Anh: {jumlah_foto}/{FOTO_PER_USER}",
                         (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX,
                         0.7, (0, 255, 0), 2)
 
-        status = f"Mengambil foto... {jumlah_foto}/{FOTO_PER_USER}"
+        status = f"Dang chup anh... {jumlah_foto}/{FOTO_PER_USER}"
         cv2.putText(frame, status, (10, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
-        cv2.putText(frame, f"Nama: {nama} | NIM: {nim}", (10, 460),
+        cv2.putText(frame, f"Ho ten: {nama} | MSV: {nim}", (10, 460),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.55, (200, 200, 200), 1)
 
-        cv2.imshow("Registrasi Wajah — Tekan Q untuk batal", frame)
+        cv2.imshow("Dang ky khuon mat - Nhan Q de huy", frame)
 
         if cv2.waitKey(100) & 0xFF == ord('q'):
-            print("\n[INFO] Registrasi dibatalkan oleh pengguna.")
+            print("\n[THÔNG TIN] Đăng ký bị hủy bởi người dùng.")
             break
 
     cam.release()
     cv2.destroyAllWindows()
 
     if jumlah_foto >= FOTO_PER_USER:
-        print(f"\n[SUKSES] {jumlah_foto} foto berhasil disimpan.")
-        print(f"[INFO]   Folder: {folder_user}")
-        print(f"[INFO]   Jalankan 'python train_model.py' untuk melatih ulang model.\n")
+        print(f"\n[THÀNH CÔNG] Đã lưu {jumlah_foto} ảnh khuôn mặt thành công.")
+        print(f"[THÔNG TIN]   Thư mục lưu trữ: {folder_user}")
+        print(f"[THÔNG TIN]   Chạy lệnh 'python train_model.py' để cập nhật mô hình nhận diện.\n")
     else:
-        print(f"\n[PERINGATAN] Hanya {jumlah_foto} foto yang tersimpan (kurang dari {FOTO_PER_USER}).")
+        print(f"\n[CẢNH BÁO] Chỉ có {jumlah_foto} ảnh được lưu (chưa đủ {FOTO_PER_USER} ảnh theo yêu cầu).")
 
 if __name__ == "__main__":
     registrasi_wajah()

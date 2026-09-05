@@ -39,6 +39,47 @@ def _upgrade_absensi_schema(cursor, database_name):
         """)
         print("  [OK] Upgrade: status 'sakit' ditambahkan")
 
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA=%s AND TABLE_NAME='absensi' AND COLUMN_NAME='buoi_so'
+    """, (database_name,))
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("ALTER TABLE absensi ADD COLUMN buoi_so INT NOT NULL DEFAULT 1 AFTER status")
+        print("  [OK] Upgrade: absensi.buoi_so ditambahkan")
+
+
+def _upgrade_users_schema(cursor, database_name):
+    """Pastikan kolom stt tersedia pada tabel users."""
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA=%s AND TABLE_NAME='users'
+          AND COLUMN_NAME='stt'
+    """, (database_name,))
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("""
+            ALTER TABLE users
+            ADD COLUMN stt INT DEFAULT NULL AFTER id
+        """)
+        print("  [OK] Upgrade: users.stt ditambahkan")
+
+
+def _upgrade_jadwal_schema(cursor, database_name):
+    """Pastikan kolom buoi_bat_dau tersedia pada tabel jadwal."""
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA=%s AND TABLE_NAME='jadwal'
+          AND COLUMN_NAME='buoi_bat_dau'
+    """, (database_name,))
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("""
+            ALTER TABLE jadwal
+            ADD COLUMN buoi_bat_dau INT NOT NULL DEFAULT 1 AFTER batas_terlambat
+        """)
+        print("  [OK] Upgrade: jadwal.buoi_bat_dau ditambahkan")
+
 
 def _upgrade_admin_schema(cursor, database_name):
     """Pastikan hanya satu akun admin awal dapat dibuat, termasuk saat race."""
@@ -115,6 +156,8 @@ def run():
         if not failures:
             _upgrade_admin_schema(cursor, database_name)
             _upgrade_absensi_schema(cursor, database_name)
+            _upgrade_users_schema(cursor, database_name)
+            _upgrade_jadwal_schema(cursor, database_name)
             conn.commit()
 
         if failures:

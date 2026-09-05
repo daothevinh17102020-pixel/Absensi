@@ -31,53 +31,10 @@ const DashboardUI = {
             btnOff.addEventListener('click', () => CameraManager.stop());
         }
 
-        // Tombol Fullscreen Camera
-        this.initFullscreen();
-
         // Auto-refresh absensi hari ini setiap 30 detik
         setInterval(() => this.refreshAbsensiTable(), 30000);
 
         console.log('[DASHBOARD] UI berhasil diinisialisasi.');
-    },
-
-    /**
-     * Khởi tạo tính năng Fullscreen cho khung camera điểm danh
-     */
-    initFullscreen: function () {
-        const btn = document.getElementById('btn-fullscreen-cam');
-        const container = document.getElementById('camera-container');
-        if (!btn || !container) return;
-
-        btn.addEventListener('click', () => {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                if (container.requestFullscreen) {
-                    container.requestFullscreen();
-                } else if (container.webkitRequestFullscreen) {
-                    container.webkitRequestFullscreen();
-                }
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
-            }
-        });
-
-        const onFullscreenChange = () => {
-            const icon = btn.querySelector('.material-symbols-outlined');
-            const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
-            if (isFull) {
-                if (icon) icon.textContent = 'fullscreen_exit';
-                btn.title = 'Thoát toàn màn hình';
-            } else {
-                if (icon) icon.textContent = 'fullscreen';
-                btn.title = 'Toàn màn hình camera';
-            }
-        };
-
-        document.addEventListener('fullscreenchange', onFullscreenChange);
-        document.addEventListener('webkitfullscreenchange', onFullscreenChange);
     },
 
     /**

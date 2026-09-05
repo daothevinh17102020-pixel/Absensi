@@ -584,6 +584,49 @@ class SchedulePolicyTests(unittest.TestCase):
         self.assertEqual(active_query.args[1][-1], database.ABSENSI_GRACE_MINUTES)
         self.assertEqual(finished_query.args[1][1], database.ABSENSI_GRACE_MINUTES)
 
+    def test_ada_mahasiswa_hadir_jadwal_checks_valid_attendance(self):
+        cursor = Mock()
+        cursor.fetchone.return_value = (1,)
+        connection = Mock()
+        connection.cursor.return_value = cursor
+
+        with patch.object(database, 'get_connection', return_value=connection):
+            has_attendance = database.ada_mahasiswa_hadir_jadwal(12, date(2026, 9, 6))
+
+        self.assertTrue(has_attendance)
+        query, params = cursor.execute.call_args.args
+        self.assertIn("status IN ('hadir', 'terlambat', 'izin', 'sakit')", query)
+        self.assertEqual(params, (12, date(2026, 9, 6)))
+
+    def test_kelas_sudah_ada_detects_existing_class(self):
+        cursor = Mock()
+        cursor.fetchone.return_value = (1,)
+        connection = Mock()
+        connection.cursor.return_value = cursor
+
+        with patch.object(database, 'get_connection', return_value=connection):
+            exists = database.kelas_sudah_ada('ML-01', '2026')
+
+        self.assertTrue(exists)
+        query, params = cursor.execute.call_args.args
+        self.assertIn("nama_kelas = %s AND angkatan = %s", query)
+        self.assertEqual(params, ('ML-01', '2026'))
+
+    def test_matakuliah_memiliki_absensi_detects_attendance(self):
+        cursor = Mock()
+        cursor.fetchone.return_value = (1,)
+        connection = Mock()
+        connection.cursor.return_value = cursor
+
+        with patch.object(database, 'get_connection', return_value=connection):
+            has_absensi = database.matakuliah_memiliki_absensi(5)
+
+        self.assertTrue(has_absensi)
+        query, params = cursor.execute.call_args.args
+        self.assertIn("j.matakuliah_id = %s", query)
+        self.assertEqual(params, (5,))
+
+
 
 class ReportingTests(unittest.TestCase):
     def test_empty_attendance_percentage_reports_zero_total(self):
@@ -700,6 +743,37 @@ class ApiValidationTests(unittest.TestCase):
         self.assertIn('/absensi/export?format=csv&amp;kelas_id=7', html)
         self.assertIn('&amp;matakuliah_id=9', html)
         self.assertNotIn('format=csv?kelas_id', html)
+
+    @patch.object(app.db, 'get_rekap_absensi')
+    def test_csv_export_contains_utf8_bom_and_vietnamese_content(self, mock_rekap):
+        mock_rekap.return_value = [
+            {
+                'nama': 'Nguyễn Văn A',
+                'nim': '2026001',
+                'nama_kelas': 'K58 Tin Học',
+                'nama_mk': 'Học Máy',
+                'kode_mk': 'ML01',
+                'hari': 'Thứ Hai',
+                'tanggal': '2026-09-06',
+                'waktu_absen': '08:00:00',
+                'status': 'hadir',
+                'alasan': 'Đúng giờ',
+            }
+        ]
+        response = self.client.get('/absensi/export?format=csv')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('text/csv', response.content_type)
+        self.assertIn('charset=utf-8', response.content_type.lower())
+        # Xác nhận có tiền tố UTF-8 BOM (0xEF, 0xBB, 0xBF) cho Microsoft Excel (GAP-07)
+        self.assertTrue(
+            response.data.startswith(b'\xef\xbb\xbf'),
+            'CSV export must start with UTF-8 BOM (\\xef\\xbb\\xbf) for Excel compatibility'
+        )
+        content = response.data.decode('utf-8')
+        self.assertIn('Họ và tên', content)
+        self.assertIn('Thời gian điểm danh', content)
+        self.assertIn('Nguyễn Văn A', content)
+        self.assertIn('Thứ Hai', content)
 
     @patch.object(app.db, 'cari_mahasiswa', side_effect=RuntimeError('private-db-error'))
     def test_search_failure_is_500_without_exception_detail(self, _search):

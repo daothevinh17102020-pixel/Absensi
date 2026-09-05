@@ -1,8 +1,17 @@
-# face_recognize.py — Engine Pengenalan Wajah Real-Time + Integrasi ESP32
+# face_recognize.py — Nhận diện khuôn mặt thời gian thực + Tích hợp ESP32 (Script CLI)
 
 import cv2
 import numpy as np
 import os
+import sys
+
+if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
 import requests
 from database import get_user_by_id, catat_absensi
 from config import (MODEL_PATH, CONFIDENCE_THRESHOLD, CAMERA_INDEX,
@@ -10,13 +19,13 @@ from config import (MODEL_PATH, CONFIDENCE_THRESHOLD, CAMERA_INDEX,
 
 def kirim_notifikasi(nama, nim, status):
     """
-    Kirim hasil pengenalan ke:
-    1. Flask server (untuk update dashboard real-time)
-    2. ESP32 (untuk LCD & LED) — hanya jika ESP32_ENABLED = True
+    Gửi kết quả điểm danh tới:
+    1. Flask server (để cập nhật giao diện dashboard thời gian thực)
+    2. ESP32 (hiển thị LCD & đèn LED) — chỉ kích hoạt nếu ESP32_ENABLED = True
     """
     payload = {"nama": nama, "nim": nim, "status": status}
 
-    # -- Kirim ke Flask dashboard --
+    # -- Gửi tới Flask dashboard --
     try:
         requests.post(
             f"http://127.0.0.1:{FLASK_PORT}/api/hasil-absensi",
@@ -24,9 +33,9 @@ def kirim_notifikasi(nama, nim, status):
             timeout=2
         )
     except Exception:
-        pass  # Flask mungkin belum jalan, tidak apa-apa
+        pass  # Flask có thể chưa chạy, không gây lỗi ngắt quãng
 
-    # -- Kirim ke ESP32 (jika sudah tersedia) --
+    # -- Gửi tới ESP32 (nếu được kích hoạt) --
     if ESP32_ENABLED:
         try:
             resp = requests.post(
@@ -35,20 +44,20 @@ def kirim_notifikasi(nama, nim, status):
                 timeout=ESP32_TIMEOUT
             )
             if resp.status_code == 200:
-                print(f"[ESP32] Notifikasi terkirim → {status}")
+                print(f"[ESP32] Đã gửi thông báo → {status}")
             else:
-                print(f"[ESP32] Respons tidak terduga: {resp.status_code}")
+                print(f"[ESP32] Phản hồi bất thường: {resp.status_code}")
         except requests.exceptions.ConnectionError:
-            print(f"[WARN] ESP32 tidak terjangkau di {ESP32_IP}:{ESP32_PORT}")
+            print(f"[CẢNH BÁO] Không thể kết nối tới ESP32 tại {ESP32_IP}:{ESP32_PORT}")
         except requests.exceptions.Timeout:
-            print(f"[WARN] ESP32 timeout setelah {ESP32_TIMEOUT}s")
+            print(f"[CẢNH BÁO] ESP32 timeout sau {ESP32_TIMEOUT}s")
         except Exception as e:
-            print(f"[WARN] Gagal kirim ke ESP32: {e}")
+            print(f"[CẢNH BÁO] Gửi tín hiệu tới ESP32 thất bại: {e}")
 
 def cek_esp32():
-    """Ping ESP32 untuk memastikan koneksi sebelum mulai."""
+    """Kiểm tra ping ESP32 trước khi bắt đầu nhận diện."""
     if not ESP32_ENABLED:
-        print("[INFO] ESP32 dinonaktifkan (ESP32_ENABLED = False di config.py)")
+        print("[THÔNG TIN] ESP32 đang tắt (ESP32_ENABLED = False trong config.py)")
         return
     try:
         resp = requests.get(
@@ -56,35 +65,35 @@ def cek_esp32():
             timeout=ESP32_TIMEOUT
         )
         if resp.status_code == 200:
-            print(f"[OK] ESP32 terhubung di {ESP32_IP}:{ESP32_PORT}")
+            print(f"[OK] ESP32 đã kết nối tại {ESP32_IP}:{ESP32_PORT}")
         else:
-            print(f"[WARN] ESP32 merespons dengan status {resp.status_code}")
+            print(f"[CẢNH BÁO] ESP32 phản hồi trạng thái: {resp.status_code}")
     except Exception:
-        print(f"[WARN] ESP32 tidak terjangkau di {ESP32_IP} — pastikan:")
-        print(f"       1. ESP32 sudah menyala dan terhubung WiFi")
-        print(f"       2. IP di config.py sudah benar")
-        print(f"       3. Laptop & ESP32 dalam jaringan WiFi yang sama")
+        print(f"[CẢNH BÁO] Không thể kết nối tới ESP32 tại {ESP32_IP} — Vui lòng kiểm tra:")
+        print("       1. ESP32 đã cấp nguồn và kết nối WiFi")
+        print("       2. Địa chỉ IP trong config.py chính xác")
+        print("       3. Máy tính và ESP32 đang chung một mạng nội bộ")
 
 def mulai_pengenalan():
     print("=" * 50)
-    print("   SISTEM ABSENSI FACE RECOGNITION")
+    print("   HỆ THỐNG ĐIỂM DANH NHẬN DIỆN KHUÔN MẶT")
     print("=" * 50)
 
-    # Validasi model tersedia
+    # Kiểm tra mô hình khả dụng
     if not os.path.exists(MODEL_PATH):
-        print(f"[ERROR] Model tidak ditemukan: {MODEL_PATH}")
-        print("[INFO]  Jalankan 'python train_model.py' terlebih dahulu.")
+        print(f"[LỖI] Không tìm thấy tệp mô hình: {MODEL_PATH}")
+        print("[THÔNG TIN] Vui lòng chạy lệnh 'python train_model.py' trước.")
         return
 
-    # Cek koneksi ESP32
+    # Kiểm tra kết nối ESP32
     cek_esp32()
 
-    # Load model LBPH
+    # Tải mô hình LBPH
     recognizer = cv2.face.LBPHFaceRecognizer_create()
     recognizer.read(MODEL_PATH)
-    print(f"[OK] Model LBPH dimuat dari {MODEL_PATH}")
+    print(f"[OK] Đã tải mô hình LBPH từ: {MODEL_PATH}")
 
-    # Load detektor wajah Haar Cascade
+    # Tải bộ phát hiện khuôn mặt Haar Cascade
     face_cascade = cv2.CascadeClassifier(
         cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
     )
@@ -94,23 +103,20 @@ def mulai_pengenalan():
     cam.set(4, 480)
 
     if not cam.isOpened():
-        print("[ERROR] Kamera tidak dapat dibuka.")
+        print("[LỖI] Không thể mở camera.")
         return
 
-    print("\n[INFO] Kamera aktif. Arahkan wajah ke kamera.")
-    print(f"[INFO] Threshold confidence: {CONFIDENCE_THRESHOLD}")
-    print(f"[INFO] ESP32: {'AKTIF (' + ESP32_IP + ')' if ESP32_ENABLED else 'NONAKTIF'}")
-    print("[INFO] Tekan 'Q' untuk keluar.\n")
+    print("\n[THÔNG TIN] Camera đang hoạt động. Hãy hướng khuôn mặt vào ống kính.")
+    print(f"[THÔNG TIN] Ngưỡng nhận diện (Confidence): {CONFIDENCE_THRESHOLD}")
+    print(f"[THÔNG TIN] ESP32: {'BẬT (' + ESP32_IP + ')' if ESP32_ENABLED else 'TẮT'}")
+    print("[THÔNG TIN] Nhấn phím 'Q' để thoát.\n")
 
-    # Cooldown: mencegah pencatatan berulang dalam waktu singkat
+    # Cooldown: tránh ghi nhận điểm danh liên tục trong thời gian ngắn
     cooldown       = {}      # {user_id: frame_counter}
-    COOLDOWN_FRAME = 60      # ~2 detik pada 30fps
+    COOLDOWN_FRAME = 60      # ~2 giây ở tốc độ 30fps
     frame_count    = 0
 
-    # ============================================================
-    # TAMBAHAN: Dictionary untuk mapping label model -> user_id DB
-    # ============================================================
-    # Load mapping dari file yang dibuat saat training
+    # Tải mapping nhãn từ file
     label_map_path = MODEL_PATH.replace('.yml', '_labels.npy')
     id_map_path = MODEL_PATH.replace('.yml', '_ids.npy')
     
@@ -118,19 +124,16 @@ def mulai_pengenalan():
     if os.path.exists(label_map_path) and os.path.exists(id_map_path):
         labels = np.load(label_map_path, allow_pickle=True).item()
         ids = np.load(id_map_path, allow_pickle=True).item()
-        # labels: {folder_name: label_number}
-        # ids: {folder_name: user_id_database}
         for folder, label_num in labels.items():
             label_to_user_id[label_num] = ids[folder]
-        print(f"[OK] Mapping label dimuat: {label_to_user_id}")
+        print(f"[OK] Đã tải ánh xạ nhãn: {label_to_user_id}")
     else:
-        print("[WARN] File mapping tidak ditemukan. Menggunakan prediksi langsung.")
-        print("[WARN] Pastikan train_model.py menyimpan mapping label!")
+        print("[CẢNH BÁO] Không tìm thấy file ánh xạ nhãn. Dự đoán trực tiếp theo ID.")
 
     while True:
         ret, frame = cam.read()
         if not ret:
-            print("[ERROR] Kamera berhenti membaca frame.")
+            print("[LỖI] Camera dừng truyền khung hình.")
             break
 
         frame_count += 1
@@ -146,41 +149,31 @@ def mulai_pengenalan():
         for (x, y, w, h) in faces:
             wajah_roi = gray[y:y+h, x:x+w]
 
-            # Prediksi identitas
+            # Dự đoán danh tính
             label_pred, confidence = recognizer.predict(wajah_roi)
-
-            # ============================================================
-            # PERBAIKAN PENTING: Konversi label model ke user_id database
-            # ============================================================
             user_id = label_to_user_id.get(label_pred, label_pred)
-            
-            # Log untuk debugging
-            print(f"[DEBUG] Label prediksi: {label_pred}, User ID: {user_id}, Confidence: {confidence:.2f}")
 
             if confidence < CONFIDENCE_THRESHOLD:
-                # ── WAJAH DIKENALI ──────────────────────────
+                # ── KHUÔN MẶT ĐƯỢC NHẬN DIỆN ──────────────────────────
                 user = get_user_by_id(user_id)
                 
-                # ============================================================
-                # PERBAIKAN: Validasi user ditemukan dan confidence cukup rendah
-                # ============================================================
                 if user and confidence < CONFIDENCE_THRESHOLD:
                     nama = user['nama']
                     nim  = user['nim']
 
-                    # Cek cooldown agar tidak kirim berulang
+                    # Kiểm tra cooldown
                     if frame_count > cooldown.get(user_id, 0):
                         berhasil = catat_absensi(user_id, nama, nim)
                         cooldown[user_id] = frame_count + COOLDOWN_FRAME
 
                         if berhasil:
-                            print(f"[ABSEN] {nama} | {nim} — BERHASIL DICATAT")
+                            print(f"[ĐIỂM DANH] {nama} | {nim} — ĐÃ GHI NHẬN THÀNH CÔNG")
                             kirim_notifikasi(nama, nim, "berhasil")
                         else:
-                            print(f"[INFO]  {nama} sudah absen hari ini.")
+                            print(f"[THÔNG TIN]  {nama} đã điểm danh hôm nay.")
                             kirim_notifikasi(nama, nim, "duplikat")
 
-                    # Tampilan: kotak HIJAU
+                    # Khung XANH LÁ
                     label = f"{nama} ({confidence:.0f})"
                     cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 200, 0), 2)
                     cv2.rectangle(frame, (x, y-35), (x+w, y), (0, 200, 0), -1)
@@ -188,34 +181,34 @@ def mulai_pengenalan():
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
                 
                 else:
-                    # User tidak ditemukan di database
-                    label = f"ID {user_id} tidak terdaftar ({confidence:.0f})"
+                    # Không tìm thấy sinh viên trong CSDL
+                    label = f"ID {user_id} chua dang ky ({confidence:.0f})"
                     cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 165, 255), 2)
                     cv2.rectangle(frame, (x, y-35), (x+w, y), (0, 165, 255), -1)
                     cv2.putText(frame, label, (x+5, y-10),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
             else:
-                # ── WAJAH TIDAK DIKENALI ─────────────────────
-                label = f"Tidak Dikenali ({confidence:.0f})"
+                # ── KHÔNG NHẬN DIỆN ĐƯỢC ─────────────────────
+                label = f"Khong nhan dien ({confidence:.0f})"
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 200), 2)
                 cv2.rectangle(frame, (x, y-35), (x+w, y), (0, 0, 200), -1)
                 cv2.putText(frame, label, (x+5, y-10),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
-        # Info status di layar
-        esp32_status = f"ESP32: {'ON ' + ESP32_IP if ESP32_ENABLED else 'OFF'}"
-        cv2.putText(frame, "Sistem Absensi Face Recognition",
+        # Thông tin hiển thị trên khung hình
+        esp32_status = f"ESP32: {'BAT ' + ESP32_IP if ESP32_ENABLED else 'TAT'}"
+        cv2.putText(frame, "He thong diem danh khuon mat",
                     (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 0), 2)
         cv2.putText(frame, esp32_status,
                     (10, 455), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (150, 150, 150), 1)
-        cv2.putText(frame, "Tekan Q untuk keluar",
+        cv2.putText(frame, "Nhan Q de thoat",
                     (10, 472), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (150, 150, 150), 1)
 
-        cv2.imshow("Absensi — Face Recognition", frame)
+        cv2.imshow("Diem danh - Nhan dien khuon mat", frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
-            print("\n[INFO] Sistem dihentikan oleh pengguna.")
+            print("\n[THÔNG TIN] Hệ thống đã được dừng bởi người dùng.")
             break
 
     cam.release()
