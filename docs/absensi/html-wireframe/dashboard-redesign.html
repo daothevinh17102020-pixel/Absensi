@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trang Tổng Quan Quản Lý Điểm Danh — VNIH.AI Attendance System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --a4-bg: #0a0b0d;
+      --a4-surface: #12141a;
+      --a4-surface-2: #181b24;
+      --a4-border: rgba(255, 255, 255, 0.08);
+      --a4-border-highlight: rgba(251, 106, 26, 0.3);
+      --a4-accent: #fb6a1a;
+      --a4-accent-hover: #e85c0c;
+      --a4-accent-glow: rgba(251, 106, 26, 0.15);
+      --a4-fg: #f3f4f6;
+      --a4-fg-muted: #9ca3af;
+      --a4-fg-subtle: #6b7280;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--a4-bg);
+      color: var(--a4-fg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(251, 106, 26, 0.08), transparent 40%),
+        radial-gradient(circle at 100% 100%, rgba(251, 106, 26, 0.05), transparent 30%);
+      background-attachment: fixed;
+    }
+
+    /* Top Sticky Header (AI4BA Style) */
+    .global-header {
+      height: 68px;
+      background: rgba(10, 11, 13, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--a4-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-toggle-sidebar {
+      background: var(--a4-surface-2);
+      border: 1px solid var(--a4-border);
+      color: var(--a4-accent);
+      width: 40px;
+      height: 40px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-toggle-sidebar:hover {
+      border-color: var(--a4-accent);
+      background: rgba(251, 106, 26, 0.1);
+      transform: scale(1.05);
+    }
+
+    .brand-logo-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--a4-accent);
+      letter-spacing: -0.5px;
+    }
+
+    .brand-sub {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--a4-fg-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-center {
+      flex: 1;
+      max-width: 460px;
+      margin: 0 24px;
+    }
+
+    .search-box {
+      width: 100%;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 40px;
+      background: var(--a4-surface-2);
+      border: 1px solid var(--a4-border);
+      border-radius: 9999px;
+      padding: 0 16px 0 42px;
+      color: var(--a4-fg);
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--a4-accent);
+      box-shadow: 0 0 0 3px rgba(251, 106, 26, 0.15);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      stroke: var(--a4-fg-subtle);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .header-title-page {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--a4-fg);
+      margin-right: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 9999px;
+      background: var(--a4-surface-2);
+      border: 1px solid var(--a4-border);
+      color: var(--a4-fg-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .icon-btn:hover {
+      color: var(--a4-fg);
+      border-color: var(--a4-border-highlight);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .badge-dot {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 8px;
+      height: 8px;
+      background-color: var(--a4-accent);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--a4-accent);
+    }
+
+    /* App Container */
+    .app-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Collapsible Sidebar Navigation */
+    .sidebar {
+      width: 240px;
+      background-color: rgba(18, 20, 26, 0.85);
+      backdrop-filter: blur(16px);
+      border-right: 1px solid var(--a4-border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 12px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .sidebar.collapsed {
+      width: 68px;
+      padding: 20px 8px;
+    }
+
+    .sidebar.collapsed .nav-text,
+    .sidebar.collapsed .user-info {
+      display: none;
+    }
+
+    .sidebar.collapsed .nav-item a {
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .sidebar.collapsed .user-profile-card {
+      justify-content: center;
+      padding: 8px;
+    }
+
+    .nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .nav-item a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      color: var(--a4-fg-muted);
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .nav-item a:hover {
+      background: var(--a4-surface-2);
+      color: var(--a4-fg);
+    }
+
+    .nav-item.active a {
+      background: rgba(251, 106, 26, 0.12);
+      color: var(--a4-accent);
+      border: 1px solid var(--a4-border-highlight);
+      font-weight: 700;
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      flex-shrink: 0;
+    }
+
+    .user-profile-card {
+      background: var(--a4-surface-2);
+      border: 1px solid var(--a4-border);
+      border-radius: 14px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .user-info {
+      overflow: hidden;
+    }
+
+    .user-email {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--a4-fg);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-role {
+      font-size: 10px;
+      color: var(--a4-fg-subtle);
+    }
+
+    .btn-logout {
+      background: none;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+    }
+
+    .btn-logout:hover {
+      background: rgba(239, 68, 68, 0.15);
+    }
+
+    /* Main Dashboard Viewport */
+    .main-viewport {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .a4-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--a4-accent);
+      background: rgba(251, 106, 26, 0.1);
+      border: 1px solid rgba(251, 106, 26, 0.25);
+      padding: 6px 16px;
+      border-radius: 9999px;
+    }
+
+    .chip-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--a4-accent);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--a4-accent);
+    }
+
+    /* KPI Summary Cards Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .a4-panel {
+      background: var(--a4-surface);
+      border: 1px solid var(--a4-border);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .a4-panel:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--a4-fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 4px;
+    }
+
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--a4-fg);
+      line-height: 1;
+    }
+
+    .kpi-sub {
+      font-size: 10.5px;
+      color: var(--a4-fg-subtle);
+      margin-top: 6px;
+    }
+
+    .kpi-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .kpi-icon-box.accent { background: rgba(251, 106, 26, 0.15); color: var(--a4-accent); }
+    .kpi-icon-box.yellow { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .kpi-icon-box.red { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .kpi-icon-box.blue { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+
+    /* LAYOUT BỐ CỤC 2 CỘT (62% CỘT CAMERA RỘNG VS 38% BẢNG ĐIỂM DANH) */
+    .dashboard-2col-grid {
+      display: grid;
+      grid-template-columns: 62% 38%;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card-title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--a4-border);
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+    }
+
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--a4-fg);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 9999px;
+    }
+
+    .status-badge.live {
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .live-dot-indicator {
+      width: 6px;
+      height: 6px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    /* Multi-Face Camera Box - Expanded Size (Height 540px) */
+    .camera-box {
+      width: 100%;
+      height: 540px;
+      background-color: #060709;
+      border: 1px solid var(--a4-border);
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-image: 
+        radial-gradient(circle at center, rgba(251, 106, 26, 0.12), transparent 70%),
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 30px 30px, 30px 30px;
+    }
+
+    .multi-count-tag {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: rgba(10, 11, 13, 0.85);
+      border: 1px solid var(--a4-accent);
+      color: var(--a4-accent);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 20;
+    }
+
+    .camera-placeholder-content {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .cam-big-icon {
+      width: 56px;
+      height: 56px;
+      stroke: var(--a4-accent);
+    }
+
+    .cam-instruction {
+      font-size: 14px;
+      color: var(--a4-fg-muted);
+      font-weight: 500;
+    }
+
+    /* MULTI-FACE BOUNDING BOXES (5-10 NGƯỜI CÙNG LÚC) */
+    .face-box {
+      position: absolute;
+      border: 2px dashed var(--a4-accent);
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(251, 106, 26, 0.35);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 6px;
+      animation: pulse-box 2s infinite ease-in-out;
+    }
+
+    .face-box.green {
+      border-color: #10b981;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+    }
+
+    .face-box.late {
+      border-color: #f59e0b;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
+    }
+
+    .face-tag {
+      background: rgba(10, 11, 13, 0.9);
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      align-self: flex-start;
+      border: 1px solid currentColor;
+    }
+
+    .face-tag.green { color: #10b981; border-color: #10b981; }
+    .face-tag.accent { color: var(--a4-accent); border-color: var(--a4-accent); }
+    .face-tag.late { color: #f59e0b; border-color: #f59e0b; }
+
+    /* Rounded Action Buttons */
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--a4-accent);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(251, 106, 26, 0.35);
+    }
+
+    .btn-primary:hover {
+      background: var(--a4-accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--a4-surface-2);
+      color: var(--a4-fg);
+      border: 1px solid var(--a4-border);
+    }
+
+    .btn-secondary:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* CỘT HÀNH ĐỘNG GỌN GÀNG: CHỈ NÚT ICON THÙNG RÁC XOÁ 🗑️ */
+    .btn-icon-delete {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #ef4444;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-icon-delete:hover {
+      background: #ef4444;
+      color: #ffffff;
+      transform: scale(1.1);
+      box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Attendance Table Container */
+    .table-container {
+      width: 100%;
+      height: 540px;
+      overflow-y: auto;
+    }
+
+    .attendance-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      text-align: left;
+    }
+
+    .attendance-table th {
+      background-color: #0e1015;
+      color: var(--a4-fg-subtle);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--a4-border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .attendance-table td {
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--a4-fg);
+      vertical-align: middle;
+    }
+
+    .attendance-table tr:hover td {
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .student-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .avatar-mini {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(251, 106, 26, 0.15);
+      border: 1px solid rgba(251, 106, 26, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: var(--a4-accent);
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .student-name {
+      font-weight: 700;
+      color: var(--a4-fg);
+      font-size: 12px;
+    }
+
+    .student-code {
+      font-size: 10px;
+      color: var(--a4-fg-subtle);
+    }
+
+    .badge-status {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      font-size: 10.5px;
+      font-weight: 700;
+    }
+
+    .badge-status.success { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .badge-status.late { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .badge-status.manual { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: var(--a4-surface);
+      border: 1px solid var(--a4-border);
+      border-radius: 24px;
+      width: 420px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.9);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--a4-border);
+      padding-bottom: 12px;
+    }
+
+    .modal-title { font-size: 16px; font-weight: 800; color: var(--a4-fg); }
+    .btn-close { background: none; border: none; color: var(--a4-fg-subtle); font-size: 20px; cursor: pointer; }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label { font-size: 12px; font-weight: 700; color: var(--a4-fg-muted); }
+    .form-control {
+      height: 40px;
+      background: var(--a4-surface-2);
+      border: 1px solid var(--a4-border);
+      border-radius: 12px;
+      padding: 0 14px;
+      color: var(--a4-fg);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .form-control:focus { border-color: var(--a4-accent); }
+  </style>
+</head>
+<body>
+
+  <!-- Top Global Header -->
+  <header class="global-header">
+    <div class="brand-group">
+      <button class="btn-toggle-sidebar" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Ẩn / Hiện Menu Bên Trái">
+        ☰
+      </button>
+      <div class="brand-logo-group">
+        <div>
+          <div class="brand-title">VNIH.AI</div>
+          <div class="brand-sub">Hệ thống sinh trắc học</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" class="search-input" placeholder="Tìm kiếm sinh viên, môn học, lịch học...">
+      </div>
+    </div>
+
+    <div class="header-right">
+      <span class="header-title-page">Quản lý điểm danh</span>
+      <button class="icon-btn" title="Thông báo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="badge-dot"></span>
+      </button>
+      <button class="icon-btn" title="Cài đặt">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+      <button class="icon-btn" title="Tài khoản cá nhân">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- Sidebar Collapsible -->
+    <aside class="sidebar" id="main-sidebar">
+      <ul class="nav-list">
+        <li class="nav-item active">
+          <a href="#" title="Tổng quan">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span class="nav-text">Tổng quan</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" title="Sinh viên">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <span class="nav-text">Sinh viên</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" title="Lớp & Môn học">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+            <span class="nav-text">Lớp & Môn học</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" title="Lịch học">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <span class="nav-text">Lịch học</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" title="Tổng hợp điểm danh">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span class="nav-text">Tổng hợp điểm danh</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" title="Báo cáo">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            <span class="nav-text">Báo cáo</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="user-profile-card">
+        <div class="user-info">
+          <div class="user-email">duyvinh1710@gmail.com</div>
+          <div class="user-role">Quản trị viên hệ thống</div>
+        </div>
+        <button class="btn-logout" title="Đăng xuất">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Viewport -->
+    <main class="main-viewport" id="main-viewport-box">
+      
+      <!-- Top Tag Badge AI4BA Style -->
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="a4-chip">
+          <span class="chip-dot"></span> Khung Scan Camera AI Multi-Face (Hỗ trợ 5 - 10 người cùng lúc)
+        </span>
+        <button class="btn-action btn-secondary" onclick="toggleSidebar()" title="Ấn để Thu gọn / Mở rộng Sidebar bên trái">
+          ↔️ Ẩn / Hiện Menu Bên Trái
+        </button>
+      </div>
+
+      <!-- Toast Notice Banner cho việc mở rộng Kích thước Camera & Bảng điểm danh -->
+      <div id="expand-toast-notice" style="display: none; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #10b981; padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 700; align-items: center; gap: 8px; transition: all 0.3s ease;">
+        ↔️ Sidebar đã thu gọn (68px) — Frame Camera AI & Bảng điểm danh đã tự động dãn rộng +172px!
+      </div>
+
+      <!-- KPI Summary Cards Grid -->
+      <section class="kpi-grid">
+        <div class="a4-panel">
+          <div>
+            <div class="kpi-label">Có mặt hôm nay</div>
+            <div class="kpi-value" id="count-present">18</div>
+            <div class="kpi-sub">75% tổng số sinh viên ca này</div>
+          </div>
+          <div class="kpi-icon-box accent">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          </div>
+        </div>
+
+        <div class="a4-panel">
+          <div>
+            <div class="kpi-label">Đi muộn</div>
+            <div class="kpi-value" id="count-late">2</div>
+            <div class="kpi-sub">Cần giảng viên xác nhận</div>
+          </div>
+          <div class="kpi-icon-box yellow">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </div>
+        </div>
+
+        <div class="a4-panel">
+          <div>
+            <div class="kpi-label">Vắng không phép</div>
+            <div class="kpi-value" id="count-absent">4</div>
+            <div class="kpi-sub">Chưa có dữ liệu scan</div>
+          </div>
+          <div class="kpi-icon-box red">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+          </div>
+        </div>
+
+        <div class="a4-panel">
+          <div>
+            <div class="kpi-label">Tổng số sinh viên</div>
+            <div class="kpi-value">24</div>
+            <div class="kpi-sub">Lớp Học Máy - Ca 1</div>
+          </div>
+          <div class="kpi-icon-box blue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- LAYOUT BỐ CỤC 2 CỘT TỶ LỆ MỚI (62% CỘT CAMERA RỘNG VS 38% BẢNG ĐIỂM DANH) -->
+      <div class="dashboard-2col-grid">
+        
+        <!-- CỘT 1 (62% RỘNG): KHUNG CAMERA MULTI-FACE SCAN TO RỘNG -->
+        <section class="a4-panel" style="flex-direction: column; align-items: stretch; padding: 20px;">
+          <div class="card-title-bar">
+            <div class="card-title-group">
+              <span class="card-title">📹 Stream Camera AI Multi-Face (Realtime Scan)</span>
+              <span class="status-badge live" id="cam-status">
+                <span class="live-dot-indicator"></span> 5-10 người / frame
+              </span>
+            </div>
+            <div class="cam-controls">
+              <button class="btn-action btn-primary" id="btn-toggle-cam" onclick="toggleCamera()">
+                📹 Bật Camera AI
+              </button>
+            </div>
+          </div>
+
+          <div class="camera-box" id="camera-viewport">
+            <div class="multi-count-tag" id="multi-tag" style="display: none;">
+              👥 Đang phát hiện & nhận diện 5 người đồng thời
+            </div>
+
+            <div class="camera-placeholder-content" id="cam-idle-state">
+              <svg class="cam-big-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+              <div class="cam-instruction">Bấm <strong>"Bật Camera AI"</strong> để bắt đầu ca nhận diện 5-10 sinh viên cùng lúc</div>
+            </div>
+
+            <!-- SIMULATED MULTI-FACE BOUNDING BOXES OVERLAY (5 NGƯỜI CÙNG LÚC) -->
+            <div id="cam-active-overlay" style="display: none; width: 100%; height: 100%; position: relative;">
+              <!-- Người 1 -->
+              <div class="face-box green" style="top: 15%; left: 8%; width: 150px; height: 180px;">
+                <span class="face-tag green">SV001 - N.V. An (98.4%)</span>
+              </div>
+              <!-- Người 2 -->
+              <div class="face-box green" style="top: 12%; left: 36%; width: 155px; height: 190px;">
+                <span class="face-tag green">SV002 - T.T. Bình (97.8%)</span>
+              </div>
+              <!-- Người 3 -->
+              <div class="face-box late" style="top: 18%; left: 65%; width: 145px; height: 175px;">
+                <span class="face-tag late">SV003 - L.V. Cường (94.2%)</span>
+              </div>
+              <!-- Người 4 -->
+              <div class="face-box green" style="top: 52%; left: 22%; width: 160px; height: 195px;">
+                <span class="face-tag accent">SV005 - H.V. Em (99.1%)</span>
+              </div>
+              <!-- Người 5 -->
+              <div class="face-box green" style="top: 50%; left: 54%; width: 150px; height: 185px;">
+                <span class="face-tag green">SV006 - V.T. Giang (96.5%)</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CỘT 2 (38% RỘNG): BẢNG ĐIỂM DANH VỚI NÚT HÀNH ĐỘNG ICON THÙNG RÁC GỌN GÀNG -->
+        <section class="a4-panel" style="flex-direction: column; align-items: stretch; padding: 20px;">
+          <div class="card-title-bar">
+            <div class="card-title-group">
+              <span class="card-title">📋 Điểm Danh Hôm Nay</span>
+            </div>
+            <div class="cam-controls">
+              <button class="btn-action btn-secondary" onclick="openManualModal()">
+                ✍️ Thủ công
+              </button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="attendance-table">
+              <thead>
+                <tr>
+                  <th style="width: 75px;">Giờ</th>
+                  <th>Sinh viên</th>
+                  <th>Trạng thái</th>
+                  <th style="text-align: center; width: 48px;">Xóa</th>
+                </tr>
+              </thead>
+              <tbody id="attendance-tbody">
+                <tr id="row-sv001">
+                  <td style="font-size: 11px; color: var(--a4-fg-subtle);">10:15 AM</td>
+                  <td>
+                    <div class="student-cell">
+                      <div class="avatar-mini">NV</div>
+                      <div>
+                        <div class="student-name">Nguyễn Văn An</div>
+                        <div class="student-code">MSSV: 2111001</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="badge-status success">🟢 Có mặt</span></td>
+                  <td style="text-align: center;">
+                    <button class="btn-icon-delete" onclick="deleteRow('row-sv001', 'Nguyễn Văn An', 'present')" title="Xóa lượt điểm danh lỗi để quét lại">
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+
+                <tr id="row-sv002">
+                  <td style="font-size: 11px; color: var(--a4-fg-subtle);">10:18 AM</td>
+                  <td>
+                    <div class="student-cell">
+                      <div class="avatar-mini">TB</div>
+                      <div>
+                        <div class="student-name">Trần Thị Bình</div>
+                        <div class="student-code">MSSV: 2111002</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="badge-status success">🟢 Có mặt</span></td>
+                  <td style="text-align: center;">
+                    <button class="btn-icon-delete" onclick="deleteRow('row-sv002', 'Trần Thị Bình', 'present')" title="Xóa lượt điểm danh lỗi để quét lại">
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+
+                <tr id="row-sv003">
+                  <td style="font-size: 11px; color: var(--a4-fg-subtle);">10:32 AM</td>
+                  <td>
+                    <div class="student-cell">
+                      <div class="avatar-mini">LC</div>
+                      <div>
+                        <div class="student-name">Lê Văn Cường</div>
+                        <div class="student-code">MSSV: 2111003</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="badge-status late">🟡 Đi muộn</span></td>
+                  <td style="text-align: center;">
+                    <button class="btn-icon-delete" onclick="deleteRow('row-sv003', 'Lê Văn Cường', 'late')" title="Xóa lượt điểm danh lỗi để quét lại">
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+
+                <tr id="row-sv004">
+                  <td style="font-size: 11px; color: var(--a4-fg-subtle);">10:35 AM</td>
+                  <td>
+                    <div class="student-cell">
+                      <div class="avatar-mini">PD</div>
+                      <div>
+                        <div class="student-name">Phạm Đức Dũng</div>
+                        <div class="student-code">MSSV: 2111004</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="badge-status manual">🔵 Thủ công</span></td>
+                  <td style="text-align: center;">
+                    <button class="btn-icon-delete" onclick="deleteRow('row-sv004', 'Phạm Đức Dũng', 'present')" title="Xóa lượt điểm danh lỗi để quét lại">
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal Manual Attendance -->
+  <div class="modal-overlay" id="manual-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-title">✍️ Ghi nhận Điểm danh Thủ công</span>
+        <button class="btn-close" onclick="closeManualModal()">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mã số sinh viên (MSSV)</label>
+        <input type="text" id="modal-mssv" class="form-control" placeholder="Ví dụ: 2111005">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Họ và tên sinh viên</label>
+        <input type="text" id="modal-name" class="form-control" placeholder="Ví dụ: Hoàng Văn Em">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Trạng thái ghi nhận</label>
+        <select id="modal-status" class="form-control">
+          <option value="present">🟢 Có mặt</option>
+          <option value="late">🟡 Đi muộn</option>
+        </select>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px;">
+        <button class="btn-action btn-secondary" onclick="closeManualModal()">Hủy</button>
+        <button class="btn-action btn-primary" onclick="submitManualAttendance()">Xác nhận lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive JavaScript -->
+  <script>
+    let isSidebarCollapsed = false;
+    let isCamRunning = false;
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('main-sidebar');
+      const toggleBtn = document.getElementById('sidebar-toggle-btn');
+      const expandToast = document.getElementById('expand-toast-notice');
+      
+      isSidebarCollapsed = !isSidebarCollapsed;
+      if (isSidebarCollapsed) {
+        sidebar.classList.add('collapsed');
+        toggleBtn.style.color = '#10b981';
+        toggleBtn.setAttribute('title', 'Mở rộng Menu bên trái');
+        if (expandToast) {
+          expandToast.style.display = 'flex';
+          expandToast.innerText = '↔️ Sidebar đã thu gọn (68px) — Frame Camera AI & Bảng điểm danh đã tự động dãn rộng +172px!';
+          setTimeout(() => { expandToast.style.display = 'none'; }, 3500);
+        }
+      } else {
+        sidebar.classList.remove('collapsed');
+        toggleBtn.style.color = '#fb6a1a';
+        toggleBtn.setAttribute('title', 'Thu gọn Menu bên trái');
+        if (expandToast) {
+          expandToast.style.display = 'flex';
+          expandToast.innerText = '↔️ Sidebar đã mở rộng (240px)';
+          setTimeout(() => { expandToast.style.display = 'none'; }, 2500);
+        }
+      }
+    }
+
+    function toggleCamera() {
+      const btn = document.getElementById('btn-toggle-cam');
+      const idleState = document.getElementById('cam-idle-state');
+      const activeOverlay = document.getElementById('cam-active-overlay');
+      const multiTag = document.getElementById('multi-tag');
+
+      isCamRunning = !isCamRunning;
+      if (isCamRunning) {
+        btn.innerText = "🛑 Tắt Camera AI";
+        btn.style.background = "#ef4444";
+        idleState.style.display = "none";
+        activeOverlay.style.display = "block";
+        multiTag.style.display = "flex";
+      } else {
+        btn.innerText = "📹 Bật Camera AI";
+        btn.style.background = "#fb6a1a";
+        idleState.style.display = "flex";
+        activeOverlay.style.display = "none";
+        multiTag.style.display = "none";
+      }
+    }
+
+    function deleteRow(rowId, name, type) {
+      if (confirm(`Xóa lượt điểm danh của sinh viên "${name}" để thực hiện quét lại?`)) {
+        const row = document.getElementById(rowId);
+        if (row) {
+          row.remove();
+          
+          if (type === 'present') {
+            const countEl = document.getElementById('count-present');
+            countEl.innerText = Math.max(0, parseInt(countEl.innerText) - 1);
+          } else if (type === 'late') {
+            const countEl = document.getElementById('count-late');
+            countEl.innerText = Math.max(0, parseInt(countEl.innerText) - 1);
+          }
+        }
+      }
+    }
+
+    function openManualModal() {
+      document.getElementById('manual-modal').classList.add('active');
+    }
+
+    function closeManualModal() {
+      document.getElementById('manual-modal').classList.remove('active');
+    }
+
+    function submitManualAttendance() {
+      const mssv = document.getElementById('modal-mssv').value.trim();
+      const name = document.getElementById('modal-name').value.trim();
+      const statusVal = document.getElementById('modal-status').value;
+
+      if (!mssv || !name) {
+        alert("Vui lòng nhập đầy đủ MSSV và Họ tên sinh viên!");
+        return;
+      }
+
+      const tbody = document.getElementById('attendance-tbody');
+      const newRowId = 'row-' + Date.now();
+      const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      const tr = document.createElement('tr');
+      tr.id = newRowId;
+
+      const isLate = statusVal === 'late';
+      const badgeHtml = isLate ? '<span class="badge-status late">🟡 Đi muộn</span>' : '<span class="badge-status manual">🔵 Thủ công</span>';
+
+      tr.innerHTML = `
+        <td style="font-size: 11px; color: var(--a4-fg-subtle);">${nowTime}</td>
+        <td>
+          <div class="student-cell">
+            <div class="avatar-mini">${name.substring(0, 2).toUpperCase()}</div>
+            <div>
+              <div class="student-name">${name}</div>
+              <div class="student-code">MSSV: ${mssv}</div>
+            </div>
+          </div>
+        </td>
+        <td>${badgeHtml}</td>
+        <td style="text-align: center;">
+          <button class="btn-icon-delete" onclick="deleteRow('${newRowId}', '${name}', '${isLate ? 'late' : 'present'}')" title="Xóa lượt điểm danh lỗi để quét lại">
+            🗑️
+          </button>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+
+      if (isLate) {
+        const countEl = document.getElementById('count-late');
+        countEl.innerText = parseInt(countEl.innerText) + 1;
+      } else {
+        const countEl = document.getElementById('count-present');
+        countEl.innerText = parseInt(countEl.innerText) + 1;
+      }
+
+      document.getElementById('modal-mssv').value = '';
+      document.getElementById('modal-name').value = '';
+      closeManualModal();
+    }
+  </script>
+</body>
+</html>

@@ -1,12 +1,170 @@
 {% extends 'base.html' %}
-{% block title %}Bảng điều khiển - Hệ thống điểm danh{% endblock %}
+{% block title %}Bảng điều khiển — GRIT.AI{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 {% endblock %}
 
 {% block content %}
-<!-- Section 1: Stats Cards -->
+<!-- Section 1: Kamera + Absensi Hari Ini (Được đưa lên đầu) -->
+<section class="grid grid-cols-12 gap-8 mb-8">
+    <!-- Kamera Absensi (live feed) -->
+    <div
+        class="col-span-12 lg:col-span-7 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col h-[500px]">
+        <div class="p-gutter border-b border-outline-variant flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary">videocam</span>
+                <h4 class="font-title-sm text-title-sm text-on-surface">Camera điểm danh</h4>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="btn-fullscreen-cam" type="button" title="Toàn màn hình camera"
+                    class="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors border border-outline-variant/50 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[18px]">fullscreen</span>
+                </button>
+                <div class="flex items-center gap-2 bg-emerald-500/10 px-3 py-1 rounded-full">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span id="connection-status" class="text-body-sm font-semibold text-emerald-500">Đang kết nối...</span>
+                </div>
+            </div>
+        </div>
+        <!-- Container kamera dengan video feed -->
+        <div id="camera-container" class="flex-1 bg-surface-container-lowest relative flex items-center justify-center">
+            <!-- Video element untuk webcam -->
+            <video id="camera-feed" autoplay playsinline muted></video>
+
+            <!-- Placeholder saat kamera mati -->
+            <div id="camera-placeholder" class="text-center flex flex-col items-center">
+                <div class="w-16 h-16 rounded-2xl bg-surface-container-high/40 border border-outline-variant/30 flex items-center justify-center p-2.5 mb-3 shadow-inner">
+                    <svg class="w-10 h-10 opacity-35" viewBox="20 40 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="cam-grit-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ff7a3d"/>
+                                <stop offset="60%" stop-color="#ff5500"/>
+                                <stop offset="100%" stop-color="#d93d00"/>
+                            </linearGradient>
+                        </defs>
+                        <rect x="40" y="182" width="36" height="36" fill="url(#cam-grit-grad)"/>
+                        <path d="M 81.36 182 A 120 120 0 0 1 307.16 146 L 264.31 146 A 84 84 0 0 0 117.95 182 Z" fill="url(#cam-grit-grad)"/>
+                        <path d="M 124 182 L 320 182 L 320 200 A 120 120 0 0 1 81.36 218 L 117.95 218 A 84 84 0 0 0 282.05 218 L 124 218 Z" fill="url(#cam-grit-grad)"/>
+                    </svg>
+                </div>
+                <p class="text-on-surface font-body-md font-semibold mb-1">Cảm biến thị giác AI sẵn sàng</p>
+                <p class="text-on-surface-variant font-body-sm">Nhấn nút "Bật camera" để kích hoạt nhận diện khuôn mặt GRIT.AI</p>
+                <p class="text-outline text-[11px] mt-1">Thuật toán chống giả mạo sinh trắc học thời gian thực sẽ tự động hoạt động</p>
+            </div>
+
+            <!-- Anti-spoofing indicator -->
+            <div id="spoofing-indicator" class="active" style="display:none">
+                <span class="dot"></span>
+                <span class="label">Chống giả mạo: Đạt</span>
+            </div>
+
+            <!-- Recognition overlay (tampil saat wajah dikenali) -->
+            <div id="recognition-overlay"></div>
+
+            <!-- Layer bbox tung khuon mat; khong chan thao tac camera -->
+            <div id="face-box-layer" aria-live="polite"></div>
+
+            <!-- Tombol kontrol kamera -->
+            <div class="camera-controls">
+                <button id="btn-camera-on" class="btn-camera btn-camera-on">
+                    <span class="material-symbols-outlined">videocam</span>
+                    <span>Bật camera</span>
+                </button>
+                <button id="btn-camera-off" class="btn-camera btn-camera-off" style="display:none">
+                    <span class="material-symbols-outlined">videocam_off</span>
+                    <span>Tắt camera</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Absensi Hari Ini -->
+    <div
+        class="col-span-12 lg:col-span-5 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col h-[500px]">
+        <div
+            class="p-gutter border-b border-outline-variant flex justify-between items-center bg-surface-container-high/50">
+            <h4 class="font-title-sm text-title-sm text-on-surface">Điểm danh hôm nay</h4>
+            <div class="flex items-center gap-2">
+                <button id="btn-absen-manual"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[12px] font-bold hover:bg-primary/20 transition-colors border border-primary/20">
+                    <span class="material-symbols-outlined text-[16px]">edit_note</span>
+                    Điểm danh thủ công
+                </button>
+                <a href="{{ url_for('absensi_rekap') }}"
+                    class="text-primary text-body-sm font-semibold hover:underline">Xem tất cả</a>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="sticky top-0 bg-surface-container-low z-10">
+                    <tr>
+                        <th
+                            class="px-4 py-3 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant">
+                            Sinh viên</th>
+                        <th
+                            class="px-4 py-3 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant">
+                            Thời gian</th>
+                        <th
+                            class="px-4 py-3 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant">
+                            Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody id="absensi-tbody" class="divide-y divide-outline-variant">
+                    {% for a in absensi_hari_ini %}
+                    <tr class="hover:bg-surface-container-high transition-colors absensi-item-row cursor-context-menu" data-id="{{ a.id }}" data-nama="{{ a.nama }}" data-status="{{ a.status }}">
+                        <td class="px-4 py-2.5">
+                            <div class="flex items-center gap-2.5">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center flex-shrink-0">
+                                    <span class="material-symbols-outlined text-secondary text-[18px]">person</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="font-body-sm text-on-surface font-semibold truncate">{{ a.nama }}</p>
+                                    <p class="text-[11px] text-on-surface-variant truncate">{{ a.nim }} — {{ a.nama_kelas }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-2.5 text-body-sm text-on-surface-variant whitespace-nowrap">{{ a.waktu_absen }}</td>
+                        <td class="px-4 py-2.5 whitespace-nowrap">
+                            {% if a.status == 'hadir' %}
+                            <span
+                                class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 text-[11px] font-bold">Có
+                                mặt</span>
+                            {% elif a.status == 'terlambat' %}
+                            <span class="px-2.5 py-0.5 rounded-full bg-tertiary/15 text-tertiary text-[11px] font-bold">Đi
+                                muộn</span>
+                            {% elif a.status == 'alpha' %}
+                            <span class="px-2.5 py-0.5 rounded-full bg-error/15 text-error text-[11px] font-bold">Vắng không
+                                phép</span>
+                            {% elif a.status == 'izin' %}
+                            <span class="px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 text-[11px] font-bold" {%
+                                if a.alasan %}title="Lý do: {{ a.alasan }}" {% endif %}>Vắng có phép</span>
+                            {% elif a.status == 'sakit' %}
+                            <span class="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 text-[11px] font-bold" {%
+                                if a.alasan %}title="Lý do: {{ a.alasan }}" {% endif %}>Nghỉ ốm</span>
+                            {% else %}
+                            <span class="px-2.5 py-0.5 rounded-full bg-secondary/15 text-secondary text-[11px] font-bold">{{
+                                a.status|capitalize }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="empty-row">
+                        <td colspan="3" class="px-6 py-12 text-center">
+                            <span
+                                class="material-symbols-outlined text-3xl text-on-surface-variant/20 mb-2">event_busy</span>
+                            <p class="text-body-sm text-on-surface-variant">Chưa có dữ liệu điểm danh hôm nay</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- Section 2: Stats Cards (Được đưa xuống dưới) -->
 <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <!-- Hadir -->
     <div
@@ -79,146 +237,8 @@
     </div>
 </section>
 
-<!-- Section 2: Kamera + Absensi Hari Ini -->
-<section class="grid grid-cols-12 gap-8 mb-8">
-    <!-- Kamera Absensi (live feed) -->
-    <div
-        class="col-span-12 lg:col-span-7 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col h-[500px]">
-        <div class="p-gutter border-b border-outline-variant flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <span class="material-symbols-outlined text-primary">videocam</span>
-                <h4 class="font-title-sm text-title-sm text-on-surface">Camera điểm danh</h4>
-            </div>
-            <div class="flex items-center gap-2 bg-emerald-500/10 px-3 py-1 rounded-full">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span id="connection-status" class="text-body-sm font-semibold text-emerald-500">Đang kết nối...</span>
-            </div>
-        </div>
-        <!-- Container kamera dengan video feed -->
-        <div id="camera-container" class="flex-1 bg-surface-container-lowest relative flex items-center justify-center">
-            <!-- Video element untuk webcam -->
-            <video id="camera-feed" autoplay playsinline muted></video>
-
-            <!-- Placeholder saat kamera mati -->
-            <div id="camera-placeholder" class="text-center">
-                <span class="material-symbols-outlined text-6xl text-on-surface-variant/20 mb-4">videocam</span>
-                <p class="text-on-surface-variant font-body-sm">Nhấn nút "Bật camera" để bắt đầu</p>
-                <p class="text-outline text-[11px] mt-1">Nhận diện khuôn mặt và chống giả mạo sẽ tự động bật</p>
-            </div>
-
-            <!-- Anti-spoofing indicator -->
-            <div id="spoofing-indicator" class="active" style="display:none">
-                <span class="dot"></span>
-                <span class="label">Chống giả mạo: Đạt</span>
-            </div>
-
-            <!-- Recognition overlay (tampil saat wajah dikenali) -->
-            <div id="recognition-overlay"></div>
-
-            <!-- Layer bbox tung khuon mat; khong chan thao tac camera -->
-            <div id="face-box-layer" aria-live="polite"></div>
-
-            <!-- Tombol kontrol kamera -->
-            <div class="camera-controls">
-                <button id="btn-camera-on" class="btn-camera btn-camera-on">
-                    <span class="material-symbols-outlined">videocam</span>
-                    <span>Bật camera</span>
-                </button>
-                <button id="btn-camera-off" class="btn-camera btn-camera-off" style="display:none">
-                    <span class="material-symbols-outlined">videocam_off</span>
-                    <span>Tắt camera</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Absensi Hari Ini -->
-    <div
-        class="col-span-12 lg:col-span-5 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col h-[500px]">
-        <div
-            class="p-gutter border-b border-outline-variant flex justify-between items-center bg-surface-container-high/50">
-            <h4 class="font-title-sm text-title-sm text-on-surface">Điểm danh hôm nay</h4>
-            <div class="flex items-center gap-2">
-                <button id="btn-absen-manual"
-                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[12px] font-bold hover:bg-primary/20 transition-colors border border-primary/20">
-                    <span class="material-symbols-outlined text-[16px]">edit_note</span>
-                    Điểm danh thủ công
-                </button>
-                <a href="{{ url_for('absensi_rekap') }}"
-                    class="text-primary text-body-sm font-semibold hover:underline">Xem tất cả</a>
-            </div>
-        </div>
-        <div class="flex-1 overflow-y-auto">
-            <table class="w-full text-left border-collapse">
-                <thead class="sticky top-0 bg-surface-container-low z-10">
-                    <tr>
-                        <th
-                            class="px-6 py-4 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant">
-                            Sinh viên</th>
-                        <th
-                            class="px-6 py-4 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant">
-                            Thời gian</th>
-                        <th
-                            class="px-6 py-4 text-label-caps text-on-surface-variant font-label-caps border-b border-outline-variant">
-                            Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody id="absensi-tbody" class="divide-y divide-outline-variant">
-                    {% for a in absensi_hari_ini %}
-                    <tr class="hover:bg-surface-container-high transition-colors">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center">
-                                    <span class="material-symbols-outlined text-secondary text-[20px]">person</span>
-                                </div>
-                                <div>
-                                    <p class="font-body-md text-on-surface font-semibold">{{ a.nama }}</p>
-                                    <p class="text-[12px] text-on-surface-variant">{{ a.nim }} — {{ a.nama_kelas }}</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 text-body-sm text-on-surface-variant">{{ a.waktu_absen }}</td>
-                        <td class="px-6 py-4">
-                            {% if a.status == 'hadir' %}
-                            <span
-                                class="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-500 text-[12px] font-bold">Có
-                                mặt</span>
-                            {% elif a.status == 'terlambat' %}
-                            <span class="px-3 py-1 rounded-full bg-tertiary/15 text-tertiary text-[12px] font-bold">Đi
-                                muộn</span>
-                            {% elif a.status == 'alpha' %}
-                            <span class="px-3 py-1 rounded-full bg-error/15 text-error text-[12px] font-bold">Vắng không
-                                phép</span>
-                            {% elif a.status == 'izin' %}
-                            <span class="px-3 py-1 rounded-full bg-blue-500/15 text-blue-400 text-[12px] font-bold" {%
-                                if a.alasan %}title="Lý do: {{ a.alasan }}" {% endif %}>Vắng có phép</span>
-                            {% elif a.status == 'sakit' %}
-                            <span class="px-3 py-1 rounded-full bg-amber-500/15 text-amber-400 text-[12px] font-bold" {%
-                                if a.alasan %}title="Lý do: {{ a.alasan }}" {% endif %}>Nghỉ ốm</span>
-                            {% else %}
-                            <span class="px-3 py-1 rounded-full bg-secondary/15 text-secondary text-[12px] font-bold">{{
-                                a.status|capitalize }}</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr class="empty-row">
-                        <td colspan="3" class="px-6 py-12 text-center">
-                            <span
-                                class="material-symbols-outlined text-3xl text-on-surface-variant/20 mb-2">event_busy</span>
-                            <p class="text-body-sm text-on-surface-variant">Chưa có dữ liệu điểm danh hôm nay</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
-
 <!-- Modal Absen Manual -->
-<div id="modal-absen-manual" class="fixed inset-0 z-50 hidden">
+<div id="modal-absen-manual" class="fixed inset-0 z-[60] hidden">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="modal-overlay"></div>
     <div class="absolute inset-0 flex items-center justify-center p-4">
         <div
@@ -310,51 +330,20 @@
     </div>
 </div>
 
-<!-- Section 3: Statistik bawah -->
-<section class="grid grid-cols-12 gap-8">
-    <!-- Kehadiran Per Kelas -->
-    <div
-        class="col-span-12 lg:col-span-6 bg-surface-container-low border border-outline-variant rounded-xl p-card-padding">
-        <div class="flex justify-between items-center mb-6">
-            <h4 class="font-title-sm text-title-sm text-on-surface">Tỷ lệ có mặt theo lớp</h4>
-            <span class="material-symbols-outlined text-on-surface-variant">bar_chart</span>
-        </div>
-        <div class="space-y-6">
-            <div class="text-center py-8 text-on-surface-variant">
-                <span class="material-symbols-outlined text-3xl text-on-surface-variant/20 mb-2">analytics</span>
-                <p class="font-body-sm">Thống kê sẽ hiển thị sau khi có dữ liệu điểm danh</p>
-            </div>
-        </div>
-    </div>
-    <!-- Info Sistem -->
-    <div
-        class="col-span-12 lg:col-span-6 bg-surface-container-low border border-outline-variant rounded-xl p-card-padding">
-        <div class="flex justify-between items-center mb-6">
-            <h4 class="font-title-sm text-title-sm text-on-surface">Thông tin hệ thống</h4>
-            <span class="material-symbols-outlined text-primary">info</span>
-        </div>
-        <div class="space-y-4">
-            <div class="p-4 bg-primary/5 border-l-4 border-primary rounded-r-xl">
-                <h5 class="font-body-md font-bold text-primary">Nhận diện khuôn mặt</h5>
-                <p class="text-body-sm text-on-surface-variant">ArcFace + độ tương đồng cosine — Ngưỡng: {{
-                    conf_threshold if conf_threshold is not none else 'Cần hiệu chuẩn' }}</p>
-            </div>
-            <div class="p-4 bg-emerald-500/5 border-l-4 border-emerald-500 rounded-r-xl">
-                <h5 class="font-body-md font-bold text-emerald-500">Chống giả mạo</h5>
-                <p class="text-body-sm text-on-surface-variant">Phân tích kết cấu LBP — Ngưỡng: {{ spoof_threshold }}
-                </p>
-            </div>
-            <div class="p-4 bg-surface-container-high/40 border-l-4 border-outline-variant rounded-r-xl">
-                <h5 class="font-body-md font-bold text-on-surface">Thống kê</h5>
-                <p class="text-body-sm text-on-surface-variant">{{ statistik.total_kelas }} lớp — {{
-                    statistik.total_mahasiswa }} sinh viên đã đăng ký</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Toast container untuk notifikasi -->
+<!-- Toast container cho thông báo -->
 <div id="toast-container"></div>
+
+<!-- Context Menu Xóa Điểm Danh Khi Chuột Phải -->
+<div id="attendance-ctx-menu" class="hidden fixed z-[9999] bg-surface-container-high border border-outline-variant rounded-xl p-1.5 shadow-2xl min-w-[220px] backdrop-blur-md">
+    <div id="ctx-student-info" class="text-[11px] font-bold text-on-surface-variant px-3 py-1.5 border-b border-outline-variant/40 flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[14px] text-primary">account_circle</span>
+        <span id="ctx-student-name" class="truncate">Sinh viên</span>
+    </div>
+    <button id="ctx-btn-delete" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-error hover:bg-error/15 rounded-lg transition-colors text-left cursor-pointer">
+        <span class="material-symbols-outlined text-[16px]">delete_forever</span>
+        <span>Xóa để điểm danh lại</span>
+    </button>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -550,6 +539,130 @@
         btnClose.addEventListener('click', closeModal);
         btnCancel.addEventListener('click', closeModal);
         overlay.addEventListener('click', closeModal);
+    })();
+
+    // Script xử lý Context Menu chuột phải xóa lượt điểm danh hôm nay
+    (function () {
+        const menu = document.getElementById('attendance-ctx-menu');
+        const btnDelete = document.getElementById('ctx-btn-delete');
+        const studentNameEl = document.getElementById('ctx-student-name');
+        let currentTargetRow = null;
+
+        document.addEventListener('contextmenu', function (e) {
+            const row = e.target.closest('#absensi-tbody tr');
+            if (row && !row.classList.contains('empty-row')) {
+                e.preventDefault();
+                currentTargetRow = row;
+                const nama = row.dataset.nama || row.querySelector('p.font-semibold')?.innerText || 'Sinh viên';
+                if (studentNameEl) studentNameEl.textContent = nama;
+
+                document.querySelectorAll('#absensi-tbody tr').forEach(r => r.classList.remove('bg-primary/10', 'ring-1', 'ring-primary/40'));
+                row.classList.add('bg-primary/10', 'ring-1', 'ring-primary/40');
+
+                if (menu) {
+                    menu.classList.remove('hidden');
+                    const x = Math.min(e.pageX, window.innerWidth - 230);
+                    const y = Math.min(e.pageY, window.innerHeight - 110);
+                    menu.style.left = x + 'px';
+                    menu.style.top = y + 'px';
+                }
+            } else {
+                if (menu) menu.classList.add('hidden');
+                document.querySelectorAll('#absensi-tbody tr').forEach(r => r.classList.remove('bg-primary/10', 'ring-1', 'ring-primary/40'));
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            if (menu && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+                document.querySelectorAll('#absensi-tbody tr').forEach(r => r.classList.remove('bg-primary/10', 'ring-1', 'ring-primary/40'));
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && menu) {
+                menu.classList.add('hidden');
+                document.querySelectorAll('#absensi-tbody tr').forEach(r => r.classList.remove('bg-primary/10', 'ring-1', 'ring-primary/40'));
+            }
+        });
+
+        if (btnDelete) {
+            btnDelete.addEventListener('click', function () {
+                if (!currentTargetRow) return;
+                const absensiId = currentTargetRow.dataset.id;
+                const nama = currentTargetRow.dataset.nama || 'Sinh viên';
+                const status = currentTargetRow.dataset.status || 'hadir';
+                if (menu) menu.classList.add('hidden');
+
+                if (!absensiId) {
+                    currentTargetRow.remove();
+                    checkTableEmpty();
+                    return;
+                }
+
+                btnDelete.disabled = true;
+                fetch(`/api/absensi/hapus/${absensiId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(r => r.json())
+                .then(res => {
+                    btnDelete.disabled = false;
+                    if (res.status === 'ok') {
+                        if (currentTargetRow) {
+                            currentTargetRow.style.transition = 'all 0.25s ease';
+                            currentTargetRow.style.opacity = '0';
+                            currentTargetRow.style.transform = 'translateX(20px)';
+                            setTimeout(() => {
+                                if (currentTargetRow) currentTargetRow.remove();
+                                checkTableEmpty();
+                            }, 250);
+                        }
+
+                        // Cập nhật số liệu thống kê realtime
+                        const statHadir = document.getElementById('stat-hadir');
+                        const statTerlambat = document.getElementById('stat-terlambat');
+                        if (status === 'hadir' && statHadir) {
+                            const val = parseInt(statHadir.textContent) || 0;
+                            if (val > 0) statHadir.textContent = val - 1;
+                        } else if (status === 'terlambat' && statTerlambat) {
+                            const val = parseInt(statTerlambat.textContent) || 0;
+                            if (val > 0) statTerlambat.textContent = val - 1;
+                        }
+
+                        // Hiển thị Toast thông báo
+                        if (window.showFlash) {
+                            window.showFlash(res.pesan || `Đã xóa điểm danh của ${nama}. Sinh viên có thể điểm danh lại.`, 'success');
+                        } else {
+                            alert(res.pesan || `Đã xóa điểm danh của ${nama}. Sinh viên có thể điểm danh lại.`);
+                        }
+                    } else {
+                        alert(res.pesan || 'Không thể xóa lượt điểm danh.');
+                    }
+                })
+                .catch(err => {
+                    btnDelete.disabled = false;
+                    console.error('Lỗi xóa điểm danh:', err);
+                    alert('Lỗi kết nối khi xóa điểm danh.');
+                });
+            });
+        }
+
+        function checkTableEmpty() {
+            const tbody = document.getElementById('absensi-tbody');
+            if (!tbody) return;
+            const rows = tbody.querySelectorAll('tr:not(.empty-row)');
+            if (rows.length === 0) {
+                tbody.innerHTML = `
+                    <tr class="empty-row">
+                        <td colspan="3" class="px-6 py-12 text-center">
+                            <span class="material-symbols-outlined text-3xl text-on-surface-variant/20 mb-2">event_busy</span>
+                            <p class="text-body-sm text-on-surface-variant">Chưa có dữ liệu điểm danh hôm nay</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
     })();
 </script>
 {% endblock %}

@@ -46,6 +46,7 @@ if model_dir:
 # â”€â”€ Inisialisasi Flask + SocketIO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 app = Flask(__name__)
 app.secret_key = FLASK_SECRET_KEY
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
@@ -841,8 +842,50 @@ def api_absensi_hari_ini():
         print(f'[API] Failed to load today attendance: {e}')
         return jsonify({
             'status': 'error', 'data': [],
-            'pesan': 'KhÃ´ng thá»ƒ táº£i dá»¯ liá»‡u Ä‘iá»ƒm danh.'
+            'pesan': 'Không thể tải dữ liệu điểm danh.'
         }), 500
+
+
+@app.route('/api/absensi/hapus/<int:absensi_id>', methods=['POST', 'DELETE'])
+@login_required
+def api_absensi_hapus(absensi_id):
+    """Xóa lượt điểm danh hôm nay để sinh viên có thể điểm danh lại."""
+    conn = None
+    cursor = None
+    try:
+        conn = db.get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT a.id, a.user_id, u.nama, a.status
+            FROM absensi a
+            JOIN users u ON a.user_id = u.id
+            WHERE a.id = %s
+        """, (absensi_id,))
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({
+                'status': 'error',
+                'pesan': 'Không tìm thấy dữ liệu điểm danh cần xóa.'
+            }), 404
+
+        cursor.execute("DELETE FROM absensi WHERE id = %s", (absensi_id,))
+        conn.commit()
+
+        return jsonify({
+            'status': 'ok',
+            'pesan': f"Đã xóa dữ liệu điểm danh của {row['nama']}. Sinh viên có thể điểm danh lại qua Camera.",
+            'data': {'id': absensi_id, 'user_id': row['user_id'], 'nama': row['nama'], 'status': row['status']}
+        })
+    except Exception as e:
+        if conn and conn.is_connected():
+            conn.rollback()
+        print(f'[API] Lỗi khi xóa điểm danh {absensi_id}: {e}')
+        return jsonify({'status': 'error', 'pesan': f'Lỗi máy chủ khi xóa điểm danh: {str(e)}'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 @app.route('/api/absensi/manual', methods=['POST'])

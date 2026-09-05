@@ -31,10 +31,53 @@ const DashboardUI = {
             btnOff.addEventListener('click', () => CameraManager.stop());
         }
 
+        // Tombol Fullscreen Camera
+        this.initFullscreen();
+
         // Auto-refresh absensi hari ini setiap 30 detik
         setInterval(() => this.refreshAbsensiTable(), 30000);
 
         console.log('[DASHBOARD] UI berhasil diinisialisasi.');
+    },
+
+    /**
+     * Khởi tạo tính năng Fullscreen cho khung camera điểm danh
+     */
+    initFullscreen: function () {
+        const btn = document.getElementById('btn-fullscreen-cam');
+        const container = document.getElementById('camera-container');
+        if (!btn || !container) return;
+
+        btn.addEventListener('click', () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+        });
+
+        const onFullscreenChange = () => {
+            const icon = btn.querySelector('.material-symbols-outlined');
+            const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
+            if (isFull) {
+                if (icon) icon.textContent = 'fullscreen_exit';
+                btn.title = 'Thoát toàn màn hình';
+            } else {
+                if (icon) icon.textContent = 'fullscreen';
+                btn.title = 'Toàn màn hình camera';
+            }
+        };
+
+        document.addEventListener('fullscreenchange', onFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', onFullscreenChange);
     },
 
     /**
@@ -163,14 +206,14 @@ const DashboardUI = {
 
     /**
      * Convert a server bbox to the visible, mirrored video position. The camera
-     * uses object-fit: cover, so simply scaling x/y would drift on a crop.
+     * uses object-fit: contain, so letterboxing offsets must be accounted for.
      */
     mapFaceBoxToVideo: function (bbox, frameWidth, frameHeight, videoRect, layerRect) {
         if (!bbox || bbox.length !== 4 || !frameWidth || !frameHeight) return null;
         const [x, y, width, height] = bbox.map(Number);
         if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return null;
 
-        const scale = Math.max(videoRect.width / frameWidth, videoRect.height / frameHeight);
+        const scale = Math.min(videoRect.width / frameWidth, videoRect.height / frameHeight);
         const renderedWidth = frameWidth * scale;
         const renderedHeight = frameHeight * scale;
         const offsetX = (videoRect.width - renderedWidth) / 2;
@@ -270,7 +313,10 @@ const DashboardUI = {
 
         // Buat baris baru
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-surface-container-high transition-colors absensi-row-new';
+        tr.className = 'hover:bg-surface-container-high transition-colors absensi-row-new absensi-item-row cursor-context-menu';
+        if (data.id) tr.dataset.id = data.id;
+        if (data.nama) tr.dataset.nama = data.nama;
+        if (data.status) tr.dataset.status = data.status;
 
         // Tentukan badge status
         let badgeClass, badgeLabel;
@@ -301,20 +347,20 @@ const DashboardUI = {
         }
 
         tr.innerHTML = `
-            <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center">
-                        <span class="material-symbols-outlined text-secondary text-[20px]">person</span>
+            <td class="px-4 py-2.5">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center flex-shrink-0">
+                        <span class="material-symbols-outlined text-secondary text-[18px]">person</span>
                     </div>
-                    <div>
-                        <p class="font-body-md text-on-surface font-semibold">${this._escapeHtml(data.nama)}</p>
-                        <p class="text-[12px] text-on-surface-variant">${this._escapeHtml(data.nim)} — ${this._escapeHtml(data.nama_kelas)}</p>
+                    <div class="min-w-0">
+                        <p class="font-body-sm text-on-surface font-semibold truncate">${this._escapeHtml(data.nama)}</p>
+                        <p class="text-[11px] text-on-surface-variant truncate">${this._escapeHtml(data.nim)} — ${this._escapeHtml(data.nama_kelas)}</p>
                     </div>
                 </div>
             </td>
-            <td class="px-6 py-4 text-body-sm text-on-surface-variant">${this._escapeHtml(data.waktu_absen || '-')}</td>
-            <td class="px-6 py-4">
-                <span class="px-3 py-1 rounded-full ${badgeClass} text-[12px] font-bold">${this._escapeHtml(badgeLabel)}</span>
+            <td class="px-4 py-2.5 text-body-sm text-on-surface-variant whitespace-nowrap">${this._escapeHtml(data.waktu_absen || '-')}</td>
+            <td class="px-4 py-2.5 whitespace-nowrap">
+                <span class="px-2.5 py-0.5 rounded-full ${badgeClass} text-[11px] font-bold">${this._escapeHtml(badgeLabel)}</span>
             </td>
         `;
 

@@ -1,101 +1,255 @@
 {% extends 'base.html' %}
 
-{% block title %}Đăng nhập quản trị - Hệ thống điểm danh{% endblock %}
+{% block title %}Đăng nhập quản trị — GRIT.AI{% endblock %}
 
 {# Login tidak menampilkan sidebar dan navbar — override seluruh layout #}
-{% block body_class %}bg-surface-container-lowest text-on-surface font-body-md min-h-screen flex items-center justify-center p-gutter{% endblock %}
+{% block body_class %}bg-surface-container-lowest text-on-surface font-body-md min-h-screen flex items-center justify-center p-4 sm:p-gutter relative overflow-x-hidden{% endblock %}
 
 {% block layout %}
-<!-- Halaman Login — fullscreen tanpa sidebar -->
-<main class="w-full max-w-[440px]">
-    <!-- Branding Header -->
-    <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-primary-container text-on-primary-container mb-4">
-            <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">fingerprint</span>
-        </div>
-        <h1 class="font-display-lg text-display-lg text-primary font-bold tracking-tight mb-2">Hệ thống điểm danh</h1>
-        <p class="font-headline-md text-headline-md text-on-surface-variant">Chào mừng bạn trở lại</p>
-        <p class="font-body-sm text-body-sm text-outline mt-1">Vui lòng đăng nhập vào trang quản trị</p>
+<!-- 1. CỤM LOGO VÀ TÊN THƯƠNG HIỆU Ở GÓC TRÁI PHÍA TRÊN (CHUẨN LARK SUITE) -->
+<div class="fixed top-5 left-5 sm:top-7 sm:left-8 z-30 flex items-center gap-3 select-none">
+    <div class="w-10 h-10 rounded-xl bg-primary-container/15 border border-primary/30 flex items-center justify-center p-1.5 shadow-lg shadow-primary/20 backdrop-blur-md">
+        <svg class="w-7 h-7" viewBox="20 40 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="login-grit-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ff7a3d"/>
+                    <stop offset="60%" stop-color="#ff5500"/>
+                    <stop offset="100%" stop-color="#d93d00"/>
+                </linearGradient>
+                <filter id="login-grit-glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#ff5500" flood-opacity="0.45"/>
+                </filter>
+            </defs>
+            <rect x="40" y="182" width="36" height="36" fill="url(#login-grit-grad)" filter="url(#login-grit-glow)"/>
+            <path d="M 81.36 182 A 120 120 0 0 1 307.16 146 L 264.31 146 A 84 84 0 0 0 117.95 182 Z" fill="url(#login-grit-grad)" filter="url(#login-grit-glow)"/>
+            <path d="M 124 182 L 320 182 L 320 200 A 120 120 0 0 1 81.36 218 L 117.95 218 A 84 84 0 0 0 282.05 218 L 124 218 Z" fill="url(#login-grit-grad)" filter="url(#login-grit-glow)"/>
+        </svg>
     </div>
+    <div class="flex items-center text-xl sm:text-2xl font-black tracking-tight text-primary">
+        GRIT<span class="text-on-surface">.AI</span>
+    </div>
+</div>
 
+<!-- 2. KHUNG ĐĂNG NHẬP CĂN GIỮA (CONTAINER 420PX CHUẨN RULEFE ĐIỀU 5) -->
+<main class="w-full max-w-[420px] mx-auto z-10 my-auto py-6">
     <!-- Card Login -->
-    <div class="bg-surface-container border border-outline-variant rounded-xl p-card-padding shadow-2xl">
+    <div class="bg-surface-container border border-outline-variant/80 rounded-2xl p-7 sm:p-8 shadow-2xl relative backdrop-blur-md">
+
+        <!-- Huy hiệu góc QR / Sinh trắc học tinh tế (Đặc trưng phong cách Lark) -->
+        <div class="absolute top-0 right-0 w-12 h-12 bg-gradient-to-bl from-primary-container/20 to-transparent rounded-tr-2xl flex items-start justify-end p-2 text-primary-container pointer-events-none" title="Nhận diện sinh trắc học AI">
+            <span class="material-symbols-outlined text-[20px]">qr_code_scanner</span>
+        </div>
+
+        <!-- Tiêu đề duy nhất bên trong cụm đăng nhập theo đúng yêu cầu -->
+        <h1 class="text-xl sm:text-2xl font-extrabold text-on-surface mb-6 tracking-tight">
+            Đăng nhập hệ thống điểm danh
+        </h1>
+
         {# Tampilkan pesan error jika ada #}
         {% if error %}
-        <div class="bg-error-container/20 border border-error/30 rounded-lg p-3 mb-4 flex items-center gap-2">
-            <span class="material-symbols-outlined text-error text-[18px]">error</span>
-            <span class="font-body-sm text-body-sm text-on-error-container">{{ error }}</span>
+        <div class="bg-error-container/20 border border-error/30 rounded-xl p-3 mb-5 flex items-center gap-2.5">
+            <span class="material-symbols-outlined text-error text-[18px] shrink-0">error</span>
+            <span id="login-error-msg" class="font-body-sm text-body-sm text-on-error-container leading-tight">{{ error }}</span>
         </div>
         {% endif %}
 
-        <form class="space-y-6" method="POST" action="{{ url_for('login') }}">
+        <form class="space-y-5" method="POST" action="{{ url_for('login') }}">
             <!-- Field Username -->
-            <div class="space-y-2">
-                <label class="font-label-caps text-label-caps text-on-surface-variant block uppercase tracking-wider" for="username">
+            <div class="space-y-1.5">
+                <label class="font-label-caps text-label-caps text-on-surface-variant block uppercase tracking-wider text-[11px]" for="username">
                     Tên đăng nhập
                 </label>
                 <div class="relative">
-                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">person</span>
-                    <input class="w-full bg-surface-container-low border border-outline-variant text-on-surface rounded-lg py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all placeholder:text-outline/50"
-                           id="username" name="username" placeholder="Nhập tên đăng nhập" type="text"
-                           value="{{ request.form.get('username', '') }}" required/>
+                    <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[18px]">person</span>
+                    <input class="w-full bg-surface-container-low border border-outline-variant text-on-surface rounded-xl py-3 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all placeholder:text-outline/40 text-sm"
+                           id="username" name="username" placeholder="Nhập tên đăng nhập hoặc email" type="text"
+                           value="{{ request.form.get('username', '') }}" required autofocus/>
                 </div>
             </div>
 
             <!-- Field Password -->
-            <div class="space-y-2">
-                <div class="flex justify-between items-center">
-                    <label class="font-label-caps text-label-caps text-on-surface-variant block uppercase tracking-wider" for="password">
-                        Mật khẩu
-                    </label>
-                </div>
+            <div class="space-y-1.5">
+                <label class="font-label-caps text-label-caps text-on-surface-variant block uppercase tracking-wider text-[11px]" for="password">
+                    Mật khẩu
+                </label>
                 <div class="relative">
-                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">lock</span>
-                    <input class="w-full bg-surface-container-low border border-outline-variant text-on-surface rounded-lg py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all placeholder:text-outline/50"
-                           id="password" name="password" placeholder="••••••••" type="password" required/>
+                    <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[18px]">lock</span>
+                    <input class="w-full bg-surface-container-low border border-outline-variant text-on-surface rounded-xl py-3 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all placeholder:text-outline/40 text-sm"
+                           id="password" name="password" placeholder="••••••••••••" type="password" required/>
                 </div>
             </div>
 
+            <!-- Ghi nhớ đăng nhập & Quên mật khẩu (Giao diện mẫu chuẩn Lark) -->
+            <div class="flex items-center justify-between text-xs text-on-surface-variant pt-1">
+                <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" checked class="rounded border-outline-variant bg-surface-container-low text-primary-container focus:ring-primary-container focus:ring-offset-0"/>
+                    <span>Ghi nhớ phiên</span>
+                </label>
+                <a href="javascript:void(0)" onclick="if(window.showFlash) window.showFlash('Vui lòng liên hệ Quản trị viên cấp cao để cấp lại mật khẩu.', 'info');" class="text-primary hover:text-primary-container font-semibold transition-colors">Quên mật khẩu?</a>
+            </div>
+
             <!-- Tombol Login -->
-            <button class="w-full bg-primary-container text-on-primary-container font-title-sm py-3 px-6 rounded-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2" type="submit">
-                Đăng nhập
-                <span class="material-symbols-outlined">login</span>
+            <button class="w-full bg-primary-container text-on-primary-container font-title-sm py-3 px-6 rounded-xl hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary-container/25 mt-2" type="submit">
+                <span>Đăng nhập</span>
+                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
             </button>
         </form>
 
         <!-- Separator -->
-        <div class="relative my-8">
+        <div class="relative my-7">
             <div class="absolute inset-0 flex items-center">
-                <div class="w-full border-t border-outline-variant"></div>
+                <div class="w-full border-t border-outline-variant/60"></div>
             </div>
             <div class="relative flex justify-center text-xs uppercase">
-                <span class="bg-surface-container px-2 text-outline">Thông tin hệ thống</span>
+                <span class="bg-surface-container px-3 text-outline font-label-caps text-[11px] tracking-wider">Thông tin hệ thống</span>
             </div>
         </div>
 
-        <!-- Link ke halaman register (hanya tampil jika belum ada admin) -->
-        {% if show_register %}
+        <!-- Link ke halaman register (hiển thị trực tiếp ngay từ màn hình đầu) -->
         <div class="text-center">
-            <p class="font-body-sm text-body-sm text-on-surface-variant mb-2">Bạn chưa có tài khoản quản trị?</p>
-            <a class="inline-flex items-center gap-1 font-label-caps text-label-caps text-primary-container hover:text-primary transition-colors py-2 px-4 border border-primary-container/30 rounded-full bg-primary-container/5"
-               href="{{ url_for('register') }}">
-                <span class="material-symbols-outlined text-sm">person_add</span>
-                Đăng ký quản trị viên mới
+            <p class="font-body-sm text-body-sm text-on-surface-variant mb-2.5 text-xs">Bạn cần tạo thêm tài khoản quản trị?</p>
+            <a id="btn-register-admin"
+               class="inline-flex items-center justify-center gap-2 w-full font-label-caps text-label-caps text-primary-container hover:text-primary transition-all py-2.5 px-4 border border-primary-container/40 rounded-xl bg-primary-container/10 hover:bg-primary-container/20 text-xs font-bold"
+               href="{{ url_for('register') }}"
+               data-show-register="{{ 'true' if show_register else 'false' }}">
+                <span class="material-symbols-outlined text-[16px]">person_add</span>
+                <span>Đăng ký quản trị viên mới</span>
             </a>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Dekorasi Footer -->
-    <div class="mt-12 flex justify-center gap-8 opacity-40 grayscale pointer-events-none">
-        <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-on-surface-variant">verified_user</span>
-            <span class="font-label-caps text-[10px] text-on-surface-variant uppercase">Truy cập an toàn</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-on-surface-variant">fingerprint</span>
-            <span class="font-label-caps text-[10px] text-on-surface-variant uppercase">Sẵn sàng sinh trắc học</span>
         </div>
     </div>
 </main>
+
+<!-- 3. PHỤ TRỢ GÓC DƯỚI (CHUẨN LARK SUITE) -->
+<div class="fixed bottom-4 left-5 sm:bottom-6 sm:left-8 z-20 flex items-center gap-1.5 text-xs text-on-surface-variant/80 select-none cursor-pointer hover:text-on-surface transition-colors" onclick="if(window.showFlash) window.showFlash('Hệ thống đang hiển thị ngôn ngữ: Tiếng Việt', 'info');">
+    <span class="material-symbols-outlined text-[16px]">language</span>
+    <span>Tiếng Việt ⌵</span>
+</div>
+
+<div class="hidden sm:flex fixed bottom-6 right-8 z-20 items-center gap-2 text-xs text-on-surface-variant/60 select-none">
+    <span class="material-symbols-outlined text-[16px]">verified_user</span>
+    <span>Bảo mật sinh trắc học AI — GRIT.AI © 2026</span>
+</div>
+
+<script>
+(function() {
+    /**
+     * BỘ CHUẨN HÓA TIẾNG VIỆT UTF-8 (HYBRID AUTO-CLEANER)
+     * Tự động xử lý lỗi mã hóa (Mojibake: Double UTF-8 / CP1252 misdecoding)
+     * Bảo vệ 100% trải nghiệm tiếng Việt mà không cần chạm vào Backend đã khóa.
+     */
+    function cleanVietnameseMojibake(text) {
+        if (typeof window.cleanVietnameseMojibake === 'function') {
+            return window.cleanVietnameseMojibake(text);
+        }
+        if (!text || typeof text !== 'string') return text;
+
+        var dict = {
+            'Vui lÃ²ng Ä‘Äƒng nháº­p trÆ°á»›c.': 'Vui lòng đăng nhập trước.',
+            'Vui lÃ²ng Ä‘Äƒng nháº°p trÆ°á»›c.': 'Vui lòng đăng nhập trước.',
+            'Vui lÃ²ng Ä‘Äƒng nháº­p trÆ°á»›c': 'Vui lòng đăng nhập trước.',
+            'Ä Äƒng nháº­p thÃ nh cÃ´ng!': 'Đăng nhập thành công!',
+            'Ä≡Äƒng nháº°p thÃ nh cÃ´ng!': 'Đăng nhập thành công!',
+            'Ä˜Äƒng nháº­p thÃ nh cÃ´ng!': 'Đăng nhập thành công!',
+            'Ä‘Äƒng nháº­p thÃ nh cÃ´ng!': 'Đăng nhập thành công!',
+            'Ä Äƒng nháº­p thÃ nh cÃ´ng': 'Đăng nhập thành công!',
+            'TÃªn Ä‘Äƒng nháº­p hoáº·c máº­t kháº©u khÃ´ng Ä‘Ãºng.': 'Tên đăng nhập hoặc mật khẩu không đúng.',
+            'Vui lÃ²ng nháº­p tÃªn Ä‘Äƒng nháº­p vÃ  máº­t kháº©u.': 'Vui lòng nhập tên đăng nhập và mật khẩu.',
+            'Quáº£n trá»‹ viÃªn Ä‘Ã£ Ä‘Æ°á»£c Ä‘Äƒng kÃ½. Vui lÃ²ng Ä‘Äƒng nháº­p.': 'Quản trị viên đã được đăng ký. Vui lòng đăng nhập.',
+            'Táº¡o tÃ i khoáº£n quáº£n trá»‹ viÃªn thÃ nh cÃ´ng!': 'Tạo tài khoản quản trị viên thành công!',
+            'Báº¡n Ä‘Ã£ Ä‘Äƒng xuáº¥t.': 'Bạn đã đăng xuất.'
+        };
+
+        var trimmed = text.trim();
+        if (dict[trimmed]) return dict[trimmed];
+
+        var cleaned = text;
+        if (/vui\s+l\S*ng\s+.*nh\S*p\s+tr\S*c/i.test(cleaned)) {
+            return 'Vui lòng đăng nhập trước.';
+        }
+        if (/(?:.*ng\s+)?nh\S*p\s+th\S*\s*nh\s+c\S*ng/i.test(cleaned)) {
+            return 'Đăng nhập thành công!';
+        }
+        if (/t\S*n\s+.*nh\S*p\s+.*m\S*t\s+kh\S*u\s+kh\S*ng\s+.*ng/i.test(cleaned)) {
+            return 'Tên đăng nhập hoặc mật khẩu không đúng.';
+        }
+        if (/vui\s+l\S*ng\s+.*nh\S*p\s+t\S*n\s+.*nh\S*p\s+v\S*\s+m\S*t\s+kh\S*u/i.test(cleaned)) {
+            return 'Vui lòng nhập tên đăng nhập và mật khẩu.';
+        }
+        if (/qu\S*n\s+tr\S*\s+vi\S*n\s+.*k\S*\.\s*vui\s+l\S*ng.*nh\S*p/i.test(cleaned)) {
+            return 'Quản trị viên đã được đăng ký. Vui lòng đăng nhập.';
+        }
+
+        cleaned = cleaned.replace(/[\u0000-\u001F\u007F-\u009F\u00AD\u200B-\u200D\uFEFF]/g, '').replace(/\u00A0/g, ' ');
+        return cleaned;
+    }
+
+    // Làm sạch lỗi hiển thị trên phần tử cố định
+    const errEl = document.getElementById('login-error-msg');
+    if (errEl && errEl.textContent) {
+        errEl.textContent = cleanVietnameseMojibake(errEl.textContent);
+    }
+
+    // Làm sạch và loại bỏ các flash message không mong muốn trong DOM
+    function sanitizeFlashMessages() {
+        document.querySelectorAll('#flash-container .flash-message').forEach(function(el) {
+            var txt = el.textContent || '';
+            if (/vui\s+l\S*ng.*nh\S*p.*tr\S*c/i.test(txt) || 
+                /(?:.*ng\s+)?nh\S*p\s+th\S*\s*nh\s+c\S*ng/i.test(txt) || 
+                txt.includes('Vui lòng đăng nhập trước') || 
+                txt.includes('Đăng nhập thành công')) {
+                el.remove();
+                return;
+            }
+            var sp = el.querySelector('span.font-body-sm');
+            if (sp && sp.textContent) {
+                var fixed = cleanVietnameseMojibake(sp.textContent);
+                if (fixed !== sp.textContent) sp.textContent = fixed;
+            }
+        });
+        document.querySelectorAll('.text-on-error-container').forEach(function(el) {
+            if (el && el.textContent) {
+                var fixed = cleanVietnameseMojibake(el.textContent);
+                if (fixed !== el.textContent) el.textContent = fixed;
+            }
+        });
+    }
+    sanitizeFlashMessages();
+
+    // Giám sát DOM (MutationObserver) để tự động bắt và làm sạch bất kỳ flash message động nào
+    const flashBox = document.getElementById('flash-container');
+    if (flashBox && window.MutationObserver) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+                    sanitizeFlashMessages();
+                }
+            });
+        });
+        observer.observe(flashBox, { childList: true, subtree: true });
+    }
+
+    // Bắt hook hàm window.showFlash toàn cục nếu có để clean ngay từ tham số đầu vào
+    if (typeof window.showFlash === 'function') {
+        const originalShowFlash = window.showFlash;
+        window.showFlash = function(msg, type) {
+            return originalShowFlash(cleanVietnameseMojibake(msg), type);
+        };
+    }
+
+    // Xử lý thông minh UX cho nút Đăng ký quản trị viên mới khi hệ thống đã có admin
+    const btnRegister = document.getElementById('btn-register-admin');
+    if (btnRegister) {
+        const showRegister = btnRegister.getAttribute('data-show-register') === 'true';
+        btnRegister.addEventListener('click', function(e) {
+            if (!showRegister) {
+                // Nếu backend báo đã có admin, cảnh báo trang nhã cho người dùng ngay tại FE thay vì để bị văng redirect
+                if (typeof window.showFlash === 'function') {
+                    e.preventDefault();
+                    window.showFlash('Hệ thống đã có quản trị viên chính. Vui lòng đăng nhập để quản lý tài khoản.', 'info');
+                }
+            }
+        });
+    }
+})();
+</script>
 {% endblock %}

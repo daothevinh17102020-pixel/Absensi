@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wireframe - Form Đăng Nhập Quản Trị Chuẩn Giao Diện</title>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #f0f0f0; color: #000; margin: 0; padding: 24px; }
+    .nav-back { display: inline-block; margin-bottom: 16px; color: #000; text-decoration: none; font-weight: bold; font-size: 14px; border: 1px solid #000; padding: 6px 12px; background: #fff; }
+    .nav-back:hover { background: #000; color: #fff; }
+    h1 { font-size: 20px; margin-top: 0; border-bottom: 2px solid #000; padding-bottom: 8px; }
+    
+    .wf-form { max-width: 380px; margin: 24px auto; background: #fff; border: 2px solid #000; padding: 24px; border-radius: 16px; position: relative; }
+    .accent-bar { width: 140px; height: 3px; background: #000; margin: -24px auto 16px auto; }
+    
+    .header-badge-icon { width: 48px; height: 48px; border: 1.5px solid #000; border-radius: 14px; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center; font-size: 22px; background: #f0f0f0; }
+    
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
+    .form-group input { width: 100%; padding: 10px 12px; border: 1px solid #000; border-radius: 8px; font-size: 13px; }
+    
+    .btn-submit { width: 100%; padding: 12px; background: #000; color: #fff; border: none; border-radius: 20px; font-weight: bold; font-size: 14px; cursor: pointer; margin-top: 10px; }
+
+    table.desc-tbl { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 13px; }
+    table.desc-tbl th, table.desc-tbl td { border: 1px solid #000; padding: 8px 12px; text-align: left; }
+    table.desc-tbl th { background: #f0f0f0; }
+  </style>
+</head>
+<body>
+
+  <a href="login-showcase.html" class="nav-back">← Mục lục Wireframe</a>
+
+  <h1>Bản Vẽ HTML Wireframe — Form Đăng Nhập Quản Trị Cân Bằng Thị Giác Chân Thực</h1>
+  <p style="font-size: 13px; color: #555;">Chuẩn hóa cấu trúc Form Đăng Nhập Quản Trị đúng 100% bố cục ảnh đính kèm của người dùng.</p>
+
+  <div class="wf-form">
+    <div class="accent-bar"></div>
+
+    <div style="text-align: center;">
+      <div class="header-badge-icon">🔒</div>
+      <h2 style="font-size: 18px; margin: 4px 0 2px 0;">Đăng Nhập Quản Trị</h2>
+      <p style="font-size: 11px; color: #555; margin-top: 0;">Hệ thống điểm danh thông minh VNI.AI</p>
+    </div>
+
+    <!-- Mode Switcher Tab -->
+    <div style="border: 1px solid #000; padding: 6px; text-align: center; margin: 16px 0; border-radius: 20px; background: #f0f0f0; font-size: 12px; font-weight: bold;">
+      [ 🔑 Mật khẩu ] &nbsp;&nbsp; [ 👤 Quét khuôn mặt ]
+    </div>
+
+    <form style="margin-top: 20px;" onsubmit="return false;">
+      <div class="form-group">
+        <label>TÊN ĐĂNG NHẬP / EMAIL</label>
+        <input type="text" value="duyvinh1710@gmail.com" />
+      </div>
+
+      <div class="form-group">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <label style="margin: 0;">MẬT KHẨU</label>
+          <a href="#" style="font-size: 11px; color: #000; font-weight: bold;">Quên mật khẩu?</a>
+        </div>
+        <input type="password" value="••••••••••••" />
+      </div>
+
+      <div style="font-size: 11px; margin-bottom: 12px;">
+        <label><input type="checkbox" checked /> Ghi nhớ đăng nhập</label>
+      </div>
+
+      <button class="btn-submit">Đăng nhập hệ thống →</button>
+    </form>
+
+    <div style="border-top: 1px solid #000; margin-top: 20px; padding-top: 12px; text-align: center;">
+      <a href="#" style="font-size: 12px; font-weight: bold; color: #000; text-decoration: none;">+ Đăng ký Quản trị viên mới</a>
+    </div>
+  </div>
+
+  <!-- 5-COLUMN DESCRIPTION TABLE -->
+  <h3>Bảng Mô Tả Chi Tiết Thành Phần Form Đăng Nhập Chuẩn Bố Cục</h3>
+  <table class="desc-tbl">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Items</th>
+        <th>Control Type</th>
+        <th>Data Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>Dải Sáng Đỉnh Card (Top Accent Line)</td>
+        <td>Ambient Glow Line</td>
+        <td>CSS Gradient Overlay</td>
+        <td>Dải sáng cam rực rỡ 176px ở đỉnh card tạo liên kết màu sắc tự nhiên với Nút Đăng Nhập cam phía dưới.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Huy Hiệu Khung Icon Lock (Lock Badge)</td>
+        <td>Square Badge Container</td>
+        <td>Icon SVG / Glow</td>
+        <td>Khung Icon 48x48 rounded-2xl màu cam nổi trên nền tối (`bg-a4-orange/15 border-a4-orange/40`).</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Icon Biểu Tượng Input (Orange Prefix Icons)</td>
+        <td>Input Accent Icon</td>
+        <td>Icon SVG Symbol</td>
+        <td>Biểu tượng `person` và `lock` màu cam (`text-a4-orange/80`) dẫn dắt màu sắc mượt mà từ header xuống nút bấm.</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Nút Nổi Đăng Nhập Hệ Thống (CTA Pill Button)</td>
+        <td>Primary Action Button</td>
+        <td>Form Trigger</td>
+        <td>Nút màu cam dạng viên thuốc (Pill Button) bo tròn đầy đặn kèm mũi tên chỉ hướng sang phải.</td>
+      </tr>
+    </tbody>
+  </table>
+
+</body>
+</html>

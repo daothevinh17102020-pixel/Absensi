@@ -16,6 +16,14 @@ menulis kode apapun.
 - Training LBPH wajib di background thread, tidak boleh blokir Flask
 - UNIQUE constraint absensi: (user_id, jadwal_id, tanggal)
 - Jangan pernah sentuh config.py, dataset/, models/ untuk di-commit
+- **Quy tắc giải trình 4 điểm trước khi sửa code (FE & BE)**:
+  Trước khi chỉnh sửa bất kỳ file code FE hay BE nào, bắt buộc phải giải trình trước bằng tiếng Việt gồm đủ 4 nội dung:
+  1. *Sửa phần nào*: Tệp, dòng, hàm hoặc thành phần cụ thể.
+  2. *Sửa như thế nào*: Phương án thay đổi chi tiết.
+  3. *Tại sao sửa*: Nguyên nhân kỹ thuật/nghiệp vụ.
+  4. *Mục đích là gì*: Kết quả kỳ vọng sau sửa.
+- **Quy tắc đơn tệp HTML Demo/Wireframe (Single HTML with Tabs & Versioning Rule)**:
+  Trong cùng 1 app, chỉ dùng duy nhất 1 file HTML demo. Khi có thêm phương án, không cần sửa đè nếu tốn token — chỉ cần tạo Tab mới ghi Version 2, Version 3... hoặc viết nối tiếp xuống dưới, tuyệt đối không tạo nhiều file lẻ tẻ.
 
 ## Stack
 - Backend: Flask 3.0, MySQL 8.0, opencv-contrib-python 4.8

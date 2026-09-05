@@ -16,9 +16,9 @@ const mapped = sandbox.DashboardUI.mapFaceBoxToVideo(
     { left: 0, top: 0, width: 800, height: 400 }
 );
 
-// object-fit: cover: scale 1.25, vertical crop 100px; horizontal mirror.
+// object-fit: contain: scale 5/6 (~0.8333), letterbox offset 133.33px; horizontal mirror.
 assert.deepStrictEqual(JSON.parse(JSON.stringify(mapped)), {
-    left: 550, top: -37.5, width: 125, height: 125
+    left: 500, top: 41.66666666666667, width: 83.33333333333334, height: 83.33333333333334
 });
 
 assert.strictEqual(

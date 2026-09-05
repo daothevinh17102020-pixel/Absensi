@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 40 400 380" width="100%" height="100%">
+  <defs>
+    <linearGradient id="grad-f4-orange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff7a3d"/>
+      <stop offset="60%" stop-color="#ff5500"/>
+      <stop offset="100%" stop-color="#d93d00"/>
+    </linearGradient>
+    <filter id="glow-f4" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#ff5500" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <g class="f4-render-group" transform="translate(20, 0)">
+    <rect class="f4-path" x="40" y="182" width="36" height="36" fill="url(#grad-f4-orange)" filter="url(#glow-f4)"/>
+    <path class="f4-path" d="M 81.36 182 A 120 120 0 0 1 307.16 146 L 264.31 146 A 84 84 0 0 0 117.95 182 Z" fill="url(#grad-f4-orange)" filter="url(#glow-f4)"/>
+    <path class="f4-path" d="M 124 182 L 320 182 L 320 200 A 120 120 0 0 1 81.36 218 L 117.95 218 A 84 84 0 0 0 282.05 218 L 124 218 Z" fill="url(#grad-f4-orange)" filter="url(#glow-f4)"/>
+  </g>
+
+  <text x="200" y="360" text-anchor="middle" fill="#ff5500" font-size="28" font-weight="900" font-family="'Plus Jakarta Sans', sans-serif" letter-spacing="2">GRIT<tspan fill="#ffffff">.AI</tspan></text>
+  <text x="200" y="388" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="700" font-family="'Plus Jakarta Sans', sans-serif" letter-spacing="2">HỆ THỐNG ĐIỂM DANH SINH TRẮC HỌC</text>
+</svg>

@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wireframe HTML Demo v1 — Khung Camera Stream ESP32-CAM AI Attendance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #080B11;
+      color: #F8FAFC;
+      min-height: 100vh;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    /* Top Breadcrumb & Navigation */
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #94A3B8;
+      text-decoration: none;
+      background: #0F172A;
+      border: 1px solid #1E293B;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-back:hover {
+      color: #F8FAFC;
+      background: #1E293B;
+      border-color: #334155;
+    }
+
+    .version-tag {
+      font-size: 12px;
+      font-weight: 700;
+      color: #FF7A00;
+      background: rgba(255, 122, 0, 0.12);
+      border: 1px solid rgba(255, 122, 0, 0.3);
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Hero Section */
+    .hero-section {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .hero-title {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1px;
+      color: #FFFFFF;
+      margin-bottom: 14px;
+    }
+
+    .hero-title .brand-accent {
+      background: linear-gradient(135deg, #FF9500 0%, #FF5E00 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+
+    .hero-subtitle {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #94A3B8;
+      max-width: 640px;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+
+    /* Main Camera Frame Card */
+    .camera-card {
+      background: #0E131F;
+      border: 1px solid #1E293B;
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 122, 0, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Card Header Bar */
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 8px 18px 8px;
+    }
+
+    .cam-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .cam-icon {
+      width: 20px;
+      height: 20px;
+      stroke: #FF7A00;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .cam-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #FF7A00;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #10B981;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 6px 14px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      background-color: #10B981;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #10B981;
+      animation: pulse-green 1.8s infinite;
+    }
+
+    @keyframes pulse-green {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Camera Viewport Area - Expanded Dimensions */
+    .camera-viewport {
+      position: relative;
+      width: 100%;
+      height: 480px;
+      background-color: #070A10;
+      border-radius: 18px;
+      border: 1px solid #192233;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-image: 
+        radial-gradient(rgba(255, 122, 0, 0.08) 1px, transparent 0);
+      background-size: 24px 24px;
+      background-position: -19px -19px;
+    }
+
+    /* Scanning Laser Line */
+    .scan-laser {
+      position: absolute;
+      top: 50px;
+      width: 240px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent 0%, #FF7A00 50%, transparent 100%);
+      box-shadow: 0 0 15px #FF7A00, 0 0 30px #FF5E00;
+      animation: scan-move 3.2s ease-in-out infinite alternate;
+      z-index: 3;
+    }
+
+    @keyframes scan-move {
+      0% { top: 75px; opacity: 0.85; }
+      50% { opacity: 1; }
+      100% { top: 345px; opacity: 0.85; }
+    }
+
+    /* Human Face Oval Reticle Guide & Spinning HUD Effect */
+    .reticle-container {
+      position: relative;
+      width: 280px;
+      height: 340px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    /* 360 Spinning Outer HUD Ring ("Hiệu ứng quay quay") */
+    .reticle-spin-ring-outer {
+      position: absolute;
+      width: 260px;
+      height: 330px;
+      border: 2px dashed rgba(255, 122, 0, 0.45);
+      border-radius: 50%;
+      animation: spin-clockwise 14s linear infinite;
+      box-shadow: 0 0 15px rgba(255, 122, 0, 0.15);
+      pointer-events: none;
+    }
+
+    /* Counter-Rotating Inner Tech Arc Ring */
+    .reticle-spin-ring-inner {
+      position: absolute;
+      width: 240px;
+      height: 315px;
+      border: 2px solid transparent;
+      border-top: 3px solid #FF7A00;
+      border-bottom: 3px solid #FF7A00;
+      border-radius: 50%;
+      animation: spin-counter 8s linear infinite;
+      filter: drop-shadow(0 0 8px #FF7A00);
+      pointer-events: none;
+      opacity: 0.85;
+    }
+
+    @keyframes spin-clockwise {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes spin-counter {
+      0% { transform: rotate(360deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    /* Main Oval Face Guide */
+    .reticle-oval {
+      position: absolute;
+      width: 215px;
+      height: 295px;
+      border: 2px dashed #FF7A00;
+      border-radius: 50%;
+      box-shadow: 0 0 25px rgba(255, 122, 0, 0.25), inset 0 0 25px rgba(255, 122, 0, 0.15);
+      animation: glow-pulse 2.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow-pulse {
+      0% { box-shadow: 0 0 15px rgba(255, 122, 0, 0.2); }
+      100% { box-shadow: 0 0 35px rgba(255, 122, 0, 0.45); }
+    }
+
+    /* Human Face Feature Outline (Subtle Inner Silhouette) */
+    .face-silhouette {
+      position: absolute;
+      width: 165px;
+      height: 225px;
+      border-radius: 50%;
+      border: 1px dotted rgba(255, 122, 0, 0.25);
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .eye-line-guide {
+      width: 115px;
+      height: 1px;
+      background: rgba(255, 122, 0, 0.2);
+      position: absolute;
+      top: 90px;
+    }
+
+    /* Reticle Corner Crosshairs */
+    .crosshair-tick {
+      position: absolute;
+      font-size: 15px;
+      font-weight: 400;
+      color: #FF7A00;
+      opacity: 0.85;
+      user-select: none;
+    }
+    .tick-tl { top: 6px; left: 12px; }
+    .tick-tr { top: 6px; right: 12px; }
+    .tick-bl { bottom: 6px; left: 12px; }
+    .tick-br { bottom: 6px; right: 12px; }
+
+    /* Alignment Status Badge (Redesigned Compact Pill Button) */
+    .status-pill {
+      position: relative;
+      z-index: 5;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(6, 78, 59, 0.85);
+      border: 1.5px solid #059669;
+      color: #10B981;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 16px;
+      border-radius: 20px;
+      letter-spacing: 0.6px;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+      backdrop-filter: blur(6px);
+      transition: all 0.2s ease;
+    }
+
+    .status-pill-dot {
+      width: 6px;
+      height: 6px;
+      background-color: #10B981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10B981;
+    }
+
+    /* Bottom Scanning Progress Overlay */
+    .viewport-bottom-bar {
+      position: absolute;
+      bottom: 20px;
+      left: 36px;
+      right: 36px;
+      z-index: 5;
+    }
+
+    .telemetry-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      margin-bottom: 8px;
+    }
+
+    .telemetry-label {
+      color: #FF7A00;
+    }
+
+    .telemetry-val {
+      color: #10B981;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 7px;
+      background: rgba(30, 41, 59, 0.9);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .progress-fill {
+      width: 78%;
+      height: 100%;
+      background: linear-gradient(90deg, #FF7A00 0%, #FF5E00 100%);
+      border-radius: 10px;
+      box-shadow: 0 0 12px rgba(255, 122, 0, 0.6);
+      transition: width 0.4s ease;
+    }
+
+    /* Card Footer Metrics */
+    .card-footer {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding-top: 18px;
+      border-top: 1px solid #151D2A;
+      margin-top: 16px;
+    }
+
+    .metric-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #94A3B8;
+      font-weight: 500;
+    }
+
+    .metric-value {
+      font-weight: 700;
+      color: #F8FAFC;
+    }
+
+    .metric-value.highlight-orange {
+      color: #FF7A00;
+    }
+
+    .metric-value.highlight-green {
+      color: #10B981;
+    }
+
+    /* 5-Column Description Table Section (BA Standard) */
+    .desc-section {
+      margin-top: 48px;
+      background: #0E131F;
+      border: 1px solid #1E293B;
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .desc-header {
+      font-size: 16px;
+      font-weight: 700;
+      color: #F8FAFC;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #1E293B;
+      padding-bottom: 12px;
+    }
+
+    .desc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .desc-table th {
+      background: #161F30;
+      color: #94A3B8;
+      font-weight: 600;
+      padding: 10px 14px;
+      border: 1px solid #232F45;
+    }
+
+    .desc-table td {
+      padding: 12px 14px;
+      border: 1px solid #1E293B;
+      color: #CBD5E1;
+      line-height: 1.5;
+    }
+
+    .desc-table tr:nth-child(even) td {
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    .tag-ctrl {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(255, 122, 0, 0.12);
+      color: #FF7A00;
+      border: 1px solid rgba(255, 122, 0, 0.3);
+    }
+
+    .tag-data {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(16, 185, 129, 0.12);
+      color: #10B981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .page-footer {
+      margin-top: 36px;
+      font-size: 12px;
+      color: #64748B;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Navigation Bar -->
+    <div class="top-nav">
+      <a href="enrollment-wireframe.html" class="btn-back">
+        ← Mục lục Wireframe (tất cả flows)
+      </a>
+      <span class="version-tag">PHIÊN BẢN v1</span>
+    </div>
+
+    <!-- Hero Header -->
+    <div class="hero-section">
+      <h1 class="hero-title">
+        Điểm danh sinh viên<br>Tự động hóa với <span class="brand-accent">VNI.AI</span>
+      </h1>
+      <p class="hero-subtitle">
+        Giải pháp tối ưu hóa điểm danh lớp học bằng thuật toán ArcFace sinh trắc học, kết nối camera ESP32 nhanh chóng và chính xác.
+      </p>
+    </div>
+
+    <!-- Camera Stream Card Frame -->
+    <div class="camera-card">
+      
+      <!-- Card Top Bar -->
+      <div class="card-header">
+        <div class="cam-title-group">
+          <svg class="cam-icon" viewBox="0 0 24 24">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+          <span class="cam-title">CAMERA STREAM (ESP32-CAM)</span>
+        </div>
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          LIVE STREAM
+        </div>
+      </div>
+
+      <!-- Camera Viewport / Scanning HUD -->
+      <div class="camera-viewport">
+        
+        <!-- Laser Scan Bar Animation -->
+        <div class="scan-laser"></div>
+
+        <!-- Oval Face Reticle Guide with 360 Spinning HUD Effect -->
+        <div class="reticle-container">
+          <!-- 360 Spinning Outer HUD Ring ("Hiệu ứng quay quay") -->
+          <div class="reticle-spin-ring-outer"></div>
+          <div class="reticle-spin-ring-inner"></div>
+
+          <!-- Main Oval Face Guide -->
+          <div class="reticle-oval"></div>
+          
+          <!-- Subtle Face Outline Guide -->
+          <div class="face-silhouette">
+            <div class="eye-line-guide"></div>
+          </div>
+          
+          <!-- Corner Ticks -->
+          <span class="crosshair-tick tick-tl">+</span>
+          <span class="crosshair-tick tick-tr">+</span>
+          <span class="crosshair-tick tick-bl">+</span>
+          <span class="crosshair-tick tick-br">+</span>
+
+          <!-- Redesigned Compact Alignment Badge -->
+          <div class="status-pill">
+            <span class="status-pill-dot"></span>
+            CĂN MẶT CHUẨN
+          </div>
+        </div>
+
+        <!-- Progress Overlay Bar -->
+        <div class="viewport-bottom-bar">
+          <div class="telemetry-row">
+            <span class="telemetry-label">AI SCANNING</span>
+            <span class="telemetry-val">78%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Card Metrics Footer -->
+      <div class="card-footer">
+        <div class="metric-item">
+          Chính xác: <span class="metric-value">99.8%</span>
+        </div>
+        <div class="metric-item">
+          Tốc độ: <span class="metric-value highlight-orange">&lt; 0.3s</span>
+        </div>
+        <div class="metric-item">
+          AI Engine: <span class="metric-value highlight-green">ArcFace 3.0</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 5-Column Description Table -->
+    <div class="desc-section">
+      <div class="desc-header">
+        <span>Bảng Mô Tả Chi Tiết Màn Hình & Thành Phần (5 Cột Standard BA)</span>
+        <span style="font-size: 12px; font-weight: 500; color: #94A3B8;">Feature: Camera Stream / Face HUD</span>
+      </div>
+
+      <table class="desc-table">
+        <thead>
+          <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 20%;">Items</th>
+            <th style="width: 15%;">Control type</th>
+            <th style="width: 15%;">Data type</th>
+            <th style="width: 45%;">Mô tả chi tiết & Quy tắc nghiệp vụ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong>Live Stream Badge</strong></td>
+            <td><span class="tag-ctrl">Status Indicator</span></td>
+            <td><span class="tag-data">Boolean / Enum</span></td>
+            <td>Đèn LED nhấp nháy màu xanh lá báo hiệu luồng RTSP/MJPEG stream từ ESP32-CAM đang kết nối thời gian thực.</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><strong>Human Face Oval Reticle</strong></td>
+            <td><span class="tag-ctrl">HUD Overlay</span></td>
+            <td><span class="tag-data">Vector Graphic</span></td>
+            <td>Khung định vị khuôn mặt Oval nét đứt viền cam rực rỡ (`215px x 295px`), thiết kế mô phỏng tỷ lệ gương mặt người thật.</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><strong>360 Spinning HUD Rings</strong></td>
+            <td><span class="tag-ctrl">Rotating Animation</span></td>
+            <td><span class="tag-data">CSS Keyframes</span></td>
+            <td>Vòng xoay 360 độ ("hiệu ứng quay quay") nét đứt và các cung tròn kỹ thuật xoay quanh khung Oval theo 2 chiều ngược nhau.</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><strong>Expanded Camera Viewport</strong></td>
+            <td><span class="tag-ctrl">Video Stream Container</span></td>
+            <td><span class="tag-data">RTSP Stream View</span></td>
+            <td>Khung hiển thị camera mở rộng (chiều cao 480px, max-width 1040px) giữ nguyên bố cục tổng thể.</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><strong>Scan Laser Line</strong></td>
+            <td><span class="tag-ctrl">Visual Animation</span></td>
+            <td><span class="tag-data">CSS Gradient</span></td>
+            <td>Dải sáng laser quét dọc từ trán xuống cằm trên khung Oval khuôn mặt, phản hồi tiến trình trích xuất vector ArcFace.</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td><strong>Compact Status Pill Button</strong></td>
+            <td><span class="tag-ctrl">Status Badge / Button</span></td>
+            <td><span class="tag-data">String State</span></td>
+            <td>Thiết kế lại kích thước nhỏ gọn (font 11px, padding 5px 16px) với nhãn <em>"● CĂN MẶT CHUẨN"</em> nền xanh lá mờ glassmorphism.</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td><strong>Telemetry & Progress Bar</strong></td>
+            <td><span class="tag-ctrl">Progress Bar</span></td>
+            <td><span class="tag-data">Float / Percentage</span></td>
+            <td>Hiển thị dòng <em>"AI SCANNING 78%"</em> kèm thanh progress chạy hiệu ứng glow da cam biểu thị tiến độ trích xuất đặc trưng.</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td><strong>Metrics Footer</strong></td>
+            <td><span class="tag-ctrl">Data Summary</span></td>
+            <td><span class="tag-data">Metrics Telemetry</span></td>
+            <td>Hiển thị 3 chỉ số hiệu năng: Độ chính xác (`99.8%`), Độ trễ xử lý (`< 0.3s`), và Phiên bản mô hình AI (`ArcFace 3.0`).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Page Footer -->
+    <div class="page-footer">
+      Thành phần giao diện Demo v1 · Được thiết kế bằng skill <code>/wireframe-html</code> · Dự án ML Attendance VNI.AI
+    </div>
+
+  </div>
+
+</body>
+</html>

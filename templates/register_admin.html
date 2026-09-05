@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Đăng ký quản trị viên - Hệ thống điểm danh{% endblock %}
+{% block title %}Thiết lập ban đầu — GRIT.AI{% endblock %}
 
 {# Register tidak menampilkan sidebar dan navbar — override seluruh layout #}
 {% block body_class %}flex items-center justify-center min-h-screen p-gutter selection:bg-primary-container selection:text-on-primary-container{% endblock %}
@@ -14,14 +14,28 @@
 
 <!-- Halaman Register Admin — fullscreen tanpa sidebar -->
 <main class="w-full max-w-[480px]">
-    <div class="glass-effect rounded-xl p-8 shadow-2xl">
+    <div class="bg-surface-container border border-outline-variant rounded-xl p-8 shadow-2xl">
         <!-- Header Section -->
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-container/10 border border-primary/20 mb-4">
-                <span class="material-symbols-outlined text-primary text-[32px]">admin_panel_settings</span>
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary-container/15 border border-primary/30 p-2 mb-4 shadow-xl shadow-primary/25 backdrop-blur-md">
+                <svg class="w-14 h-14" viewBox="20 40 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="reg-grit-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ff7a3d"/>
+                            <stop offset="60%" stop-color="#ff5500"/>
+                            <stop offset="100%" stop-color="#d93d00"/>
+                        </linearGradient>
+                        <filter id="reg-grit-glow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#ff5500" flood-opacity="0.45"/>
+                        </filter>
+                    </defs>
+                    <rect x="40" y="182" width="36" height="36" fill="url(#reg-grit-grad)" filter="url(#reg-grit-glow)"/>
+                    <path d="M 81.36 182 A 120 120 0 0 1 307.16 146 L 264.31 146 A 84 84 0 0 0 117.95 182 Z" fill="url(#reg-grit-grad)" filter="url(#reg-grit-glow)"/>
+                    <path d="M 124 182 L 320 182 L 320 200 A 120 120 0 0 1 81.36 218 L 117.95 218 A 84 84 0 0 0 282.05 218 L 124 218 Z" fill="url(#reg-grit-grad)" filter="url(#reg-grit-glow)"/>
+                </svg>
             </div>
-            <h1 class="font-display-lg text-display-lg text-on-surface mb-2">Thiết lập ban đầu</h1>
-            <p class="font-body-md text-body-md text-on-surface-variant">Thiết lập tài khoản quản trị viên đầu tiên của hệ thống.</p>
+            <h1 class="font-display-lg text-display-lg text-primary font-black tracking-tight mb-1">GRIT<span class="text-on-surface">.AI</span></h1>
+            <p class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-[.2em] font-bold">THIẾT LẬP TÀI KHOẢN QUẢN TRỊ ĐẦU TIÊN</p>
         </div>
 
         <!-- Banner informasi -->

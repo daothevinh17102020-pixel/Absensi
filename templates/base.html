@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>{% block title %}Hệ thống điểm danh{% endblock %}</title>
+    <title>{% block title %}GRIT.AI — Hệ thống điểm danh sinh trắc học{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo_grit_ai_icon.svg') }}"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -205,9 +206,30 @@
         ::-webkit-scrollbar-track { background: #0a0a0a; }
         ::-webkit-scrollbar-thumb { background: #363636; }
         ::-webkit-scrollbar-thumb:hover { background: #ff5500; }
+        @media (min-width: 1024px) {
+            .app-sidebar {
+                width: 72px !important;
+                transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s ease !important;
+            }
+            .app-sidebar:hover {
+                width: 260px !important;
+                box-shadow: 18px 0 45px rgba(0, 0, 0, 0.85), 0 0 20px rgba(255, 85, 0, 0.1) !important;
+            }
+            .app-header {
+                width: calc(100% - 72px) !important;
+            }
+            .app-main {
+                margin-left: 72px !important;
+            }
+        }
         @media (max-width: 1023px) {
-            .app-sidebar { transform: translateX(-100%); box-shadow: 20px 0 50px rgba(0,0,0,.45) !important; }
+            .app-sidebar { transform: translateX(-100%); box-shadow: 20px 0 50px rgba(0,0,0,.45) !important; width: 260px !important; }
             .app-sidebar.is-open { transform: translateX(0); }
+            /* Hiển thị đầy đủ chữ thương hiệu, nhãn menu và profile khi sidebar mở trên mobile */
+            .app-sidebar.is-open [class*="max-w-0"] {
+                opacity: 1 !important;
+                max-width: 180px !important;
+            }
             .app-header { width: 100% !important; }
             .app-main { margin-left: 0 !important; }
             .app-page { padding: 5.5rem 1rem 1.5rem !important; }
@@ -238,6 +260,12 @@
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
     {% for category, message in messages %}
+    {# Ẩn bỏ hoàn toàn 2 pop-up thông báo trước đăng nhập và sau đăng nhập #}
+    {% set msg_lower = message|lower %}
+    {% set has_nhap = ('nhá' in msg_lower or 'nhập' in msg_lower or 'login' in msg_lower) %}
+    {% set has_target = ('vui' in msg_lower or 'thành' in msg_lower or 'thã' in msg_lower or 'trước' in msg_lower or 'træ' in msg_lower) %}
+    {% set is_auth_popup = (has_nhap and has_target) %}
+    {% if not is_auth_popup %}
     <div class="flash-message pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md border
         {% if category == 'error' %}
             bg-error-container/90 border-error/30 text-on-error-container
@@ -257,6 +285,7 @@
             <span class="material-symbols-outlined text-[16px]">close</span>
         </button>
     </div>
+    {% endif %}
     {% endfor %}
 {% endif %}
 {% endwith %}
@@ -274,7 +303,152 @@
 <script>
 (function(){
     var MAX_FLASH = 3;
+
+    /**
+     * BỘ CHUẨN HÓA TIẾNG VIỆT UTF-8 TOÀN CỤC (GLOBAL HYBRID AUTO-CLEANER)
+     * Tự động giải mã các thông báo Mojibake từ Flask Backend sang tiếng Việt chuẩn UTF-8.
+     */
+    function cleanVietnameseMojibake(text) {
+        if (!text || typeof text !== 'string') return text;
+
+        // 1. Bảng ánh xạ các thông báo nguyên văn từ Backend Flask (Exact Match Dictionary)
+        var dict = {
+            'Vui lÃ²ng Ä‘Äƒng nháº­p trÆ°á»›c.': 'Vui lòng đăng nhập trước.',
+            'Vui lÃ²ng Ä‘Äƒng nháº°p trÆ°á»›c.': 'Vui lòng đăng nhập trước.',
+            'Vui lÃ²ng Ä‘Äƒng nháº­p trÆ°á»›c': 'Vui lòng đăng nhập trước.',
+            'Ä Äƒng nháº­p thÃ nh cÃ´ng!': 'Đăng nhập thành công!',
+            'Ä≡Äƒng nháº°p thÃ nh cÃ´ng!': 'Đăng nhập thành công!',
+            'Ä˜Äƒng nháº­p thÃ nh cÃ´ng!': 'Đăng nhập thành công!',
+            'Ä‘Äƒng nháº­p thÃ nh cÃ´ng!': 'Đăng nhập thành công!',
+            'Ä Äƒng nháº­p thÃ nh cÃ´ng': 'Đăng nhập thành công!',
+            'TÃªn Ä‘Äƒng nháº­p hoáº·c máº­t kháº©u khÃ´ng Ä‘Ãºng.': 'Tên đăng nhập hoặc mật khẩu không đúng.',
+            'Vui lÃ²ng nháº­p tÃªn Ä‘Äƒng nháº­p vÃ  máº­t kháº©u.': 'Vui lòng nhập tên đăng nhập và mật khẩu.',
+            'Quáº£n trá»‹ viÃªn Ä‘Ã£ Ä‘Æ°á»£c Ä‘Äƒng kÃ½. Vui lÃ²ng Ä‘Äƒng nháº­p.': 'Quản trị viên đã được đăng ký. Vui lòng đăng nhập.',
+            'Táº¡o tÃ i khoáº£n quáº£n trá»‹ viÃªn thÃ nh cÃ´ng!': 'Tạo tài khoản quản trị viên thành công!',
+            'Báº¡n Ä‘Ã£ Ä‘Äƒng xuáº¥t.': 'Bạn đã đăng xuất.',
+            'ThÃªm lá»›p thÃ nh cÃ´ng!': 'Thêm lớp thành công!',
+            'KhÃ´ng tÃ¬m tháº¥y lá»›p.': 'Không tìm thấy lớp.',
+            'Cáº­p nháº­t lá»›p thÃ nh cÃ´ng!': 'Cập nhật lớp thành công!',
+            'XÃ³a lá»›p thÃ nh cÃ´ng.': 'Xóa lớp thành công.',
+            'KhÃ´ng thá»ƒ xÃ³a lá»›p. CÃ³ thá»ƒ lá»›p váº«n cÃ²n sinh viÃªn liÃªn quan.': 'Không thể xóa lớp. Có thể lớp vẫn còn sinh viên liên quan.',
+            'ThÃªm mÃ´n há» c thÃ nh cÃ´ng!': 'Thêm môn học thành công!',
+            'KhÃ´ng tÃ¬m tháº¥y mÃ´n há» c.': 'Không tìm thấy môn học.',
+            'Cáº­p nháº­t mÃ´n há» c thÃ nh cÃ´ng!': 'Cập nhật môn học thành công!',
+            'XÃ³a mÃ´n há» c thÃ nh cÃ´ng.': 'Xóa môn học thành công.',
+            'KhÃ´ng thá»ƒ xÃ³a mÃ´n há» c.': 'Không thể xóa môn học.',
+            'KhÃ´ng tÃ¬m tháº¥y sinh viÃªn.': 'Không tìm thấy sinh viên.',
+            'Cáº­p nháº­t thÃ´ng tin sinh viÃªn thÃ nh cÃ´ng!': 'Cập nhật thông tin sinh viên thành công!',
+            'XÃ³a sinh viÃªn thÃ nh cÃ´ng.': 'Xóa sinh viên thành công.',
+            'KhÃ´ng thá»ƒ xÃ³a sinh viÃªn.': 'Không thể xóa sinh viên.',
+            'ChÆ°a cÃ i Ä‘áº·t openpyxl. Vui lÃ²ng xuáº¥t dá»¯ liá»‡u dÆ°á»›i dáº¡ng CSV.': 'Chưa cài đặt openpyxl. Vui lòng xuất dữ liệu dưới dạng CSV.',
+            'Dá»¯ liá»‡u khÃ´ng há»£p lá»‡.': 'Dữ liệu không hợp lệ.',
+            'KhÃ´ng thá»ƒ thay Ä‘á»•i tráº¡ng thÃ¡i Ä‘iá»ƒm danh.': 'Không thể thay đổi trạng thái điểm danh.'
+        };
+
+        var trimmed = text.trim();
+        if (dict[trimmed]) return dict[trimmed];
+
+        // 2. Bộ quy tắc Regex nhận diện ngữ cảnh lỗi phổ quát (Pattern Normalizer)
+        var cleaned = text;
+
+        // Vui lòng đăng nhập trước
+        if (/vui\s+l\S*ng\s+.*nh\S*p\s+tr\S*c/i.test(cleaned)) {
+            return 'Vui lòng đăng nhập trước.';
+        }
+
+        // Đăng nhập thành công
+        if (/(?:.*ng\s+)?nh\S*p\s+th\S*\s*nh\s+c\S*ng/i.test(cleaned)) {
+            return 'Đăng nhập thành công!';
+        }
+
+        // Tên đăng nhập hoặc mật khẩu không đúng
+        if (/t\S*n\s+.*nh\S*p\s+.*m\S*t\s+kh\S*u\s+kh\S*ng\s+.*ng/i.test(cleaned)) {
+            return 'Tên đăng nhập hoặc mật khẩu không đúng.';
+        }
+
+        // Vui lòng nhập tên đăng nhập và mật khẩu
+        if (/vui\s+l\S*ng\s+.*nh\S*p\s+t\S*n\s+.*nh\S*p\s+v\S*\s+m\S*t\s+kh\S*u/i.test(cleaned)) {
+            return 'Vui lòng nhập tên đăng nhập và mật khẩu.';
+        }
+
+        // Quản trị viên đã được đăng ký
+        if (/qu\S*n\s+tr\S*\s+vi\S*n\s+.*k\S*\.\s*vui\s+l\S*ng.*nh\S*p/i.test(cleaned)) {
+            return 'Quản trị viên đã được đăng ký. Vui lòng đăng nhập.';
+        }
+
+        // Tạo tài khoản quản trị viên thành công
+        if (/t\S*o\s+t\S*i\s+kho\S*n\s+qu\S*n\s+tr\S*\s+vi\S*n\s+th\S*\s*nh\s+c\S*ng/i.test(cleaned)) {
+            return 'Tạo tài khoản quản trị viên thành công!';
+        }
+
+        // Bạn đã đăng xuất
+        if (/b\S*n\s+.*ng\s+xu\S*t/i.test(cleaned)) {
+            return 'Bạn đã đăng xuất.';
+        }
+
+        // Đăng ký sinh viên {nama} thành công
+        var regStudent = /(?:.*ng\s+k\S*\s+sinh\s+vi\S*n\s+)(.+?)(?:\s+th\S*\s*nh\s+c\S*ng.*)/i;
+        if (regStudent.test(cleaned)) {
+            var m = cleaned.match(regStudent);
+            var sName = m && m[1] ? m[1].trim() : '';
+            return 'Đăng ký sinh viên ' + sName + ' thành công! Hãy tiếp tục chụp ảnh sinh trắc học.';
+        }
+
+        return cleaned;
+    }
+
+    // Hàm nhận diện CHÍNH XÁC các thông báo auth cần triệt tiêu (tránh nuốt nhầm thông báo nghiệp vụ)
+    function isSuppressedAuthMessage(text) {
+        if (!text || typeof text !== 'string') return false;
+        var lower = text.toLowerCase().trim();
+        // 1. "Vui lòng đăng nhập trước" (chuẩn UTF-8 hoặc mojibake)
+        var isLoginBefore = (lower.indexOf('vui') !== -1 && lower.indexOf('nhập') !== -1 && lower.indexOf('trước') !== -1) ||
+                            (lower.indexOf('vui') !== -1 && lower.indexOf('nhap') !== -1 && lower.indexOf('truoc')) ||
+                            (lower.indexOf('vui') !== -1 && lower.indexOf('nhá') !== -1 && lower.indexOf('træ') !== -1);
+        // 2. "Đăng nhập thành công" (chuẩn UTF-8 hoặc mojibake)
+        var isLoginSuccess = (lower.indexOf('đăng nhập') !== -1 && lower.indexOf('thành công') !== -1) ||
+                             (lower.indexOf('dang nhap') !== -1 && lower.indexOf('thanh cong')) ||
+                             (lower.indexOf('nhá') !== -1 && lower.indexOf('thã') !== -1 && lower.indexOf('cã') !== -1);
+        return isLoginBefore || isLoginSuccess;
+    }
+
+    // Hàm quét sạch và loại bỏ các pop-up thông báo không mong muốn trên giao diện
+    function sanitizeAllFlash() {
+        var container = document.getElementById('flash-container');
+        if (container) {
+            var messages = container.querySelectorAll('.flash-message');
+            messages.forEach(function(msgEl) {
+                var sp = msgEl.querySelector('span.font-body-sm');
+                var text = sp ? sp.textContent : msgEl.textContent;
+                // Nếu là thông báo trước đăng nhập hoặc sau đăng nhập: XÓA NGAY LẬP TỨC KHỎI DOM
+                if (isSuppressedAuthMessage(text)) {
+                    msgEl.remove();
+                    return;
+                }
+                if (sp && sp.textContent) {
+                    var fixed = cleanVietnameseMojibake(sp.textContent);
+                    if (fixed !== sp.textContent) sp.textContent = fixed;
+                }
+            });
+        }
+        var loginErr = document.getElementById('login-error-msg');
+        if (loginErr && loginErr.textContent) {
+            var fixedErr = cleanVietnameseMojibake(loginErr.textContent);
+            if (fixedErr !== loginErr.textContent) loginErr.textContent = fixedErr;
+        }
+        document.querySelectorAll('.text-on-error-container').forEach(function(el) {
+            if (el && el.textContent) {
+                var fixedErrEl = cleanVietnameseMojibake(el.textContent);
+                if (fixedErrEl !== el.textContent) el.textContent = fixedErrEl;
+            }
+        });
+    }
+
+    // Thực hiện làm sạch ngay lập tức khi script được load
+    sanitizeAllFlash();
+
     function initFlash() {
+        sanitizeAllFlash();
         var container = document.getElementById('flash-container');
         if (!container) return;
         var msgs = container.querySelectorAll('.flash-message');
@@ -290,15 +464,45 @@
             }, 3000 + idx * 500); // stagger dismiss
         });
     }
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initFlash);
     } else {
         initFlash();
     }
-    // Fungsi global untuk menambah flash dari JS
+
+    // Lắng nghe MutationObserver trên flash-container với cờ Re-entrancy Guard
+    var flashBox = document.getElementById('flash-container');
+    var isSanitizing = false;
+    if (flashBox && window.MutationObserver) {
+        var observer = new MutationObserver(function(mutations) {
+            if (isSanitizing) return;
+            var hasAdded = false;
+            for (var i = 0; i < mutations.length; i++) {
+                if (mutations[i].addedNodes && mutations[i].addedNodes.length > 0) {
+                    hasAdded = true;
+                    break;
+                }
+            }
+            if (hasAdded) {
+                isSanitizing = true;
+                try {
+                    sanitizeAllFlash();
+                } finally {
+                    isSanitizing = false;
+                }
+            }
+        });
+        observer.observe(flashBox, { childList: true, subtree: true });
+    }
+
+    // Hàm toàn cục tạo flash toast từ JS
     window.showFlash = function(msg, type) {
+        if (isSuppressedAuthMessage(msg)) return;
         type = type || 'info';
+        msg = cleanVietnameseMojibake(msg);
         var container = document.getElementById('flash-container');
+        if (!container) return;
         var colorMap = {
             success: 'bg-primary-container/90 border-primary/30 text-on-primary-container',
             error:   'bg-error-container/90 border-error/30 text-on-error-container',
@@ -327,84 +531,99 @@
 {# halaman auth (login/register) yang tidak butuh sidebar        #}
 {# ============================================================ #}
 {% block layout %}
-<!-- Sidebar Navigasi -->
+<!-- Sidebar Navigasi (Tự động thu gọn 72px khi không rê chuột, mở rộng 260px khi hover) -->
 <div id="sidebar-backdrop" class="hidden fixed inset-0 bg-black/70 z-40 lg:hidden" aria-hidden="true"></div>
-<aside id="app-sidebar" class="app-sidebar fixed left-0 top-0 h-screen w-[260px] bg-surface-container dark:bg-surface-container-low backdrop-blur-md bg-opacity-80 border-r border-outline-variant dark:border-outline-variant flex flex-col gap-4 py-8 px-4 z-50 transition-all duration-200 ease-in-out">
-    <!-- Brand Header -->
-    <div class="px-2 mb-6">
-        <h1 class="font-display-lg text-[26px] leading-tight text-primary dark:text-primary font-extrabold tracking-tight">VNIH<span class="text-on-surface">.AI</span></h1>
-        <p class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-[.18em] mt-2">Hệ thống sinh trắc học</p>
+<aside id="app-sidebar" class="app-sidebar group fixed left-0 top-0 h-screen w-[72px] lg:w-[72px] hover:w-[260px] bg-surface-container dark:bg-surface-container-low backdrop-blur-md bg-opacity-95 border-r border-outline-variant dark:border-outline-variant flex flex-col z-50 transition-all duration-300 ease-in-out overflow-hidden">
+    <!-- Brand Header với Logo GRIT.AI Form 04 chính thức (Chiều cao cố định 64px ngang hàng tuyệt đối với Top Navbar) -->
+    <div class="h-16 min-h-[64px] max-h-[64px] flex items-center px-3.5 gap-3 border-b border-outline-variant/30 shrink-0 box-border">
+        <div class="w-11 h-11 min-w-[44px] rounded-xl bg-primary-container/15 border border-primary/30 flex items-center justify-center p-1 shrink-0 shadow-lg shadow-primary/20">
+            <svg class="w-8 h-8" viewBox="20 40 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="sb-grit-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ff7a3d"/>
+                        <stop offset="60%" stop-color="#ff5500"/>
+                        <stop offset="100%" stop-color="#d93d00"/>
+                    </linearGradient>
+                </defs>
+                <rect x="40" y="182" width="36" height="36" fill="url(#sb-grit-grad)"/>
+                <path d="M 81.36 182 A 120 120 0 0 1 307.16 146 L 264.31 146 A 84 84 0 0 0 117.95 182 Z" fill="url(#sb-grit-grad)"/>
+                <path d="M 124 182 L 320 182 L 320 200 A 120 120 0 0 1 81.36 218 L 117.95 218 A 84 84 0 0 0 282.05 218 L 124 218 Z" fill="url(#sb-grit-grad)"/>
+            </svg>
+        </div>
+        <!-- Chữ thương hiệu: Ẩn khi thu gọn 72px, hiện ra mượt mà khi hover mở rộng -->
+        <div class="flex flex-col whitespace-nowrap overflow-hidden opacity-0 max-w-0 group-hover:opacity-100 group-hover:max-w-[180px] transition-all duration-300 ease-in-out">
+            <h1 class="font-display-lg text-[22px] leading-tight text-primary dark:text-primary font-black tracking-tight">GRIT<span class="text-on-surface">.AI</span></h1>
+            <p class="font-label-caps text-[9px] text-on-surface-variant uppercase tracking-[.18em] mt-0.5 font-bold">Hệ thống sinh trắc học</p>
+        </div>
     </div>
     <!-- Menu Navigasi -->
-    <nav class="flex-1 space-y-1">
-        {# Variabel active_page diset di setiap route Flask untuk highlight menu #}
-        <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out
+    <nav class="flex-1 p-2 space-y-1 overflow-y-auto overflow-x-hidden">
+        {# Variabel active_page diset di setiap route Flask để highlight menu #}
+        <a class="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ease-in-out relative group/item
             {% if active_page == 'dashboard' %}text-primary font-bold border-l-4 border-primary bg-primary-container/15
             {% else %}text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface{% endif %}"
-           href="{{ url_for('dashboard') }}">
-            <span class="material-symbols-outlined" {% if active_page == 'dashboard' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>dashboard</span>
-            <span class="font-body-md text-body-md">Tổng quan</span>
+           href="{{ url_for('dashboard') }}" title="Tổng quan">
+            <span class="material-symbols-outlined shrink-0 text-[24px]" {% if active_page == 'dashboard' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>dashboard</span>
+            <span class="font-body-md text-body-md whitespace-nowrap overflow-hidden opacity-0 max-w-0 group-hover:opacity-100 group-hover:max-w-[180px] transition-all duration-200 ease-in-out">Tổng quan</span>
         </a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out
+        <a class="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ease-in-out relative group/item
             {% if active_page == 'mahasiswa' %}text-primary font-bold border-l-4 border-primary bg-primary-container/15
             {% else %}text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface{% endif %}"
-           href="{{ url_for('mahasiswa_index') }}">
-            <span class="material-symbols-outlined" {% if active_page == 'mahasiswa' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>group</span>
-            <span class="font-body-md text-body-md">Sinh viên</span>
+           href="{{ url_for('mahasiswa_index') }}" title="Sinh viên">
+            <span class="material-symbols-outlined shrink-0 text-[24px]" {% if active_page == 'mahasiswa' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>group</span>
+            <span class="font-body-md text-body-md whitespace-nowrap overflow-hidden opacity-0 max-w-0 group-hover:opacity-100 group-hover:max-w-[180px] transition-all duration-200 ease-in-out">Sinh viên</span>
         </a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out
+        <a class="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ease-in-out relative group/item
             {% if active_page == 'kelas' %}text-primary font-bold border-l-4 border-primary bg-primary-container/15
             {% else %}text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface{% endif %}"
-           href="{{ url_for('kelas_index') }}">
-            <span class="material-symbols-outlined" {% if active_page == 'kelas' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>school</span>
-            <span class="font-body-md text-body-md">Lớp &amp; Môn học</span>
+           href="{{ url_for('kelas_index') }}" title="Lớp & Môn học">
+            <span class="material-symbols-outlined shrink-0 text-[24px]" {% if active_page == 'kelas' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>school</span>
+            <span class="font-body-md text-body-md whitespace-nowrap overflow-hidden opacity-0 max-w-0 group-hover:opacity-100 group-hover:max-w-[180px] transition-all duration-200 ease-in-out">Lớp &amp; Môn học</span>
         </a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out
+        <a class="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ease-in-out relative group/item
             {% if active_page == 'jadwal' %}text-primary font-bold border-l-4 border-primary bg-primary-container/15
             {% else %}text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface{% endif %}"
-           href="{{ url_for('jadwal_index') }}">
-            <span class="material-symbols-outlined" {% if active_page == 'jadwal' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>calendar_month</span>
-            <span class="font-body-md text-body-md">Lịch học</span>
+           href="{{ url_for('jadwal_index') }}" title="Lịch học">
+            <span class="material-symbols-outlined shrink-0 text-[24px]" {% if active_page == 'jadwal' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>calendar_month</span>
+            <span class="font-body-md text-body-md whitespace-nowrap overflow-hidden opacity-0 max-w-0 group-hover:opacity-100 group-hover:max-w-[180px] transition-all duration-200 ease-in-out">Lịch học</span>
         </a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out
+        <a class="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ease-in-out relative group/item
             {% if active_page == 'rekap' %}text-primary font-bold border-l-4 border-primary bg-primary-container/15
             {% else %}text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface{% endif %}"
-           href="{{ url_for('absensi_rekap') }}">
-            <span class="material-symbols-outlined" {% if active_page == 'rekap' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>assignment</span>
-            <span class="font-body-md text-body-md">Tổng hợp điểm danh</span>
+           href="{{ url_for('absensi_rekap') }}" title="Tổng hợp điểm danh">
+            <span class="material-symbols-outlined shrink-0 text-[24px]" {% if active_page == 'rekap' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>assignment</span>
+            <span class="font-body-md text-body-md whitespace-nowrap overflow-hidden opacity-0 max-w-0 group-hover:opacity-100 group-hover:max-w-[180px] transition-all duration-200 ease-in-out">Tổng hợp điểm danh</span>
         </a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out
+        <a class="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ease-in-out relative group/item
             {% if active_page == 'laporan' %}text-primary font-bold border-l-4 border-primary bg-primary-container/15
             {% else %}text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface{% endif %}"
-           href="{{ url_for('laporan_index') }}">
-            <span class="material-symbols-outlined" {% if active_page == 'laporan' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>assessment</span>
-            <span class="font-body-md text-body-md">Báo cáo</span>
+           href="{{ url_for('laporan_index') }}" title="Báo cáo">
+            <span class="material-symbols-outlined shrink-0 text-[24px]" {% if active_page == 'laporan' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>assessment</span>
+            <span class="font-body-md text-body-md whitespace-nowrap overflow-hidden opacity-0 max-w-0 group-hover:opacity-100 group-hover:max-w-[180px] transition-all duration-200 ease-in-out">Báo cáo</span>
         </a>
     </nav>
-    <!-- Profil Admin di bawah sidebar -->
-    <div class="mt-auto pt-6 border-t border-outline-variant px-2">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-secondary overflow-hidden">
-                <span class="material-symbols-outlined">account_circle</span>
-            </div>
-            <div class="flex flex-col">
-                <span class="font-label-caps text-label-caps text-on-surface font-bold">{{ session.get('username', 'Admin') }}</span>
-                <span class="font-body-sm text-[11px] text-on-surface-variant">Quản trị viên hệ thống</span>
-            </div>
-            <a href="{{ url_for('logout') }}" class="ml-auto text-on-surface-variant hover:text-primary transition-colors" title="Đăng xuất">
-                <span class="material-symbols-outlined">logout</span>
-            </a>
+    <!-- Profil Admin di bawah sidebar (Ẩn tên và logout khi thu gọn 72px, hiện khi hover) -->
+    <div class="mt-auto h-16 min-h-[64px] max-h-[64px] border-t border-outline-variant/30 px-3.5 flex items-center gap-3 shrink-0 overflow-hidden box-border">
+        <div class="w-10 h-10 min-w-[40px] rounded-full bg-secondary-container flex items-center justify-center text-secondary overflow-hidden shrink-0" title="Quản trị viên">
+            <span class="material-symbols-outlined text-[24px]">account_circle</span>
         </div>
+        <div class="flex flex-col whitespace-nowrap overflow-hidden opacity-0 max-w-0 group-hover:opacity-100 group-hover:max-w-[130px] transition-all duration-300 ease-in-out">
+            <span class="font-label-caps text-label-caps text-on-surface font-bold truncate">{{ session.get('username', 'Admin') }}</span>
+            <span class="font-body-sm text-[11px] text-on-surface-variant truncate">Quản trị viên hệ thống</span>
+        </div>
+        <a href="{{ url_for('logout') }}" class="ml-auto text-on-surface-variant hover:text-primary transition-all duration-200 opacity-0 max-w-0 overflow-hidden group-hover:opacity-100 group-hover:max-w-[32px] shrink-0 flex items-center justify-center p-1" title="Đăng xuất">
+            <span class="material-symbols-outlined text-[22px]">logout</span>
+        </a>
     </div>
 </aside>
 
-<!-- Top Navbar -->
-<header class="app-header fixed top-0 right-0 w-[calc(100%-260px)] z-40 bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-outline-variant dark:border-outline-variant flex justify-between items-center h-16 px-gutter ml-auto">
+<!-- Top Navbar (Căn ngang hàng với cụm Logo Sidebar, chiều rộng thích ứng 72px) -->
+<header class="app-header fixed top-0 right-0 w-[calc(100%-72px)] z-40 bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-outline-variant dark:border-outline-variant flex justify-between items-center h-16 px-gutter ml-auto">
     <div class="flex items-center gap-4 flex-1">
         <button id="sidebar-toggle" type="button" class="lg:hidden p-2 -ml-2 text-on-surface-variant hover:text-primary focus-ring rounded-lg" aria-label="Mở điều hướng" aria-controls="app-sidebar" aria-expanded="false"><span class="material-symbols-outlined">menu</span></button>
-        <div class="relative w-full max-w-md focus-within:ring-2 focus-within:ring-primary rounded-lg transition-all">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-            <input id="global-search-input" class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-10 pr-4 py-2 text-body-sm focus:outline-none focus:border-primary transition-colors" placeholder="Tìm kiếm sinh viên, lịch học..." type="text" autocomplete="off" role="combobox" aria-controls="search-dropdown" aria-expanded="false"/>
+        <div class="relative w-full max-w-[580px] focus-within:ring-2 focus-within:ring-primary rounded-lg transition-all">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[22px]">search</span>
+            <input id="global-search-input" class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-11 pr-4 py-2.5 text-[14px] text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:border-primary transition-colors" placeholder="Tìm kiếm sinh viên, lịch học..." type="text" autocomplete="off" role="combobox" aria-controls="search-dropdown" aria-expanded="false"/>
             
             <!-- Dropdown Hasil Pencarian -->
             <div id="search-dropdown" class="hidden absolute left-0 right-0 mt-2 bg-surface border border-outline-variant rounded-xl shadow-2xl z-[9999] overflow-hidden max-h-[420px] flex flex-col backdrop-blur-md bg-opacity-95">
@@ -419,24 +638,18 @@
         </div>
     </div>
     <div class="flex items-center gap-2">
-        <span class="desktop-only font-title-sm text-title-sm font-bold text-on-surface mr-6">Quản lý điểm danh</span>
         <div class="flex items-center gap-1">
-            <button class="p-2 text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors">
+            <button class="relative p-2 text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors rounded-lg" title="Thông báo">
                 <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-            </button>
-            <button class="p-2 text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors">
-                <span class="material-symbols-outlined" data-icon="settings">settings</span>
-            </button>
-            <button class="p-2 text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors">
-                <span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+                <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary shadow-sm shadow-primary"></span>
             </button>
         </div>
     </div>
 </header>
 
-<!-- Area Konten Utama -->
-<main class="app-main ml-[260px] pt-16 min-h-screen">
-    <div class="app-page p-8 max-w-[1600px] mx-auto">
+<!-- Area Konten Utama (Margin trái 72px giải phóng không gian màn hình, giảm padding-top áp sát line ngang) -->
+<main class="app-main ml-[72px] pt-16 min-h-screen">
+    <div class="app-page px-8 pt-3 pb-8 max-w-[1600px] mx-auto">
         {% block content %}{% endblock %}
     </div>
 </main>
@@ -630,60 +843,62 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Event listener untuk input
-    searchInput.addEventListener('input', function() {
-        const query = this.value.trim();
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => performSearch(query), 200);
-    });
+    if (searchInput) {
+        // Event listener untuk input
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => performSearch(query), 200);
+        });
 
-    searchInput.addEventListener('focus', function() {
-        const query = this.value.trim();
-        if (query) {
-            searchDropdown.classList.remove('hidden');
-            if (searchDropdownContent.children.length === 0) {
-                performSearch(query);
-            }
-        }
-    });
-
-    // Keyboard navigation (Spotlight Style)
-    searchInput.addEventListener('keydown', function(e) {
-        if (searchDropdown.classList.contains('hidden') || focusableItems.length === 0) {
-            if (e.key === 'ArrowDown' && this.value.trim()) {
+        searchInput.addEventListener('focus', function() {
+            const query = this.value.trim();
+            if (query) {
                 searchDropdown.classList.remove('hidden');
-            }
-            return;
-        }
-
-        switch (e.key) {
-            case 'ArrowDown':
-                e.preventDefault();
-                activeIndex = (activeIndex + 1) % focusableItems.length;
-                updateActiveItem();
-                break;
-            case 'ArrowUp':
-                e.preventDefault();
-                activeIndex = (activeIndex - 1 + focusableItems.length) % focusableItems.length;
-                updateActiveItem();
-                break;
-            case 'Enter':
-                if (activeIndex >= 0 && activeIndex < focusableItems.length) {
-                    e.preventDefault();
-                    window.location.href = focusableItems[activeIndex].url;
+                if (searchDropdownContent.children.length === 0) {
+                    performSearch(query);
                 }
-                break;
-            case 'Escape':
-                e.preventDefault();
-                closeDropdown();
-                searchInput.blur();
-                break;
-        }
-    });
+            }
+        });
+
+        // Keyboard navigation (Spotlight Style)
+        searchInput.addEventListener('keydown', function(e) {
+            if (searchDropdown.classList.contains('hidden') || focusableItems.length === 0) {
+                if (e.key === 'ArrowDown' && this.value.trim()) {
+                    searchDropdown.classList.remove('hidden');
+                }
+                return;
+            }
+
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    activeIndex = (activeIndex + 1) % focusableItems.length;
+                    updateActiveItem();
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    activeIndex = (activeIndex - 1 + focusableItems.length) % focusableItems.length;
+                    updateActiveItem();
+                    break;
+                case 'Enter':
+                    if (activeIndex >= 0 && activeIndex < focusableItems.length) {
+                        e.preventDefault();
+                        window.location.href = focusableItems[activeIndex].url;
+                    }
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    closeDropdown();
+                    searchInput.blur();
+                    break;
+            }
+        });
+    }
 
     // Sembunyikan jika klik di luar
     document.addEventListener('click', function(e) {
-        if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+        if (searchInput && searchDropdown && !searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
             closeDropdown();
         }
     });

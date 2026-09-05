@@ -15,7 +15,7 @@
 #camera-feed {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     display: none;
     /* Mirror only the user-facing preview. The capture canvas remains raw. */
     transform: scaleX(-1);
@@ -25,7 +25,7 @@
     display: block;
 }
 
-/* Bbox is positioned by JS after accounting for object-fit: cover and mirror. */
+/* Bbox is positioned by JS after accounting for object-fit: contain and mirror. */
 #face-box-layer {
     position: absolute;
     inset: 0;
@@ -453,3 +453,16 @@
         opacity: 1;
     }
 }
+
+.cursor-context-menu {
+    cursor: context-menu;
+}
+
+/* Fullscreen Camera Mode */
+#camera-container:fullscreen,
+#camera-container:-webkit-full-screen {
+    width: 100vw;
+    height: 100vh;
+    background-color: #08090b;
+}
+

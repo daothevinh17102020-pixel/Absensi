@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 40 320 320" width="100%" height="100%">
+  <defs>
+    <linearGradient id="grit-grad-orange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff7a3d"/>
+      <stop offset="60%" stop-color="#ff5500"/>
+      <stop offset="100%" stop-color="#d93d00"/>
+    </linearGradient>
+    <filter id="grit-glow-orange" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#ff5500" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <g id="grit-icon-g">
+    <rect x="40" y="182" width="36" height="36" fill="url(#grit-grad-orange)" filter="url(#grit-glow-orange)"/>
+    <path d="M 81.36 182 A 120 120 0 0 1 307.16 146 L 264.31 146 A 84 84 0 0 0 117.95 182 Z" fill="url(#grit-grad-orange)" filter="url(#grit-glow-orange)"/>
+    <path d="M 124 182 L 320 182 L 320 200 A 120 120 0 0 1 81.36 218 L 117.95 218 A 84 84 0 0 0 282.05 218 L 124 218 Z" fill="url(#grit-grad-orange)" filter="url(#grit-glow-orange)"/>
+  </g>
+</svg>
