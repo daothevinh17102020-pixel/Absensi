@@ -1,6 +1,18 @@
 # app.py â€” Entry point Flask, semua route
 # Komentar dalam Bahasa Indonesia sesuai konvensi (context.md bagian 12)
 
+import sys
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+if hasattr(sys.stderr, 'reconfigure'):
+    try:
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
 from flask import (Flask, request, jsonify, render_template,
                    redirect, url_for, session, flash, has_request_context)
 from flask_cors import CORS
@@ -69,6 +81,10 @@ _gallery_build_state = {
     'finished_at': None,
     'updated_at': None,
     'requested_user_id': None,
+    'total_users': 0,
+    'processed_users': 0,
+    'templates_written': 0,
+    'source': 'auto_startup'
 }
 _enrollment_lock = threading.Lock()
 _enrollment_states = {}
@@ -90,28 +106,50 @@ def _get_gallery_build_state():
         return dict(_gallery_build_state)
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-# DECORATOR: login_required
-# Semua route kecuali /login dan /register wajib pakai ini
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
+# DECORATOR: login_required & admin_required
+# â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if 'admin_id' not in session:
+        if 'admin_id' not in session and not session.get('is_guest'):
             if request.path.startswith('/api/'):
                 return jsonify({
                     'status': 'error', 'data': None,
                     'pesan': 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
                 }), 401
-            flash('Vui lÃ²ng Ä‘Äƒng nháº­p trÆ°á»›c.', 'error')
+            flash('Vui lòng đăng nhập trước.', 'error')
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-# AUTH: Login, Register, Logout
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'admin_id' not in session and not session.get('is_guest'):
+            if request.path.startswith('/api/'):
+                return jsonify({
+                    'status': 'error', 'data': None,
+                    'pesan': 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
+                }), 401
+            flash('Vui lòng đăng nhập trước.', 'error')
+            return redirect(url_for('login'))
+        if session.get('role') == 'guest' or session.get('is_guest') or session.get('admin_id') == 'guest':
+            if request.path.startswith('/api/'):
+                return jsonify({
+                    'status': 'error', 'data': None,
+                    'pesan': 'Chỉ Quản trị viên mới được phép thực hiện hành động này.'
+                }), 403
+            flash('Chỉ Quản trị viên mới có quyền truy cập trang này.', 'error')
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+# â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
+# AUTH: Login, Register, Logout, Guest Login
+# â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -133,7 +171,9 @@ def login():
                 # Login berhasil â€” simpan ke session
                 session['admin_id'] = admin['id']
                 session['username'] = admin['username']
-                flash('ÄÄƒng nháº­p thÃ nh cÃ´ng!', 'success')
+                session['role'] = 'admin'
+                session['is_guest'] = False
+                flash('Ä Äƒng nháº­p thÃ nh cÃ´ng!', 'success')
                 return redirect(url_for('dashboard'))
             else:
                 error = 'TÃªn Ä‘Äƒng nháº­p hoáº·c máº­t kháº©u khÃ´ng Ä‘Ãºng.'
@@ -142,6 +182,18 @@ def login():
     show_register = (db.hitung_admin() == 0)
 
     return render_template('login.html', error=error, show_register=show_register)
+
+
+@app.route('/login/guest')
+def login_guest():
+    """Đăng nhập vai trò Khách (Sinh viên điểm danh trực tuyến)."""
+    session.clear()
+    session['admin_id'] = 'guest'
+    session['username'] = 'Khách'
+    session['role'] = 'guest'
+    session['is_guest'] = True
+    flash('Đang truy cập với vai trò Sinh viên (Chế độ điểm danh).', 'info')
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -211,12 +263,12 @@ def dashboard():
                            spoof_threshold=ANTI_SPOOFING_THRESHOLD)
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ----------------------------------------------------------------------
 # MANAJEMEN KELAS
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ----------------------------------------------------------------------
 
 @app.route('/kelas')
-@login_required
+@admin_required
 def kelas_index():
     """Daftar semua kelas."""
     daftar = db.get_semua_kelas()
@@ -228,7 +280,7 @@ def kelas_index():
 
 
 @app.route('/kelas/tambah', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def kelas_tambah():
     """Tambah kelas baru."""
     error = None
@@ -236,7 +288,7 @@ def kelas_tambah():
         nama = request.form.get('nama_kelas', '').strip()
         angkatan = request.form.get('angkatan', '').strip()
         if not nama or not angkatan:
-            error = 'Vui lÃ²ng nháº­p tÃªn lá»›p vÃ  khÃ³a há»c.'
+            error = 'Vui lÃ²ng nháº­p tÃªn lá»›p vÃ  khÃ³a há» c.'
         else:
             hasil = db.tambah_kelas(nama, angkatan, session.get('admin_id'))
             if hasil:
@@ -248,7 +300,7 @@ def kelas_tambah():
 
 
 @app.route('/kelas/edit/<int:id>', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def kelas_edit(id):
     """Edit kelas."""
     kelas = db.get_kelas_by_id(id)
@@ -260,7 +312,7 @@ def kelas_edit(id):
         nama = request.form.get('nama_kelas', '').strip()
         angkatan = request.form.get('angkatan', '').strip()
         if not nama or not angkatan:
-            error = 'Vui lÃ²ng nháº­p tÃªn lá»›p vÃ  khÃ³a há»c.'
+            error = 'Vui lÃ²ng nháº­p tÃªn lá»›p vÃ  khÃ³a há» c.'
         elif db.update_kelas(id, nama, angkatan):
             flash('Cáº­p nháº­t lá»›p thÃ nh cÃ´ng!', 'success')
             return redirect(url_for('kelas_index'))
@@ -271,7 +323,7 @@ def kelas_edit(id):
 
 
 @app.route('/kelas/hapus/<int:id>', methods=['POST'])
-@login_required
+@admin_required
 def kelas_hapus(id):
     """Hapus kelas (CASCADE ke MK dan jadwal)."""
     if db.hapus_kelas(id):
@@ -282,7 +334,7 @@ def kelas_hapus(id):
 
 
 @app.route('/kelas/<int:id>/matakuliah')
-@login_required
+@admin_required
 def kelas_detail(id):
     """Detail kelas + daftar matakuliah."""
     kelas = db.get_kelas_by_id(id)
@@ -296,12 +348,12 @@ def kelas_detail(id):
                            matakuliah=matakuliah, jumlah_mhs=jumlah_mhs)
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ----------------------------------------------------------------------
 # MANAJEMEN MATAKULIAH
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ----------------------------------------------------------------------
 
 @app.route('/matakuliah/tambah', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def matakuliah_tambah():
     """Tambah matakuliah baru."""
     kelas_id_param = request.args.get('kelas_id', type=int)
@@ -317,9 +369,8 @@ def matakuliah_tambah():
         else:
             hasil = db.tambah_matakuliah(nama, kode, kid, sks)
             if hasil:
-                flash('ThÃªm mÃ´n há»c thÃ nh cÃ´ng!', 'success')
+                flash('ThÃªm mÃ´n há» c thÃ nh cÃ´ng!', 'success')
                 return redirect(url_for('kelas_detail', id=kid))
-            error = 'KhÃ´ng thá»ƒ thÃªm mÃ´n há»c. MÃ£ mÃ´n há»c cÃ³ thá»ƒ Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.'
             error = 'KhÃ´ng thá»ƒ thÃªm mÃ´n há» c. MÃ£ mÃ´n há» c cÃ³ thá»ƒ Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.'
     return render_template('matakuliah/form.html', active_page='kelas',
                            mk=None, kelas_asal=kelas_asal,
@@ -327,7 +378,7 @@ def matakuliah_tambah():
 
 
 @app.route('/matakuliah/edit/<int:id>', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def matakuliah_edit(id):
     """Edit matakuliah."""
     mk = db.get_matakuliah_by_id(id)
@@ -342,34 +393,34 @@ def matakuliah_edit(id):
         kid  = request.form.get('kelas_id', type=int)
         sks  = request.form.get('sks', 2, type=int)
         if db.update_matakuliah(id, nama, kode, kid, sks):
-            flash('Cáº­p nháº­t mÃ´n há»c thÃ nh cÃ´ng!', 'success')
+            flash('Cáº­p nháº­t mÃ´n há» c thÃ nh cÃ´ng!', 'success')
             return redirect(url_for('kelas_detail', id=kid))
-        error = 'KhÃ´ng thá»ƒ cáº­p nháº­t mÃ´n há»c. MÃ£ mÃ´n há»c cÃ³ thá»ƒ Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.'
+        error = 'KhÃ´ng thá»ƒ cáº­p nháº­t mÃ´n há» c. MÃ£ mÃ´n há» c cÃ³ thá»ƒ Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.'
     return render_template('matakuliah/form.html', active_page='kelas',
                            mk=mk, kelas_asal=kelas_asal,
                            daftar_kelas=db.get_semua_kelas(), error=error)
 
 
 @app.route('/matakuliah/hapus/<int:id>', methods=['POST'])
-@login_required
+@admin_required
 def matakuliah_hapus(id):
     """Hapus matakuliah (CASCADE ke jadwal)."""
     mk = db.get_matakuliah_by_id(id)
     kelas_id = mk['kelas_id'] if mk else None
     if db.hapus_matakuliah(id):
-        flash('XÃ³a mÃ´n há»c thÃ nh cÃ´ng.', 'success')
+        flash('Xóa môn học thành công.', 'success')
     else:
-        flash('KhÃ´ng thá»ƒ xÃ³a mÃ´n há»c.', 'error')
+        flash('Không thể xóa môn học.', 'error')
     return redirect(url_for('kelas_detail', id=kelas_id) if kelas_id
                     else url_for('kelas_index'))
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ════════════════════════════════════════════════════════════
 # MANAJEMEN JADWAL
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ════════════════════════════════════════════════════════════
 
 @app.route('/jadwal')
-@login_required
+@admin_required
 def jadwal_index():
     """Daftar semua jadwal."""
     return render_template('jadwal/index.html', active_page='jadwal',
@@ -377,22 +428,38 @@ def jadwal_index():
 
 
 @app.route('/jadwal/tambah', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def jadwal_tambah():
     """Tambah jadwal baru."""
     error = None
     if request.method == 'POST':
-        mk_id       = request.form.get('matakuliah_id', type=int)
-        hari         = request.form.get('hari', '').strip()
-        jam_mulai    = request.form.get('jam_mulai', '').strip()
-        jam_selesai  = request.form.get('jam_selesai', '').strip()
+        mk_id           = request.form.get('matakuliah_id', type=int)
+        kelas_id        = request.form.get('kelas_id', type=int)
+        if not mk_id and kelas_id:
+            mks = db.get_matakuliah_by_kelas(kelas_id)
+            if mks:
+                mk_id = mks[0]['id']
+            else:
+                mk_id = kelas_id
+        hari            = request.form.get('hari', '').strip()
+        jam_mulai       = request.form.get('jam_mulai', '').strip()
+        jam_selesai     = request.form.get('jam_selesai', '').strip()
+        batas_terlambat = request.form.get('batas_terlambat', '').strip() or None
+        buoi_bat_dau    = request.form.get('buoi_bat_dau', type=int)
+
         if not mk_id or not hari or not jam_mulai or not jam_selesai:
             error = 'Vui lòng nhập đầy đủ thông tin.'
         elif jam_mulai >= jam_selesai:
             error = 'Giờ kết thúc phải sau giờ bắt đầu.'
         else:
-            # batas_terlambat dihitung otomatis di database.py
-            hasil = db.tambah_jadwal(mk_id, hari, jam_mulai, jam_selesai)
+            kwargs = {}
+            if buoi_bat_dau is not None:
+                kwargs['buoi_bat_dau'] = buoi_bat_dau
+            if batas_terlambat:
+                hasil = db.tambah_jadwal(mk_id, hari, jam_mulai, jam_selesai, batas_terlambat, **kwargs)
+            else:
+                hasil = db.tambah_jadwal(mk_id, hari, jam_mulai, jam_selesai, **kwargs)
+
             if hasil:
                 flash('Thêm lịch học thành công!', 'success')
                 return redirect(url_for('jadwal_index'))
@@ -404,7 +471,7 @@ def jadwal_tambah():
 
 
 @app.route('/jadwal/edit/<int:id>', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def jadwal_edit(id):
     """Sửa lịch học."""
     jadwal = db.get_jadwal_by_id(id)
@@ -414,16 +481,33 @@ def jadwal_edit(id):
 
     error = None
     if request.method == 'POST':
-        mk_id       = request.form.get('matakuliah_id', type=int)
-        hari         = request.form.get('hari', '').strip()
-        jam_mulai    = request.form.get('jam_mulai', '').strip()
-        jam_selesai  = request.form.get('jam_selesai', '').strip()
+        mk_id           = request.form.get('matakuliah_id', type=int)
+        kelas_id        = request.form.get('kelas_id', type=int)
+        if not mk_id and kelas_id:
+            mks = db.get_matakuliah_by_kelas(kelas_id)
+            if mks:
+                mk_id = mks[0]['id']
+            else:
+                mk_id = kelas_id
+        hari            = request.form.get('hari', '').strip()
+        jam_mulai       = request.form.get('jam_mulai', '').strip()
+        jam_selesai     = request.form.get('jam_selesai', '').strip()
+        batas_terlambat = request.form.get('batas_terlambat', '').strip() or None
+        buoi_bat_dau    = request.form.get('buoi_bat_dau', type=int)
+
         if not mk_id or not hari or not jam_mulai or not jam_selesai:
             error = 'Vui lòng nhập đầy đủ thông tin.'
         elif jam_mulai >= jam_selesai:
             error = 'Giờ kết thúc phải sau giờ bắt đầu.'
         else:
-            hasil = db.update_jadwal(id, mk_id, hari, jam_mulai, jam_selesai)
+            kwargs = {}
+            if buoi_bat_dau is not None:
+                kwargs['buoi_bat_dau'] = buoi_bat_dau
+            if batas_terlambat:
+                hasil = db.update_jadwal(id, mk_id, hari, jam_mulai, jam_selesai, batas_terlambat, **kwargs)
+            else:
+                hasil = db.update_jadwal(id, mk_id, hari, jam_mulai, jam_selesai, **kwargs)
+
             if hasil:
                 flash('Cập nhật lịch học thành công!', 'success')
                 return redirect(url_for('jadwal_index'))
@@ -437,7 +521,7 @@ def jadwal_edit(id):
 
 
 @app.route('/jadwal/hapus/<int:id>', methods=['POST'])
-@login_required
+@admin_required
 def jadwal_hapus(id):
     """Hapus jadwal."""
     if db.hapus_jadwal(id):
@@ -447,10 +531,9 @@ def jadwal_hapus(id):
     return redirect(url_for('jadwal_index'))
 
 
-
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ════════════════════════════════════════════════════════════
 # MANAJEMEN MAHASISWA
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ════════════════════════════════════════════════════════════
 
 def _gallery_user_ids():
     """Read only the trainer diagnostics needed to label student readiness."""
@@ -492,7 +575,7 @@ def _biometric_state(student, gallery_user_ids):
 
 
 @app.route('/mahasiswa')
-@login_required
+@admin_required
 def mahasiswa_index():
     """Daftar semua mahasiswa."""
     filter_kelas = request.args.get('kelas_id', type=int)
@@ -501,7 +584,7 @@ def mahasiswa_index():
     else:
         daftar = db.get_semua_user()
     gallery_user_ids = _gallery_user_ids()
-    # Status chá»‰ sáºµn sÃ ng sau khi gallery thá»±c sá»± chá»©a template cá»§a sinh viÃªn.
+    # Status chỉ sẵn sàng sau khi gallery thực sự chứa template của sinh viên.
     for m in daftar:
         m['foto_count'], m['biometric_state'] = _biometric_state(m, gallery_user_ids)
     all_students = db.get_semua_user()
@@ -515,12 +598,12 @@ def mahasiswa_index():
 
 
 @app.route('/mahasiswa/register', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def mahasiswa_register():
     """Form registrasi mahasiswa baru (data + foto kamera).
 
-    POST dari form biasa (tanpa foto) â†’ simpan data ke DB, redirect ke daftar.
-    POST dari AJAX (api_foto_upload) â†’ sudah ditangani route terpisah.
+    POST dari form biasa (tanpa foto) → simpan data ke DB, redirect ke daftar.
+    POST dari AJAX (api_foto_upload) → sudah ditangani route terpisah.
     """
     error = None
     if request.method == 'POST':
@@ -529,16 +612,16 @@ def mahasiswa_register():
         kelas_id = request.form.get('kelas_id', type=int)
 
         if not nama or not nim or not kelas_id:
-            error = 'Vui lÃ²ng nháº­p Ä‘áº§y Ä‘á»§ há» tÃªn, mÃ£ sinh viÃªn vÃ  lá»›p.'
+            error = 'Vui lòng nhập đầy đủ họ tên, mã sinh viên và lớp.'
         elif db.nim_sudah_ada(nim):
-            error = f'MÃ£ sinh viÃªn {nim} Ä‘Ã£ Ä‘Æ°á»£c Ä‘Äƒng kÃ½.'
+            error = f'Mã sinh viên {nim} đã được đăng ký.'
         else:
             user_id = db.tambah_user(nama, nim, kelas_id)
             if user_id:
-                flash(f'ÄÄƒng kÃ½ sinh viÃªn {nama} thÃ nh cÃ´ng! HÃ£y tiáº¿p tá»¥c chá»¥p áº£nh sinh tráº¯c há»c.', 'success')
+                flash(f'Đăng ký sinh viên {nama} thành công! Hãy tiếp tục chụp ảnh sinh trắc học.', 'success')
                 return redirect(url_for('mahasiswa_index'))
             else:
-                error = 'KhÃ´ng thá»ƒ lÆ°u dá»¯ liá»‡u. MÃ£ sinh viÃªn cÃ³ thá»ƒ Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.'
+                error = 'Không thể lưu dữ liệu. Mã sinh viên có thể đã được sử dụng.'
 
     from face.enrollment import ENROLLMENT_TOTAL, stages_for_total
     enrollment_total = min(FOTO_PER_USER, ENROLLMENT_TOTAL)
@@ -551,12 +634,12 @@ def mahasiswa_register():
 
 
 @app.route('/mahasiswa/edit/<int:id>', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def mahasiswa_edit(id):
     """Edit data mahasiswa."""
     mhs = db.get_user_by_id(id)
     if not mhs:
-        flash('KhÃ´ng tÃ¬m tháº¥y sinh viÃªn.', 'error')
+        flash('Không tìm thấy sinh viên.', 'error')
         return redirect(url_for('mahasiswa_index'))
     error = None
     if request.method == 'POST':
@@ -564,18 +647,18 @@ def mahasiswa_edit(id):
         nim  = request.form.get('nim', '').strip()
         kid  = request.form.get('kelas_id', type=int)
         if not nama or not nim or not kid:
-            error = 'Vui lÃ²ng nháº­p Ä‘áº§y Ä‘á»§ thÃ´ng tin.'
+            error = 'Vui lòng nhập đầy đủ thông tin.'
         elif db.update_user(id, nama, nim, kid):
-            flash('Cáº­p nháº­t thÃ´ng tin sinh viÃªn thÃ nh cÃ´ng!', 'success')
+            flash('Cập nhật thông tin sinh viên thành công!', 'success')
             return redirect(url_for('mahasiswa_index'))
         else:
-            error = 'KhÃ´ng thá»ƒ cáº­p nháº­t. MÃ£ sinh viÃªn cÃ³ thá»ƒ Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.'
+            error = 'Không thể cập nhật. Mã sinh viên có thể đã được sử dụng.'
     return render_template('mahasiswa/edit.html', active_page='mahasiswa',
                            mhs=mhs, daftar_kelas=db.get_semua_kelas(), error=error)
 
 
 @app.route('/mahasiswa/hapus/<int:id>', methods=['POST'])
-@login_required
+@admin_required
 def mahasiswa_hapus(id):
     """Hapus mahasiswa + folder dataset foto."""
     mhs = db.get_user_by_id(id)
@@ -587,13 +670,13 @@ def mahasiswa_hapus(id):
                 import shutil
                 shutil.rmtree(folder, ignore_errors=True)
         _start_gallery_rebuild_background()
-        flash('XÃ³a sinh viÃªn thÃ nh cÃ´ng.', 'success')
+        flash('Xóa sinh viên thành công.', 'success')
     else:
-        flash('KhÃ´ng thá»ƒ xÃ³a sinh viÃªn.', 'error')
+        flash('Không thể xóa sinh viên.', 'error')
     return redirect(url_for('mahasiswa_index'))
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ════════════════════════════════════════════════════════════
 # TAHAP 8: REKAP ABSENSI + EXPORT
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
@@ -606,13 +689,14 @@ def _lay_du_lieu_ma_tran_rekap(kelas_id=None, filter_dari=None, filter_sampai=No
     schedules = db.get_semua_jadwal()
     schedule_by_class = {}
     for s in schedules:
-        k_id = s.get('kelas_id')
-        if k_id and k_id not in schedule_by_class:
-            schedule_by_class[k_id] = s.get('id')
+        k = s.get('kelas_id')
+        if k and k not in schedule_by_class:
+            schedule_by_class[k] = s.get('id')
 
-    # Nhóm bản ghi điểm danh theo user_id: {user_id: {buoi_so: status}}
+    # Nhóm lịch sử điểm danh theo từng sinh viên và tính max buổi đã diễn ra theo từng lớp
     attendance_by_user = {}
     user_schedules = {}
+    max_buoi_by_kelas = {}
     for r in raw_rekap:
         uid = r.get('user_id')
         if uid not in attendance_by_user:
@@ -621,6 +705,9 @@ def _lay_du_lieu_ma_tran_rekap(kelas_id=None, filter_dari=None, filter_sampai=No
         attendance_by_user[uid][b_so] = r.get('status')
         if r.get('jadwal_id'):
             user_schedules[uid] = r.get('jadwal_id')
+        k_id = r.get('kelas_id')
+        if k_id is not None and b_so:
+            max_buoi_by_kelas[k_id] = max(max_buoi_by_kelas.get(k_id, 0), int(b_so))
 
     # Danh sách sinh viên đồng nhất
     if kelas_id:
@@ -648,9 +735,36 @@ def _lay_du_lieu_ma_tran_rekap(kelas_id=None, filter_dari=None, filter_sampai=No
         has_photo = bool(folder and os.path.isdir(folder) and [f for f in os.listdir(folder) if f.lower().endswith('.jpg')])
 
         user_sess = attendance_by_user.get(uid, {})
+        max_buoi = max_buoi_by_kelas.get(k_id, 0)
         sessions_map = {}
         for b in range(1, 16):
-            sessions_map[b] = user_sess.get(b)
+            if b in user_sess:
+                sessions_map[b] = user_sess[b]
+            elif b <= max_buoi:
+                sessions_map[b] = 'alpha'
+            else:
+                sessions_map[b] = None
+
+        present_count = sum(1 for v in sessions_map.values() if v == 'hadir')
+        late_count = sum(1 for v in sessions_map.values() if v == 'terlambat')
+        excused_count = sum(1 for v in sessions_map.values() if v in ('izin', 'sakit'))
+        absent_count = sum(1 for v in sessions_map.values() if v == 'alpha')
+        total_absent = absent_count
+        if total_absent >= 4:
+            exam_status = 'cam_thi'
+        elif total_absent == 3:
+            exam_status = 'canh_bao'
+        else:
+            exam_status = 'du_dieu_kien'
+
+        stats = {
+            'present_count': present_count,
+            'late_count': late_count,
+            'excused_count': excused_count,
+            'absent_count': absent_count,
+            'total_absent': total_absent,
+            'exam_status': exam_status
+        }
 
         rekap.append({
             'id': uid,
@@ -663,11 +777,19 @@ def _lay_du_lieu_ma_tran_rekap(kelas_id=None, filter_dari=None, filter_sampai=No
             'jadwal_id': j_id,
             'has_photo': has_photo,
             'status': sessions_map.get(1),
-            'sessions': sessions_map
+            'sessions': sessions_map,
+            'stats': stats
         })
 
-    # Sắp xếp đồng nhất theo Mã SV (NIM)
-    rekap = sorted(rekap, key=lambda x: str(x.get('nim') or ''))
+    # Sắp xếp A-Z theo tên chính (từ cuối cùng của họ tên)
+    def _get_sort_name(item):
+        name = str(item.get('nama') or '').strip()
+        if not name:
+            return ''
+        parts = name.split()
+        return parts[-1].lower()
+
+    rekap = sorted(rekap, key=_get_sort_name)
     return rekap, ringkasan, raw_rekap
 
 
@@ -708,11 +830,12 @@ def absensi_rekap():
 
 
 @app.route('/absensi/export')
-@login_required
+@admin_required
 def absensi_export():
     """Export rekap absensi ke CSV hoặc Excel (.xlsx) đồng nhất 100% với bảng hiển thị."""
     import io
     fmt           = request.args.get('format', 'csv').lower()
+    view          = request.args.get('view', 'matrix').lower()
     kelas_id      = request.args.get('kelas_id', type=int)
     matakuliah_id = request.args.get('matakuliah_id', type=int)
     filter_dari   = request.args.get('dari') or None
@@ -728,7 +851,7 @@ def absensi_export():
     timestamp = now_wib().strftime('%Y%m%d_%H%M%S')
 
     if fmt == 'xlsx':
-        # ── Xuất Excel: Đồng nhất 100% bảng 19 cột (STT, Sinh viên, Mã SV, Lớp, Buổi 1..15) ──
+        # ── Xuất Excel: Đồng nhất 100% bảng giao diện ──
         try:
             import openpyxl
             from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -737,172 +860,282 @@ def absensi_export():
 
             wb = openpyxl.Workbook()
             ws = wb.active
-            ws.title = 'Tổng hợp điểm danh'
 
-            # 19 cột tương ứng 100% với bảng trên giao diện
-            headers = ['STT', 'Sinh viên', 'Mã SV', 'Lớp'] + [f'Buổi {b}' for b in range(1, 16)]
-
-            # Dòng 1: Tiêu đề lớn
-            ws.merge_cells('A1:S1')
-            ws['A1'] = 'TỔNG HỢP ĐIỂM DANH — HỆ THỐNG ĐIỂM DANH'
-            ws['A1'].font = Font(name='Arial', bold=True, size=13, color='0F172A')
-            ws['A1'].fill = PatternFill('solid', fgColor='F1F5F9')
-            ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
-            ws.row_dimensions[1].height = 28
-
-            # Dòng 2: Header cột
-            header_fill = PatternFill('solid', fgColor='0F172A')
             thin_border = Border(
                 left=Side(style='thin', color='CBD5E1'),
                 right=Side(style='thin', color='CBD5E1'),
                 top=Side(style='thin', color='CBD5E1'),
                 bottom=Side(style='thin', color='CBD5E1')
             )
-
-            for col_idx, h in enumerate(headers, 1):
-                cell = ws.cell(row=2, column=col_idx, value=h)
-                cell.font = Font(name='Arial', bold=True, color='FFFFFF', size=10)
-                cell.fill = header_fill
-                cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-                cell.border = thin_border
-            ws.row_dimensions[2].height = 25
-
-            # Màu sắc ô trạng thái tương ứng UI AI4BA
-            STATUS_FILLS = {
-                'hadir': PatternFill('solid', fgColor='D1FAE5'),     # Xanh lục nhạt
-                'terlambat': PatternFill('solid', fgColor='FEF3C7'), # Vàng hổ phách nhạt
-                'alpha': PatternFill('solid', fgColor='FEE2E2'),     # Đỏ nhạt
-                'izin': PatternFill('solid', fgColor='DBEAFE'),      # Xanh dương nhạt
-                'sakit': PatternFill('solid', fgColor='DBEAFE')
-            }
-            STATUS_FONTS = {
-                'hadir': Font(name='Arial', bold=True, size=10, color='065F46'),
-                'terlambat': Font(name='Arial', bold=True, size=10, color='92400E'),
-                'alpha': Font(name='Arial', bold=True, size=10, color='991B1B'),
-                'izin': Font(name='Arial', bold=True, size=10, color='1E40AF'),
-                'sakit': Font(name='Arial', bold=True, size=10, color='1E40AF')
-            }
+            header_fill = PatternFill('solid', fgColor='0F172A')
             FONT_DEFAULT = Font(name='Arial', size=10, color='0F172A')
-            FONT_GRAY = Font(name='Arial', size=10, color='94A3B8')
 
-            # Dữ liệu từng sinh viên
-            for row_offset, a in enumerate(rekap_matrix, 3):
-                idx_str = f"{row_offset - 2:02d}"
-                nama = a.get('nama', '')
-                nim = a.get('nim', '')
-                lop = a.get('nama_kelas', '-') or '-'
-                sess_map = a.get('sessions', {})
+            if view == 'summary':
+                ws.title = 'Tổng kết chuyên cần'
+                headers = ['STT', 'Sinh viên', 'Mã SV', 'Lớp', 'Đúng giờ', 'Muộn', 'Phép', 'Vắng', 'Điều kiện thi', 'Điểm chuyên cần']
 
-                # Cột A: STT
-                c_stt = ws.cell(row=row_offset, column=1, value=idx_str)
-                c_stt.font = Font(name='Arial', bold=True, size=10, color='334155')
-                c_stt.alignment = Alignment(horizontal='center', vertical='center')
-                c_stt.border = thin_border
+                ws.merge_cells('A1:J1')
+                ws['A1'] = 'BẢNG TỔNG KẾT ĐIỂM DANH & CHUYÊN CẦN'
+                ws['A1'].font = Font(name='Arial', bold=True, size=13, color='0F172A')
+                ws['A1'].fill = PatternFill('solid', fgColor='F1F5F9')
+                ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
+                ws.row_dimensions[1].height = 28
 
-                # Cột B: Sinh viên
-                c_sv = ws.cell(row=row_offset, column=2, value=nama)
-                c_sv.font = Font(name='Arial', bold=True, size=10, color='0F172A')
-                c_sv.alignment = Alignment(horizontal='left', vertical='center')
-                c_sv.border = thin_border
+                for col_idx, h in enumerate(headers, 1):
+                    cell = ws.cell(row=2, column=col_idx, value=h)
+                    cell.font = Font(name='Arial', bold=True, color='FFFFFF', size=10)
+                    cell.fill = header_fill
+                    cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+                    cell.border = thin_border
+                ws.row_dimensions[2].height = 25
 
-                # Cột C: Mã SV
-                c_nim = ws.cell(row=row_offset, column=3, value=nim)
-                c_nim.font = Font(name='Arial', bold=True, size=10, color='334155')
-                c_nim.alignment = Alignment(horizontal='center', vertical='center')
-                c_nim.border = thin_border
+                for row_offset, a in enumerate(rekap_matrix, 3):
+                    idx_str = f"{row_offset - 2:02d}"
+                    nama = a.get('nama', '')
+                    nim = a.get('nim', '')
+                    lop = a.get('nama_kelas', '-') or '-'
+                    st = a.get('stats', {})
 
-                # Cột D: Lớp
-                c_lop = ws.cell(row=row_offset, column=4, value=lop)
-                c_lop.font = FONT_DEFAULT
-                c_lop.alignment = Alignment(horizontal='center', vertical='center')
-                c_lop.border = thin_border
+                    c_stt = ws.cell(row=row_offset, column=1, value=idx_str)
+                    c_stt.font = Font(name='Arial', bold=True, size=10, color='334155')
+                    c_stt.alignment = Alignment(horizontal='center', vertical='center')
+                    c_stt.border = thin_border
 
-                # Cột E..S: Buổi 1 -> 15
+                    c_sv = ws.cell(row=row_offset, column=2, value=nama)
+                    c_sv.font = Font(name='Arial', bold=True, size=10, color='0F172A')
+                    c_sv.alignment = Alignment(horizontal='left', vertical='center')
+                    c_sv.border = thin_border
+
+                    c_nim = ws.cell(row=row_offset, column=3, value=nim)
+                    c_nim.font = Font(name='Arial', bold=True, size=10, color='334155')
+                    c_nim.alignment = Alignment(horizontal='center', vertical='center')
+                    c_nim.border = thin_border
+
+                    c_lop = ws.cell(row=row_offset, column=4, value=lop)
+                    c_lop.font = FONT_DEFAULT
+                    c_lop.alignment = Alignment(horizontal='center', vertical='center')
+                    c_lop.border = thin_border
+
+                    c_hadir = ws.cell(row=row_offset, column=5, value=st.get('present_count', 0))
+                    c_hadir.font = Font(name='Arial', bold=True, size=10, color='065F46')
+                    c_hadir.alignment = Alignment(horizontal='center', vertical='center')
+                    c_hadir.border = thin_border
+
+                    c_late = ws.cell(row=row_offset, column=6, value=st.get('late_count', 0))
+                    c_late.font = Font(name='Arial', bold=True, size=10, color='92400E')
+                    c_late.alignment = Alignment(horizontal='center', vertical='center')
+                    c_late.border = thin_border
+
+                    c_izin = ws.cell(row=row_offset, column=7, value=st.get('excused_count', 0))
+                    c_izin.font = Font(name='Arial', bold=True, size=10, color='1E40AF')
+                    c_izin.alignment = Alignment(horizontal='center', vertical='center')
+                    c_izin.border = thin_border
+
+                    c_absent = ws.cell(row=row_offset, column=8, value=st.get('absent_count', 0))
+                    c_absent.font = Font(name='Arial', bold=True, size=10, color='991B1B')
+                    c_absent.alignment = Alignment(horizontal='center', vertical='center')
+                    c_absent.border = thin_border
+
+                    exam_status = st.get('exam_status')
+                    exam_label = 'CẤM THI' if exam_status == 'cam_thi' else ('CẢNH BÁO' if exam_status == 'canh_bao' else 'ĐỦ ĐK THI')
+                    c_exam = ws.cell(row=row_offset, column=9, value=exam_label)
+                    c_exam.font = Font(name='Arial', bold=True, size=10, color='991B1B' if exam_status == 'cam_thi' else ('92400E' if exam_status == 'canh_bao' else '065F46'))
+                    c_exam.alignment = Alignment(horizontal='center', vertical='center')
+                    c_exam.border = thin_border
+
+                    score_val = st.get('score', 10.0)
+                    c_score = ws.cell(row=row_offset, column=10, value=score_val)
+                    c_score.font = Font(name='Arial', bold=True, size=10, color='0F172A')
+                    c_score.alignment = Alignment(horizontal='center', vertical='center')
+                    c_score.border = thin_border
+
+                    ws.row_dimensions[row_offset].height = 22
+
+                col_widths = {1: 7, 2: 25, 3: 14, 4: 12, 5: 12, 6: 12, 7: 12, 8: 12, 9: 16, 10: 16}
+                for c_idx, width in col_widths.items():
+                    ws.column_dimensions[get_column_letter(c_idx)].width = width
+
+                download_name = f'tong_ket_chuyen_can_{timestamp}.xlsx'
+            else:
+                ws.title = 'Tổng hợp điểm danh'
+                headers = ['STT', 'Sinh viên', 'Mã SV', 'Lớp'] + [f'Buổi {b}' for b in range(1, 16)]
+
+                ws.merge_cells('A1:S1')
+                ws['A1'] = 'TỔNG HỢP ĐIỂM DANH — HỆ THỐNG ĐIỂM DANH'
+                ws['A1'].font = Font(name='Arial', bold=True, size=13, color='0F172A')
+                ws['A1'].fill = PatternFill('solid', fgColor='F1F5F9')
+                ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
+                ws.row_dimensions[1].height = 28
+
+                for col_idx, h in enumerate(headers, 1):
+                    cell = ws.cell(row=2, column=col_idx, value=h)
+                    cell.font = Font(name='Arial', bold=True, color='FFFFFF', size=10)
+                    cell.fill = header_fill
+                    cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+                    cell.border = thin_border
+                ws.row_dimensions[2].height = 25
+
+                STATUS_FILLS = {
+                    'hadir': PatternFill('solid', fgColor='D1FAE5'),
+                    'terlambat': PatternFill('solid', fgColor='FEF3C7'),
+                    'alpha': PatternFill('solid', fgColor='FEE2E2'),
+                    'izin': PatternFill('solid', fgColor='DBEAFE'),
+                    'sakit': PatternFill('solid', fgColor='DBEAFE')
+                }
+                STATUS_FONTS = {
+                    'hadir': Font(name='Arial', bold=True, size=10, color='065F46'),
+                    'terlambat': Font(name='Arial', bold=True, size=10, color='92400E'),
+                    'alpha': Font(name='Arial', bold=True, size=10, color='991B1B'),
+                    'izin': Font(name='Arial', bold=True, size=10, color='1E40AF'),
+                    'sakit': Font(name='Arial', bold=True, size=10, color='1E40AF')
+                }
+                FONT_GRAY = Font(name='Arial', size=10, color='94A3B8')
+
+                for row_offset, a in enumerate(rekap_matrix, 3):
+                    idx_str = f"{row_offset - 2:02d}"
+                    nama = a.get('nama', '')
+                    nim = a.get('nim', '')
+                    lop = a.get('nama_kelas', '-') or '-'
+                    sess_map = a.get('sessions', {})
+
+                    c_stt = ws.cell(row=row_offset, column=1, value=idx_str)
+                    c_stt.font = Font(name='Arial', bold=True, size=10, color='334155')
+                    c_stt.alignment = Alignment(horizontal='center', vertical='center')
+                    c_stt.border = thin_border
+
+                    c_sv = ws.cell(row=row_offset, column=2, value=nama)
+                    c_sv.font = Font(name='Arial', bold=True, size=10, color='0F172A')
+                    c_sv.alignment = Alignment(horizontal='left', vertical='center')
+                    c_sv.border = thin_border
+
+                    c_nim = ws.cell(row=row_offset, column=3, value=nim)
+                    c_nim.font = Font(name='Arial', bold=True, size=10, color='334155')
+                    c_nim.alignment = Alignment(horizontal='center', vertical='center')
+                    c_nim.border = thin_border
+
+                    c_lop = ws.cell(row=row_offset, column=4, value=lop)
+                    c_lop.font = FONT_DEFAULT
+                    c_lop.alignment = Alignment(horizontal='center', vertical='center')
+                    c_lop.border = thin_border
+
+                    for b in range(1, 16):
+                        col_b = 4 + b
+                        st = sess_map.get(b)
+                        val_text = status_vi_map.get(st, '-') if st else '-'
+                        c_b = ws.cell(row=row_offset, column=col_b, value=val_text)
+                        c_b.border = thin_border
+                        c_b.alignment = Alignment(horizontal='center', vertical='center')
+                        if st in STATUS_FILLS:
+                            c_b.fill = STATUS_FILLS[st]
+                            c_b.font = STATUS_FONTS[st]
+                        else:
+                            c_b.font = FONT_GRAY
+
+                    ws.row_dimensions[row_offset].height = 22
+
+                col_widths = {
+                    1: 7,
+                    2: 25,
+                    3: 14,
+                    4: 12,
+                }
                 for b in range(1, 16):
-                    col_b = 4 + b
-                    st = sess_map.get(b)
-                    val_text = status_vi_map.get(st, '-') if st else '-'
-                    c_b = ws.cell(row=row_offset, column=col_b, value=val_text)
-                    c_b.border = thin_border
-                    c_b.alignment = Alignment(horizontal='center', vertical='center')
+                    col_widths[4 + b] = 11
 
-                    if st in STATUS_FILLS:
-                        c_b.fill = STATUS_FILLS[st]
-                        c_b.font = STATUS_FONTS[st]
-                    else:
-                        c_b.font = FONT_GRAY
+                for c_idx, width in col_widths.items():
+                    ws.column_dimensions[get_column_letter(c_idx)].width = width
 
-                ws.row_dimensions[row_offset].height = 22
-
-            # Độ rộng các cột chuẩn
-            col_widths = {
-                1: 7,   # STT
-                2: 25,  # Sinh viên
-                3: 14,  # Mã SV
-                4: 12,  # Lớp
-            }
-            for b in range(1, 16):
-                col_widths[4 + b] = 11  # Buổi 1..15
-
-            for c_idx, width in col_widths.items():
-                ws.column_dimensions[get_column_letter(c_idx)].width = width
+                download_name = f'tong_hop_diem_danh_{timestamp}.xlsx'
 
             buf = io.BytesIO()
             wb.save(buf)
             buf.seek(0)
             return send_file(buf, as_attachment=True,
-                             download_name=f'tong_hop_diem_danh_{timestamp}.xlsx',
+                             download_name=download_name,
                              mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         except ImportError:
             flash('Chưa cài đặt openpyxl. Vui lòng xuất dữ liệu dưới dạng CSV.', 'error')
             return redirect(url_for('absensi_rekap'))
 
     else:
-        # ── Xuất CSV: Duy trì bảng giao dịch UTF-8 BOM cho tương thích hệ thống ──
+        # ── Xuất CSV: Hỗ trợ cả view summary và bảng chi tiết giao dịch UTF-8 BOM ──
         import csv
         from flask import Response
 
-        headers_csv = ['Họ và tên', 'Mã sinh viên', 'Lớp', 'Môn học', 'Mã môn học',
-                       'Thứ', 'Ngày', 'Thời gian điểm danh', 'Trạng thái', 'Ghi chú']
+        if view == 'summary':
+            headers_csv = ['STT', 'Sinh viên', 'Mã SV', 'Lớp', 'Đúng giờ', 'Muộn', 'Phép', 'Vắng', 'Điều kiện thi', 'Điểm chuyên cần']
+            def _row_summary(i, a):
+                st = a.get('stats', {})
+                exam_status = st.get('exam_status')
+                exam_label = 'CẤM THI' if exam_status == 'cam_thi' else ('CẢNH BÁO' if exam_status == 'canh_bao' else 'ĐỦ ĐK THI')
+                return [
+                    f"{i:02d}",
+                    a.get('nama', ''),
+                    a.get('nim', ''),
+                    a.get('nama_kelas', '-') or '-',
+                    st.get('present_count', 0),
+                    st.get('late_count', 0),
+                    st.get('excused_count', 0),
+                    st.get('absent_count', 0),
+                    exam_label,
+                    st.get('score', 10.0)
+                ]
 
-        status_vi_map_csv = {
-            'hadir': 'Có mặt', 'terlambat': 'Đi muộn', 'izin': 'Vắng có phép',
-            'sakit': 'Nghỉ ốm', 'alpha': 'Vắng không phép'
-        }
+            def generate_csv_summary():
+                buf = io.StringIO()
+                buf.write('\ufeff')
+                writer = csv.writer(buf)
+                writer.writerow(headers_csv)
+                for idx, a in enumerate(rekap_matrix, 1):
+                    writer.writerow(_row_summary(idx, a))
+                return buf.getvalue()
 
-        def _row(a):
-            return [
-                a.get('nama', ''), a.get('nim', ''), a.get('nama_kelas', ''),
-                a.get('nama_mk', ''), a.get('kode_mk', ''),
-                _get_ten_thu_hien_thi(a.get('hari', '')),
-                str(a.get('tanggal', '')), str(a.get('waktu_absen', '') or '-'),
-                status_vi_map_csv.get(a.get('status', ''), a.get('status', '')),
-                a.get('alasan', '') or '-'
-            ]
+            return Response(
+                generate_csv_summary(),
+                mimetype='text/csv; charset=utf-8',
+                headers={'Content-Disposition': f'attachment; filename=tong_ket_chuyen_can_{timestamp}.csv'}
+            )
+        else:
+            headers_csv = ['Họ và tên', 'Mã sinh viên', 'Lớp', 'Môn học', 'Mã môn học',
+                           'Thứ', 'Ngày', 'Thời gian điểm danh', 'Trạng thái', 'Ghi chú']
 
-        def generate_csv():
-            buf = io.StringIO()
-            # Thêm UTF-8 BOM để Microsoft Excel trên Windows tự động nhận diện font tiếng Việt (GAP-07)
-            buf.write('\ufeff')
-            writer = csv.writer(buf)
-            writer.writerow(headers_csv)
-            for a in raw_rekap:
-                writer.writerow(_row(a))
-            return buf.getvalue()
+            status_vi_map_csv = {
+                'hadir': 'Có mặt', 'terlambat': 'Đi muộn', 'izin': 'Vắng có phép',
+                'sakit': 'Nghỉ ốm', 'alpha': 'Vắng không phép'
+            }
 
-        return Response(
-            generate_csv(),
-            mimetype='text/csv; charset=utf-8',
-            headers={'Content-Disposition': f'attachment; filename=tong_hop_diem_danh_{timestamp}.csv'}
-        )
+            def _row(a):
+                return [
+                    a.get('nama', ''), a.get('nim', ''), a.get('nama_kelas', ''),
+                    a.get('nama_mk', ''), a.get('kode_mk', ''),
+                    _get_ten_thu_hien_thi(a.get('hari', '')),
+                    str(a.get('tanggal', '')), str(a.get('waktu_absen', '') or '-'),
+                    status_vi_map_csv.get(a.get('status', ''), a.get('status', '')),
+                    a.get('alasan', '') or '-'
+                ]
+
+            def generate_csv():
+                buf = io.StringIO()
+                buf.write('\ufeff')
+                writer = csv.writer(buf)
+                writer.writerow(headers_csv)
+                for a in raw_rekap:
+                    writer.writerow(_row(a))
+                return buf.getvalue()
+
+            return Response(
+                generate_csv(),
+                mimetype='text/csv; charset=utf-8',
+                headers={'Content-Disposition': f'attachment; filename=tong_hop_diem_danh_{timestamp}.csv'}
+            )
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ════════════════════════════════════════════════════════════
 # TAHAP 9: LAPORAN KEHADIRAN
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 @app.route('/laporan')
-@login_required
+@admin_required
 def laporan_index():
     """Laporan kehadiran: persentase, donut chart, ranking kelas."""
     from datetime import timedelta
@@ -947,7 +1180,7 @@ def laporan_index():
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 @app.route('/absensi/manual', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def absensi_manual():
     """Input / override absensi oleh admin."""
     if request.method == 'POST':
@@ -1012,7 +1245,7 @@ def api_absensi_hari_ini():
 
 
 @app.route('/api/absensi/hapus/<int:absensi_id>', methods=['POST', 'DELETE'])
-@login_required
+@admin_required
 def api_absensi_hapus(absensi_id):
     """Xóa lượt điểm danh hôm nay để sinh viên có thể điểm danh lại."""
     conn = None
@@ -1095,7 +1328,7 @@ def api_buoi_hoc_info():
 
 
 @app.route('/api/buoi-hoc/update', methods=['POST'])
-@login_required
+@admin_required
 def api_buoi_hoc_update():
     """Lưu chỉnh sửa thủ công Cột Buổi và Ngày từ Popup.
     - Lưu vào session để áp dụng trực tiếp cho các lượt quét điểm danh tiếp theo.
@@ -1135,7 +1368,7 @@ def api_buoi_hoc_update():
 
 
 @app.route('/api/absensi/manual', methods=['POST'])
-@login_required
+@admin_required
 def api_absensi_manual():
     """Catat absensi manual oleh admin (izin, sakit, hadir, dll)."""
     data = request.get_json(silent=True)
@@ -1202,7 +1435,7 @@ def api_absensi_manual():
 
 
 @app.route('/api/absensi/cap-nhat-buoi', methods=['POST'])
-@login_required
+@admin_required
 def api_absensi_cap_nhat_buoi():
     """Cập nhật hoặc xóa bản ghi điểm danh cho 1 sinh viên theo buổi học (1-15) từ click chuột phải."""
     data = request.get_json(silent=True)
@@ -1262,7 +1495,7 @@ def api_absensi_cap_nhat_buoi():
 
 
 @app.route('/api/mahasiswa/list')
-@login_required
+@admin_required
 def api_mahasiswa_list():
     """Daftar semua mahasiswa untuk dropdown."""
     try:
@@ -1507,7 +1740,7 @@ def _quality_enrollment_upload_locked(nama, nim, kelas_id, frame, state_key):
 
 
 @app.route('/api/foto/upload', methods=['POST'])
-@login_required
+@admin_required
 def api_foto_upload():
     """Terima foto wajah via AJAX (base64) dan simpan ke dataset/."""
     data = request.get_json(silent=True)
@@ -1624,7 +1857,7 @@ def _start_gallery_rebuild_background(requested_user_id=None):
 
 
 @app.route('/api/training/start', methods=['POST'])
-@login_required
+@admin_required
 def api_training_start():
     """Build and hot-reload the bounded ArcFace gallery in a background thread."""
 
@@ -1682,7 +1915,7 @@ def api_training_status():
 
 
 @app.route('/api/search')
-@login_required
+@admin_required
 def api_search():
     """Endpoint API untuk mencari data mahasiswa dan jadwal secara realtime."""
     query = request.args.get('q', '').strip()
@@ -2087,7 +2320,10 @@ def _tinh_status_absensi(jadwal, waktu_sekarang):
             return parts[0] * 3600 + parts[1] * 60 + parts[2]
         return None
 
-    cur_sec = _to_seconds(waktu_sekarang) or 0
+    cur_sec = _to_seconds(waktu_sekarang)
+    if cur_sec is None:
+        now = now_wib()
+        cur_sec = now.hour * 3600 + now.minute * 60 + now.second
     batas_sec = _to_seconds(jadwal.get('batas_terlambat'))
     if batas_sec is None:
         mulai_sec = _to_seconds(jadwal.get('jam_mulai')) or 0
@@ -2633,7 +2869,7 @@ def _broadcast_absensi_updates(result, skip_sid=None):
     emit_options = {'skip_sid': skip_sid} if skip_sid else {}
     stats = result.get('stats')
     if not stats:
-        db_stats = db.get_statistik_dashboard()
+        db_stats = db.get_statistik_dashboard(now_wib().date())
         stats = {
             'hadir': db_stats.get('hadir_hari_ini', 0),
             'terlambat': db_stats.get('terlambat_hari_ini', 0),

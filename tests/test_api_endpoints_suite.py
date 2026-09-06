@@ -257,7 +257,7 @@ class ApiEndpointsTestSuite(unittest.TestCase):
     def test_tc_guest_003_admin_routes_redirect_guest(self):
         """TC-GUEST-003: Khách gõ URL trang quản trị (/mahasiswa, /kelas...) bị đẩy về Dashboard"""
         self._login_guest()
-        for endpoint in ['/mahasiswa', '/mahasiswa/register', '/kelas', '/jadwal', '/absensi/rekap']:
+        for endpoint in ['/mahasiswa', '/mahasiswa/register', '/kelas', '/jadwal', '/laporan']:
             with self.subTest(endpoint=endpoint):
                 res = self.client.get(endpoint)
                 self.assertEqual(res.status_code, 302, f"Endpoint {endpoint} không redirect khách")
@@ -282,6 +282,23 @@ class ApiEndpointsTestSuite(unittest.TestCase):
              patch.object(app._gallery_user_ids, '__call__', return_value=set()):
             res = self.client.get('/mahasiswa')
             self.assertEqual(res.status_code, 200)
+
+    def test_tc_guest_006_guest_can_view_rekap(self):
+        """TC-GUEST-006: Khách được phép truy cập /absensi/rekap để xem tổng hợp điểm danh (200 OK)"""
+        self._login_guest()
+        with patch.object(app.db, 'get_semua_kelas', return_value=[]), \
+             patch.object(app.db, 'get_semua_matakuliah', return_value=[]), \
+             patch.object(app, '_lay_du_lieu_ma_tran_rekap', return_value=([], {}, [])):
+            res = self.client.get('/absensi/rekap')
+            self.assertEqual(res.status_code, 200)
+
+    def test_tc_guest_007_guest_forbidden_buoi_hoc_update(self):
+        """TC-GUEST-007: Khách bị cấm gọi API cập nhật thông tin buổi học (403 Forbidden)"""
+        self._login_guest()
+        res = self.client.post('/api/buoi-hoc/update', json={'buoi_so': 5, 'tanggal': '2026-09-06'})
+        self.assertEqual(res.status_code, 403)
+        self.assertTrue(res.is_json)
+        self.assertEqual(res.get_json().get('status'), 'error')
 
 
 if __name__ == '__main__':

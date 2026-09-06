@@ -99,9 +99,9 @@
                     <span class="material-symbols-outlined text-[16px]">edit_note</span>
                     <span id="manual-attend-label">Điểm danh thủ công</span>
                 </button>
+                {% endif %}
                 <a href="{{ url_for('absensi_rekap') }}"
                     class="text-primary text-body-sm font-semibold hover:underline whitespace-nowrap">Xem tất cả</a>
-                {% endif %}
             </div>
         </div>
         <div id="attend-table-container" class="flex-1 overflow-y-auto overflow-x-hidden">
@@ -118,7 +118,7 @@
                 </thead>
                 <tbody id="absensi-tbody" class="divide-y divide-outline-variant">
                     {% for a in absensi_hari_ini %}
-                    <tr class="hover:bg-surface-container-high transition-colors absensi-item-row cursor-context-menu" data-id="{{ a.id }}" data-nama="{{ a.nama }}" data-status="{{ a.status }}">
+                    <tr class="hover:bg-surface-container-high transition-colors absensi-item-row {% if session.get('role') != 'guest' %}cursor-context-menu{% else %}cursor-default{% endif %}" data-id="{{ a.id }}" data-nama="{{ a.nama }}" data-status="{{ a.status }}">
                         <td class="px-4 py-2.5 min-w-0">
                             <div class="flex items-center gap-2.5 min-w-0">
                                 <div

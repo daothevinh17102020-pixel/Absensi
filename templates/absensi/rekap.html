@@ -8,6 +8,7 @@
         <h2 class="font-headline-md text-headline-md text-on-surface">Tổng hợp điểm danh</h2>
     </div>
     <div class="flex gap-3">
+        {% if session.get('role') != 'guest' %}
         <a href="{{ url_for('absensi_export', format='csv') }}{{ filter_query }}" id="btn_export_csv"
            class="bg-surface-container border border-outline-variant text-on-surface px-5 py-2.5 rounded-lg flex items-center gap-2 font-title-sm hover:bg-surface-variant transition-all">
             <span class="material-symbols-outlined text-[20px]">download</span>
@@ -18,6 +19,7 @@
             <span class="material-symbols-outlined text-[20px]">download</span>
             Xuất Excel
         </a>
+        {% endif %}
     </div>
 </div>
 
@@ -152,7 +154,7 @@
                     {% for b in range(1, 16) %}
                     {% set st = (a.sessions.get(b) if a.sessions is defined else None) %}
                     {% set dt = (a.sessions_details.get(b) if a.sessions_details is defined and a.sessions_details.get(b) else None) %}
-                    <td class="col-session-matrix session-cell px-1 py-2 text-center border-r border-outline-variant/30 font-title-sm whitespace-nowrap w-[58px] min-w-[58px] max-w-[62px] cursor-context-menu hover:bg-surface-variant/30 transition-colors select-none {% if loop.last %}border-r-0{% endif %}"
+                    <td class="col-session-matrix session-cell px-1 py-2 text-center border-r border-outline-variant/30 font-title-sm whitespace-nowrap w-[58px] min-w-[58px] max-w-[62px] {% if session.get('role') != 'guest' %}cursor-context-menu hover:bg-surface-variant/30{% else %}cursor-default{% endif %} transition-colors select-none {% if loop.last %}border-r-0{% endif %}"
                         data-user-id="{{ a.user_id }}"
                         data-user-nama="{{ a.nama }}"
                         data-jadwal-id="{{ a.jadwal_id or '' }}"
@@ -161,8 +163,10 @@
                         data-tanggal="{{ dt.tanggal if dt else '' }}"
                         data-waktu="{{ dt.waktu if dt else '' }}"
                         data-alasan="{{ dt.alasan if dt else '' }}"
+                        {% if session.get('role') != 'guest' %}
                         oncontextmenu="openAttendanceContextMenu(event, this)"
-                        title="Chuột phải để chỉnh sửa Buổi {{ b }}">
+                        title="Chuột phải để chỉnh sửa Buổi {{ b }}"
+                        {% endif %}>
                         <div id="badge-{{ a.user_id }}-{{ b }}">
                             {% if st == 'hadir' %}
                             <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-semibold">
@@ -515,6 +519,9 @@
     }
 
     function openAttendanceContextMenu(e, cellEl) {
+        {% if session.get('role') == 'guest' %}
+        return;
+        {% endif %}
         e.preventDefault();
         e.stopPropagation();
 
