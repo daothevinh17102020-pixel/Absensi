@@ -1,4 +1,4 @@
-# app.py â€” Entry point Flask, semua route
+# app.py — Entry point Flask, semua route
 # Komentar dalam Bahasa Indonesia sesuai konvensi (context.md bagian 12)
 
 import sys
@@ -24,7 +24,7 @@ from zoneinfo import ZoneInfo
 from uuid import uuid4
 from config import APP_TIMEZONE
 
-# Timezone WIB (UTC+7) â€” digunakan di semua fungsi waktu
+# Timezone WIB (UTC+7) — digunakan di semua fungsi waktu
 WIB = ZoneInfo(APP_TIMEZONE)
 
 def now_wib():
@@ -60,6 +60,7 @@ if model_dir:
 app = Flask(__name__)
 app.secret_key = FLASK_SECRET_KEY
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['JSON_AS_ASCII'] = False
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
@@ -164,19 +165,19 @@ def login():
         password = request.form.get('password', '')
 
         if not username or not password:
-            error = 'Vui lÃ²ng nháº­p tÃªn Ä‘Äƒng nháº­p vÃ  máº­t kháº©u.'
+            error = 'Vui lòng nhập tên đăng nhập và mật khẩu.'
         else:
             admin = db.get_admin_by_username(username)
             if admin and check_password_hash(admin['password_hash'], password):
-                # Login berhasil â€” simpan ke session
+                # Login berhasil — simpan ke session
                 session['admin_id'] = admin['id']
                 session['username'] = admin['username']
                 session['role'] = 'admin'
                 session['is_guest'] = False
-                flash('Ä Äƒng nháº­p thÃ nh cÃ´ng!', 'success')
+                flash('Đăng nhập thành công!', 'success')
                 return redirect(url_for('dashboard'))
             else:
-                error = 'TÃªn Ä‘Äƒng nháº­p hoáº·c máº­t kháº©u khÃ´ng Ä‘Ãºng.'
+                error = 'Tên đăng nhập hoặc mật khẩu không đúng.'
 
     # Tampilkan link register hanya jika belum ada admin sama sekali
     show_register = (db.hitung_admin() == 0)
@@ -204,7 +205,7 @@ def register():
     """
     # Cek apakah sudah ada admin
     if db.hitung_admin() > 0:
-        flash('Quáº£n trá»‹ viÃªn Ä‘Ã£ Ä‘Æ°á»£c Ä‘Äƒng kÃ½. Vui lÃ²ng Ä‘Äƒng nháº­p.', 'error')
+        flash('Quản trị viên đã được đăng ký. Vui lòng đăng nhập.', 'error')
         return redirect(url_for('login'))
 
     error = None
@@ -215,11 +216,11 @@ def register():
 
         # Validasi input
         if not username or not password:
-            error = 'Vui lÃ²ng nháº­p tÃªn Ä‘Äƒng nháº­p vÃ  máº­t kháº©u.'
+            error = 'Vui lòng nhập tên đăng nhập và mật khẩu.'
         elif len(password) < 8:
-            error = 'Máº­t kháº©u pháº£i cÃ³ Ã­t nháº¥t 8 kÃ½ tá»±.'
+            error = 'Mật khẩu phải có ít nhất 8 ký tự.'
         elif password != confirm:
-            error = 'Máº­t kháº©u xÃ¡c nháº­n khÃ´ng khá»›p.'
+            error = 'Mật khẩu xác nhận không khớp.'
         else:
             # Hash password dan simpan
             hashed = generate_password_hash(password)
@@ -228,19 +229,19 @@ def register():
                 # Langsung login setelah register
                 session['admin_id'] = admin_id
                 session['username'] = username
-                flash('Táº¡o tÃ i khoáº£n quáº£n trá»‹ viÃªn thÃ nh cÃ´ng!', 'success')
+                flash('Tạo tài khoản quản trị viên thành công!', 'success')
                 return redirect(url_for('dashboard'))
             else:
-                error = 'KhÃ´ng thá»ƒ táº¡o tÃ i khoáº£n. TÃªn Ä‘Äƒng nháº­p cÃ³ thá»ƒ Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.'
+                error = 'Không thể tạo tài khoản. Tên đăng nhập có thể đã được sử dụng.'
 
     return render_template('register_admin.html', error=error)
 
 
 @app.route('/logout')
 def logout():
-    """Logout admin â€” hapus session."""
+    """Logout admin — hapus session."""
     session.clear()
-    flash('Báº¡n Ä‘Ã£ Ä‘Äƒng xuáº¥t.', 'success')
+    flash('Bạn đã đăng xuất.', 'success')
     return redirect(url_for('login'))
 
 
@@ -288,13 +289,14 @@ def kelas_tambah():
         nama = request.form.get('nama_kelas', '').strip()
         angkatan = request.form.get('angkatan', '').strip()
         if not nama or not angkatan:
-            error = 'Vui lÃ²ng nháº­p tÃªn lá»›p vÃ  khÃ³a há» c.'
+            error = 'Vui lòng nhập tên lớp và khóa học.'
         else:
             hasil = db.tambah_kelas(nama, angkatan, session.get('admin_id'))
             if hasil:
-                flash('ThÃªm lá»›p thÃ nh cÃ´ng!', 'success')
+                db.ensure_matakuliah_cho_kelas(hasil)
+                flash('Thêm lớp thành công!', 'success')
                 return redirect(url_for('kelas_index'))
-            error = 'KhÃ´ng thá»ƒ thÃªm lá»›p.'
+            error = 'Không thể thêm lớp.'
     return render_template('kelas/form.html',
                            active_page='kelas', kelas=None, error=error)
 
@@ -305,19 +307,20 @@ def kelas_edit(id):
     """Edit kelas."""
     kelas = db.get_kelas_by_id(id)
     if not kelas:
-        flash('KhÃ´ng tÃ¬m tháº¥y lá»›p.', 'error')
+        flash('Không tìm thấy lớp.', 'error')
         return redirect(url_for('kelas_index'))
     error = None
     if request.method == 'POST':
         nama = request.form.get('nama_kelas', '').strip()
         angkatan = request.form.get('angkatan', '').strip()
         if not nama or not angkatan:
-            error = 'Vui lÃ²ng nháº­p tÃªn lá»›p vÃ  khÃ³a há» c.'
+            error = 'Vui lòng nhập tên lớp và khóa học.'
         elif db.update_kelas(id, nama, angkatan):
-            flash('Cáº­p nháº­t lá»›p thÃ nh cÃ´ng!', 'success')
+            db.sync_matakuliah_ten_lop(id, nama)
+            flash('Cập nhật lớp thành công!', 'success')
             return redirect(url_for('kelas_index'))
         else:
-            error = 'KhÃ´ng thá»ƒ cáº­p nháº­t lá»›p.'
+            error = 'Không thể cập nhật lớp.'
     return render_template('kelas/form.html',
                            active_page='kelas', kelas=kelas, error=error)
 
@@ -327,9 +330,9 @@ def kelas_edit(id):
 def kelas_hapus(id):
     """Hapus kelas (CASCADE ke MK dan jadwal)."""
     if db.hapus_kelas(id):
-        flash('XÃ³a lá»›p thÃ nh cÃ´ng.', 'success')
+        flash('Xóa lớp thành công.', 'success')
     else:
-        flash('KhÃ´ng thá»ƒ xÃ³a lá»›p. CÃ³ thá»ƒ lá»›p váº«n cÃ²n sinh viÃªn liÃªn quan.', 'error')
+        flash('Không thể xóa lớp. Có thể lớp vẫn còn sinh viên liên quan.', 'error')
     return redirect(url_for('kelas_index'))
 
 
@@ -339,7 +342,7 @@ def kelas_detail(id):
     """Detail kelas + daftar matakuliah."""
     kelas = db.get_kelas_by_id(id)
     if not kelas:
-        flash('KhÃ´ng tÃ¬m tháº¥y lá»›p.', 'error')
+        flash('Không tìm thấy lớp.', 'error')
         return redirect(url_for('kelas_index'))
     matakuliah = db.get_matakuliah_by_kelas(id)
     jumlah_mhs = db.hitung_mahasiswa_per_kelas(id)
@@ -365,13 +368,13 @@ def matakuliah_tambah():
         kid  = request.form.get('kelas_id', type=int)
         sks  = request.form.get('sks', 2, type=int)
         if not nama or not kode or not kid:
-            error = 'Vui lÃ²ng nháº­p Ä‘áº§y Ä‘á»§ thÃ´ng tin.'
+            error = 'Vui lòng nhập đầy đủ thông tin.'
         else:
             hasil = db.tambah_matakuliah(nama, kode, kid, sks)
             if hasil:
-                flash('ThÃªm mÃ´n há» c thÃ nh cÃ´ng!', 'success')
+                flash('Thêm môn học thành công!', 'success')
                 return redirect(url_for('kelas_detail', id=kid))
-            error = 'KhÃ´ng thá»ƒ thÃªm mÃ´n há» c. MÃ£ mÃ´n há» c cÃ³ thá»ƒ Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.'
+            error = 'Không thể thêm môn học. Mã môn học có thể đã được sử dụng.'
     return render_template('matakuliah/form.html', active_page='kelas',
                            mk=None, kelas_asal=kelas_asal,
                            daftar_kelas=db.get_semua_kelas(), error=error)
@@ -383,7 +386,7 @@ def matakuliah_edit(id):
     """Edit matakuliah."""
     mk = db.get_matakuliah_by_id(id)
     if not mk:
-        flash('KhÃ´ng tÃ¬m tháº¥y mÃ´n há» c.', 'error')
+        flash('Không tìm thấy môn học.', 'error')
         return redirect(url_for('kelas_index'))
     kelas_asal = db.get_kelas_by_id(mk['kelas_id'])
     error = None
@@ -393,9 +396,9 @@ def matakuliah_edit(id):
         kid  = request.form.get('kelas_id', type=int)
         sks  = request.form.get('sks', 2, type=int)
         if db.update_matakuliah(id, nama, kode, kid, sks):
-            flash('Cáº­p nháº­t mÃ´n há» c thÃ nh cÃ´ng!', 'success')
+            flash('Cập nhật môn học thành công!', 'success')
             return redirect(url_for('kelas_detail', id=kid))
-        error = 'KhÃ´ng thá»ƒ cáº­p nháº­t mÃ´n há» c. MÃ£ mÃ´n há» c cÃ³ thá»ƒ Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.'
+        error = 'Không thể cập nhật môn học. Mã môn học có thể đã được sử dụng.'
     return render_template('matakuliah/form.html', active_page='kelas',
                            mk=mk, kelas_asal=kelas_asal,
                            daftar_kelas=db.get_semua_kelas(), error=error)
@@ -436,19 +439,17 @@ def jadwal_tambah():
         mk_id           = request.form.get('matakuliah_id', type=int)
         kelas_id        = request.form.get('kelas_id', type=int)
         if not mk_id and kelas_id:
-            mks = db.get_matakuliah_by_kelas(kelas_id)
-            if mks:
-                mk_id = mks[0]['id']
-            else:
-                mk_id = kelas_id
+            mk_id = db.ensure_matakuliah_cho_kelas(kelas_id)
         hari            = request.form.get('hari', '').strip()
         jam_mulai       = request.form.get('jam_mulai', '').strip()
         jam_selesai     = request.form.get('jam_selesai', '').strip()
         batas_terlambat = request.form.get('batas_terlambat', '').strip() or None
         buoi_bat_dau    = request.form.get('buoi_bat_dau', type=int)
 
-        if not mk_id or not hari or not jam_mulai or not jam_selesai:
+        if (not mk_id and not kelas_id) or not hari or not jam_mulai or not jam_selesai:
             error = 'Vui lòng nhập đầy đủ thông tin.'
+        elif not mk_id:
+            error = 'Lớp học phần không hợp lệ hoặc không thể khởi tạo môn học.'
         elif jam_mulai >= jam_selesai:
             error = 'Giờ kết thúc phải sau giờ bắt đầu.'
         else:
@@ -484,19 +485,19 @@ def jadwal_edit(id):
         mk_id           = request.form.get('matakuliah_id', type=int)
         kelas_id        = request.form.get('kelas_id', type=int)
         if not mk_id and kelas_id:
-            mks = db.get_matakuliah_by_kelas(kelas_id)
-            if mks:
-                mk_id = mks[0]['id']
-            else:
-                mk_id = kelas_id
+            mk_id = db.ensure_matakuliah_cho_kelas(kelas_id)
         hari            = request.form.get('hari', '').strip()
         jam_mulai       = request.form.get('jam_mulai', '').strip()
         jam_selesai     = request.form.get('jam_selesai', '').strip()
         batas_terlambat = request.form.get('batas_terlambat', '').strip() or None
         buoi_bat_dau    = request.form.get('buoi_bat_dau', type=int)
 
-        if not mk_id or not hari or not jam_mulai or not jam_selesai:
+        if (not mk_id and not kelas_id) or not hari or not jam_mulai or not jam_selesai:
             error = 'Vui lòng nhập đầy đủ thông tin.'
+        elif not mk_id:
+            error = 'Lớp học phần không hợp lệ hoặc không thể khởi tạo môn học.'
+        elif kelas_id and kelas_id != jadwal.get('kelas_id') and db.jadwal_memiliki_absensi(id):
+            error = 'Lịch học này đã phát sinh dữ liệu điểm danh, không thể thay đổi Lớp học phần.'
         elif jam_mulai >= jam_selesai:
             error = 'Giờ kết thúc phải sau giờ bắt đầu.'
         else:
@@ -523,7 +524,11 @@ def jadwal_edit(id):
 @app.route('/jadwal/hapus/<int:id>', methods=['POST'])
 @admin_required
 def jadwal_hapus(id):
-    """Hapus jadwal."""
+    """Hapus jadwal (GAP-08: Chặn xóa nếu đã có dữ liệu điểm danh)."""
+    if db.jadwal_memiliki_absensi(id):
+        flash('Không thể xóa lịch học đã có dữ liệu điểm danh liên quan. Vui lòng kiểm tra lại.', 'error')
+        return redirect(url_for('jadwal_index'))
+
     if db.hapus_jadwal(id):
         flash('Xóa lịch học thành công.', 'success')
     else:
@@ -1148,7 +1153,7 @@ def laporan_index():
         tanggal_dari  = today.replace(day=1).isoformat()
         tanggal_sampai = today.isoformat()
     elif periode == 'semester':
-        # Semester berjalan: Januariâ€“Juni atau Juliâ€“Desember
+        # Semester berjalan: Januari–Juni atau Juli–Desember
         bulan = today.month
         if bulan <= 6:
             tanggal_dari = today.replace(month=1, day=1).isoformat()
@@ -1188,20 +1193,20 @@ def absensi_manual():
         status_baru = request.form.get('status')
 
         if not absensi_id or status_baru not in ('hadir', 'terlambat', 'izin', 'sakit', 'alpha'):
-            flash('Dá»¯ liá»‡u khÃ´ng há»£p lá»‡.', 'error')
+            flash('Dữ liệu không hợp lệ.', 'error')
             return redirect(url_for('absensi_manual'))
 
         if db.update_status_absensi(absensi_id, status_baru):
             status_label = {
-                'hadir': 'CÃ³ máº·t', 'terlambat': 'Äi muá»™n', 'izin': 'Váº¯ng cÃ³ phÃ©p',
-                'sakit': 'Nghá»‰ á»‘m', 'alpha': 'Váº¯ng khÃ´ng phÃ©p'
+                'hadir': 'Có mặt', 'terlambat': 'Đi muộn', 'izin': 'Vắng có phép',
+                'sakit': 'Nghỉ ốm', 'alpha': 'Vắng không phép'
             }.get(status_baru, status_baru)
-            flash(f'ÄÃ£ Ä‘á»•i tráº¡ng thÃ¡i Ä‘iá»ƒm danh thÃ nh "{status_label}".', 'success')
+            flash(f'Đã đổi trạng thái điểm danh thành "{status_label}".', 'success')
         else:
-            flash('KhÃ´ng thá»ƒ thay Ä‘á»•i tráº¡ng thÃ¡i Ä‘iá»ƒm danh.', 'error')
+            flash('Không thể thay đổi trạng thái điểm danh.', 'error')
         return redirect(url_for('absensi_manual'))
 
-    # GET â€” tampilkan daftar absensi hari ini untuk dioverride
+    # GET — tampilkan daftar absensi hari ini untuk dioverride
     rekap = db.get_absensi_hari_ini(now_wib().date())
     return render_template('absensi/manual.html',
                            active_page='rekap',
@@ -1373,7 +1378,7 @@ def api_absensi_manual():
     """Catat absensi manual oleh admin (izin, sakit, hadir, dll)."""
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
-        return jsonify({'status': 'error', 'pesan': 'Dá»¯ liá»‡u khÃ´ng há»£p lá»‡.'}), 400
+        return jsonify({'status': 'error', 'pesan': 'Dữ liệu không hợp lệ.'}), 400
 
     user_id = data.get('user_id')
     jadwal_id = data.get('jadwal_id')
@@ -1384,32 +1389,32 @@ def api_absensi_manual():
             not isinstance(user_id, int) or not isinstance(jadwal_id, int) or
             user_id <= 0 or jadwal_id <= 0 or not isinstance(status, str) or
             not isinstance(alasan, str)):
-        return jsonify({'status': 'error', 'pesan': 'Dá»¯ liá»‡u khÃ´ng há»£p lá»‡.'}), 400
+        return jsonify({'status': 'error', 'pesan': 'Dữ liệu không hợp lệ.'}), 400
 
     status = status.strip()
     alasan = alasan.strip() or None
 
     if not user_id or not jadwal_id or not status:
-        return jsonify({'status': 'error', 'pesan': 'Vui lÃ²ng chá»n sinh viÃªn, lá»‹ch há»c vÃ  tráº¡ng thÃ¡i.'}), 400
+        return jsonify({'status': 'error', 'pesan': 'Vui lòng chọn sinh viên, lịch học và trạng thái.'}), 400
 
     if status not in ('hadir', 'terlambat', 'izin', 'sakit', 'alpha'):
-        return jsonify({'status': 'error', 'pesan': 'Tráº¡ng thÃ¡i khÃ´ng há»£p lá»‡.'}), 400
+        return jsonify({'status': 'error', 'pesan': 'Trạng thái không hợp lệ.'}), 400
 
     # Validasi user dan jadwal ada
     user = db.get_user_by_id(user_id)
     if not user:
-        return jsonify({'status': 'error', 'pesan': 'KhÃ´ng tÃ¬m tháº¥y sinh viÃªn.'}), 404
+        return jsonify({'status': 'error', 'pesan': 'Không tìm thấy sinh viên.'}), 404
 
     jadwal = db.get_jadwal_by_id(jadwal_id)
     if not jadwal:
-        return jsonify({'status': 'error', 'pesan': 'KhÃ´ng tÃ¬m tháº¥y lá»‹ch há»c.'}), 404
+        return jsonify({'status': 'error', 'pesan': 'Không tìm thấy lịch học.'}), 404
     if int(jadwal['kelas_id']) != int(user['kelas_id']):
         return jsonify({
             'status': 'error',
-            'pesan': 'Sinh viÃªn khÃ´ng thuá»™c lá»›p cá»§a lá»‹ch há»c Ä‘Ã£ chá»n.'
+            'pesan': 'Sinh viên không thuộc lớp của lịch học đã chọn.'
         }), 400
     if jadwal['hari'] != _get_nama_hari():
-        return jsonify({'status': 'error', 'pesan': 'Lá»‹ch há»c Ä‘Ã£ chá»n khÃ´ng diá»…n ra hÃ´m nay.'}), 400
+        return jsonify({'status': 'error', 'pesan': 'Lịch học đã chọn không diễn ra hôm nay.'}), 400
 
     tanggal = now_wib().date()
     hasil = db.catat_absensi_manual(user_id, jadwal_id, tanggal, status, alasan)
@@ -1417,21 +1422,21 @@ def api_absensi_manual():
     if hasil:
         aksi = 'diperbarui' if hasil['aksi'] == 'update' else 'dicatat'
         status_label = {
-            'hadir': 'CÃ³ máº·t', 'terlambat': 'Äi muá»™n', 'izin': 'Váº¯ng cÃ³ phÃ©p',
-            'sakit': 'Nghá»‰ á»‘m', 'alpha': 'Váº¯ng khÃ´ng phÃ©p'
+            'hadir': 'Có mặt', 'terlambat': 'Đi muộn', 'izin': 'Vắng có phép',
+            'sakit': 'Nghỉ ốm', 'alpha': 'Vắng không phép'
         }.get(status, status)
-        aksi_label = 'cáº­p nháº­t' if aksi == 'diperbarui' else 'ghi nháº­n'
-        pesan = f"ÄÃ£ {aksi_label} Ä‘iá»ƒm danh cá»§a {user['nama']} thÃ nh '{status_label}'."
+        aksi_label = 'cập nhật' if aksi == 'diperbarui' else 'ghi nhận'
+        pesan = f"Đã {aksi_label} điểm danh của {user['nama']} thành '{status_label}'."
         if hasil.get('status_lama'):
             status_lama_label = {
-                'hadir': 'CÃ³ máº·t', 'terlambat': 'Äi muá»™n', 'izin': 'Váº¯ng cÃ³ phÃ©p',
-                'sakit': 'Nghá»‰ á»‘m', 'alpha': 'Váº¯ng khÃ´ng phÃ©p'
+                'hadir': 'Có mặt', 'terlambat': 'Đi muộn', 'izin': 'Vắng có phép',
+                'sakit': 'Nghỉ ốm', 'alpha': 'Vắng không phép'
             }.get(hasil['status_lama'], hasil['status_lama'])
-            pesan += f" (trÆ°á»›c Ä‘Ã³: {status_lama_label})"
+            pesan += f" (trước đó: {status_lama_label})"
         print(f"[MANUAL] {pesan}")
         return jsonify({'status': 'ok', 'pesan': pesan, 'data': hasil})
     else:
-        return jsonify({'status': 'error', 'pesan': 'KhÃ´ng thá»ƒ ghi nháº­n Ä‘iá»ƒm danh.'}), 500
+        return jsonify({'status': 'error', 'pesan': 'Không thể ghi nhận điểm danh.'}), 500
 
 
 @app.route('/api/absensi/cap-nhat-buoi', methods=['POST'])
@@ -1507,7 +1512,7 @@ def api_mahasiswa_list():
         print(f'[API] Failed to load student list: {e}')
         return jsonify({
             'status': 'error', 'data': [],
-            'pesan': 'KhÃ´ng thá»ƒ táº£i danh sÃ¡ch sinh viÃªn.'
+            'pesan': 'Không thể tải danh sách sinh viên.'
         }), 500
 
 
@@ -1531,7 +1536,7 @@ def api_jadwal_hari_ini():
         print(f'[API] Failed to load today schedule: {e}')
         return jsonify({
             'status': 'error', 'data': [],
-            'pesan': 'KhÃ´ng thá»ƒ táº£i lá»‹ch há»c.'
+            'pesan': 'Không thể tải lịch học.'
         }), 500
 
 def _normalize_student_name(value):
@@ -1592,7 +1597,7 @@ def _quality_enrollment_upload_locked(nama, nim, kelas_id, frame, state_key):
         except (OSError, ValueError, json.JSONDecodeError):
             return jsonify({
                 'status': 'error', 'reason': 'enrollment_manifest_invalid',
-                'pesan': 'Dá»¯ liá»‡u Ä‘Äƒng kÃ½ khuÃ´n máº·t khÃ´ng há»£p lá»‡.',
+                'pesan': 'Dữ liệu đăng ký khuôn mặt không hợp lệ.',
             }), 409
     accepted_count = len(manifest['samples']) if user else 0
     reset_legacy = (
@@ -1615,12 +1620,12 @@ def _quality_enrollment_upload_locked(nama, nim, kelas_id, frame, state_key):
             else:
                 return jsonify({
                     'status': 'error',
-                    'pesan': 'Dá»¯ liá»‡u cÅ© chÆ°a cÃ³ manifest. Báº¡n cÃ³ muá»‘n lÃ m má»›i dá»¯ liá»‡u Ä‘á»ƒ Ä‘Äƒng kÃ½ láº¡i khÃ´ng?',
+                    'pesan': 'Dữ liệu cũ chưa có manifest. Bạn có muốn làm mới dữ liệu để đăng ký lại không?',
                     'can_reset': True,
                 }), 409
     total = min(FOTO_PER_USER, ENROLLMENT_TOTAL)
     if accepted_count >= total:
-        return jsonify({'status': 'selesai', 'pesan': 'ÄÃ£ Ä‘á»§ áº£nh Ä‘Äƒng kÃ½ Ä‘áº¡t chuáº©n.'})
+        return jsonify({'status': 'selesai', 'pesan': 'Đã đủ ảnh đăng ký đạt chuẩn.'})
     stage, stage_count = stage_for_count(accepted_count)
     detector, _, _ = _load_engine()
     check = validate_enrollment_frame(frame, detector, stage['id'])
@@ -1658,13 +1663,13 @@ def _quality_enrollment_upload_locked(nama, nim, kelas_id, frame, state_key):
     if not check.accepted:
         return jsonify({'status': 'retry', 'pesan': check.message, 'reason': check.reason, 'data': response_data})
     if stable_count < ENROLLMENT_STABLE_FRAMES:
-        return jsonify({'status': 'retry', 'pesan': f'Giá»¯ yÃªn tÆ° tháº¿ ({stable_count}/{ENROLLMENT_STABLE_FRAMES})...', 'reason': 'stabilizing', 'data': response_data})
+        return jsonify({'status': 'retry', 'pesan': f'Giữ yên tư thế ({stable_count}/{ENROLLMENT_STABLE_FRAMES})...', 'reason': 'stabilizing', 'data': response_data})
 
     created_user_id = None
     if not user:
         user_id = db.tambah_user(nama, nim, kelas_id)
         if not user_id:
-            return jsonify({'status': 'error', 'pesan': 'KhÃ´ng thá»ƒ táº¡o sinh viÃªn.'}), 400
+            return jsonify({'status': 'error', 'pesan': 'Không thể tạo sinh viên.'}), 400
         created_user_id = user_id
     else:
         stored_name = _normalize_student_name(user['nama'])
@@ -1672,7 +1677,7 @@ def _quality_enrollment_upload_locked(nama, nim, kelas_id, frame, state_key):
         if stored_name != submitted_name or int(user['kelas_id']) != kelas_id:
             return jsonify({
                 'status': 'error', 'reason': 'nim_conflict',
-                'pesan': 'MÃ£ sinh viÃªn Ä‘Ã£ thuá»™c vá» sinh viÃªn khÃ¡c.',
+                'pesan': 'Mã sinh viên đã thuộc về sinh viên khác.',
             }), 409
         user_id = user['id']
     image_path = None
@@ -1736,7 +1741,7 @@ def _quality_enrollment_upload_locked(nama, nim, kelas_id, frame, state_key):
         'next_stage_label': next_stage['label'] if next_stage else None,
         'next_stage_accepted': next_stage_count if next_stage else 0,
     })
-    return jsonify({'status': 'ok', 'pesan': 'ÄÃ£ lÆ°u áº£nh Ä‘áº¡t chuáº©n.', 'data': response_data})
+    return jsonify({'status': 'ok', 'pesan': 'Đã lưu ảnh đạt chuẩn.', 'data': response_data})
 
 
 @app.route('/api/foto/upload', methods=['POST'])
@@ -1745,7 +1750,7 @@ def api_foto_upload():
     """Terima foto wajah via AJAX (base64) dan simpan ke dataset/."""
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
-        return jsonify({'status': 'error', 'pesan': 'Dá»¯ liá»‡u khÃ´ng há»£p lá»‡.'}), 400
+        return jsonify({'status': 'error', 'pesan': 'Dữ liệu không hợp lệ.'}), 400
 
     nama_raw = data.get('nama', '')
     nim_raw = data.get('nim', '')
@@ -1754,41 +1759,41 @@ def api_foto_upload():
     index = data.get('index', 0)
 
     if not all(isinstance(value, str) for value in (nama_raw, nim_raw, foto_b64)):
-        return jsonify({'status': 'error', 'pesan': 'Dá»¯ liá»‡u khÃ´ng há»£p lá»‡.'}), 400
+        return jsonify({'status': 'error', 'pesan': 'Dữ liệu không hợp lệ.'}), 400
     nama = nama_raw.strip()
     nim = nim_raw.strip()
 
     if not nama or not nim or not kelas_id or not foto_b64:
-        return jsonify({'status': 'error', 'pesan': 'ThÃ´ng tin chÆ°a Ä‘áº§y Ä‘á»§.'}), 400
+        return jsonify({'status': 'error', 'pesan': 'Thông tin chưa đầy đủ.'}), 400
 
     try:
         index = int(index)
         kelas_id = int(kelas_id)
     except (TypeError, ValueError):
-        return jsonify({'status': 'error', 'pesan': 'Chá»‰ sá»‘ áº£nh hoáº·c lá»›p khÃ´ng há»£p lá»‡.'}), 400
+        return jsonify({'status': 'error', 'pesan': 'Chỉ số ảnh hoặc lớp không hợp lệ.'}), 400
 
     try:
         from config import FOTO_PER_USER
         if index < 0 or index > FOTO_PER_USER:
-            return jsonify({'status': 'error', 'pesan': 'Chá»‰ sá»‘ áº£nh khÃ´ng há»£p lá»‡.'}), 400
+            return jsonify({'status': 'error', 'pesan': 'Chỉ số ảnh không hợp lệ.'}), 400
 
         # Validasi foto sepenuhnya sebelum membuat record mahasiswa baru.
         if ',' not in foto_b64:
-            return jsonify({'status': 'error', 'pesan': 'Äá»‹nh dáº¡ng áº£nh khÃ´ng há»£p lá»‡.'}), 400
+            return jsonify({'status': 'error', 'pesan': 'Định dạng ảnh không hợp lệ.'}), 400
         _, encoded = foto_b64.split(',', 1)
         try:
             foto_bytes = base64.b64decode(encoded, validate=True)
         except (ValueError, binascii.Error):
-            return jsonify({'status': 'error', 'pesan': 'Dá»¯ liá»‡u áº£nh base64 khÃ´ng há»£p lá»‡.'}), 400
+            return jsonify({'status': 'error', 'pesan': 'Dữ liệu ảnh base64 không hợp lệ.'}), 400
         np_arr = np.frombuffer(foto_bytes, np.uint8)
         frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
         if frame is None:
-            return jsonify({'status': 'error', 'pesan': 'KhÃ´ng thá»ƒ Ä‘á»c tá»‡p áº£nh.'}), 400
+            return jsonify({'status': 'error', 'pesan': 'Không thể đọc tệp ảnh.'}), 400
 
         if data.get('protocol') != 'quality_v1':
             return jsonify({
                 'status': 'error',
-                'pesan': 'Giao thá»©c Ä‘Äƒng kÃ½ khuÃ´n máº·t khÃ´ng Ä‘Æ°á»£c há»— trá»£.',
+                'pesan': 'Giao thức đăng ký khuôn mặt không được hỗ trợ.',
             }), 400
         return _quality_enrollment_upload(nama, nim, kelas_id, frame)
 
@@ -1822,7 +1827,7 @@ def _start_gallery_rebuild_background(requested_user_id=None):
                 print('[ERROR] Gallery build finished without a usable gallery.')
                 _set_gallery_build_state(
                     state='failed',
-                    last_error='KhÃ´ng thá»ƒ táº¡o gallery tá»« dá»¯ liá»‡u Ä‘Äƒng kÃ½ hiá»‡n cÃ³.',
+                    last_error='Không thể tạo gallery từ dữ liệu đăng ký hiện có.',
                     finished_at=now_wib().isoformat(),
                 )
             else:
@@ -1835,7 +1840,7 @@ def _start_gallery_rebuild_background(requested_user_id=None):
             print(f'[ERROR] Gallery build failed: {e}')
             _set_gallery_build_state(
                 state='failed',
-                last_error='Cáº­p nháº­t gallery gáº·p lá»—i ná»™i bá»™. HÃ£y kiá»ƒm tra nháº­t kÃ½ mÃ¡y chá»§.',
+                last_error='Cập nhật gallery gặp lỗi nội bộ. Hãy kiểm tra nhật ký máy chủ.',
                 finished_at=now_wib().isoformat(),
             )
         finally:
@@ -1849,7 +1854,7 @@ def _start_gallery_rebuild_background(requested_user_id=None):
         _set_gallery_build_state(
             build_id=build_id,
             state='failed',
-            last_error='KhÃ´ng thá»ƒ khá»Ÿi cháº¡y cáº­p nháº­t gallery.',
+            last_error='Không thể khởi chạy cập nhật gallery.',
             finished_at=now_wib().isoformat(),
         )
         _training_lock.release()
@@ -1864,32 +1869,32 @@ def api_training_start():
     data = request.get_json(silent=True)
     nim = data.get('nim', '').strip() if isinstance(data, dict) and isinstance(data.get('nim', ''), str) else ''
     if not nim:
-        return jsonify({'status': 'error', 'pesan': 'Thiáº¿u mÃ£ sinh viÃªn.'}), 400
+        return jsonify({'status': 'error', 'pesan': 'Thiếu mã sinh viên.'}), 400
     user = db.get_user_by_nim(nim)
     if not user:
-        return jsonify({'status': 'error', 'pesan': 'KhÃ´ng tÃ¬m tháº¥y sinh viÃªn.'}), 404
+        return jsonify({'status': 'error', 'pesan': 'Không tìm thấy sinh viên.'}), 404
     manifest_path = os.path.join(DATASET_PATH, str(user['id']), 'enrollment_manifest.json')
     try:
         with open(manifest_path, 'r', encoding='utf-8') as manifest_file:
             manifest = json.load(manifest_file)
         from face.enrollment import manifest_is_complete, ENROLLMENT_TOTAL
         if not manifest_is_complete(manifest.get('samples'), target_total=min(FOTO_PER_USER, ENROLLMENT_TOTAL)):
-            return jsonify({'status': 'error', 'pesan': f'ChÆ°a Ä‘á»§ {min(FOTO_PER_USER, ENROLLMENT_TOTAL)} áº£nh Ä‘Ãºng cÃ¡c bÆ°á»›c Ä‘Äƒng kÃ½.'}), 409
+            return jsonify({'status': 'error', 'pesan': f'Chưa đủ {min(FOTO_PER_USER, ENROLLMENT_TOTAL)} ảnh đúng các bước đăng ký.'}), 409
     except (OSError, ValueError, json.JSONDecodeError):
-        return jsonify({'status': 'error', 'pesan': 'Dá»¯ liá»‡u Ä‘Äƒng kÃ½ khuÃ´n máº·t chÆ°a hoÃ n chá»‰nh.'}), 409
+        return jsonify({'status': 'error', 'pesan': 'Dữ liệu đăng ký khuôn mặt chưa hoàn chỉnh.'}), 409
 
     build_id = _start_gallery_rebuild_background(requested_user_id=int(user['id']))
     if not build_id:
         current = _get_gallery_build_state()
         return jsonify({
             'status': 'error',
-            'pesan': 'Gallery khuÃ´n máº·t Ä‘ang Ä‘Æ°á»£c cáº­p nháº­t. Vui lÃ²ng chá» hoÃ n táº¥t.',
+            'pesan': 'Gallery khuôn mặt đang được cập nhật. Vui lòng chờ hoàn tất.',
             'data': {'build_id': current.get('build_id'), 'state': current.get('state')}
         }), 409
 
     return jsonify({
         'status': 'ok',
-        'pesan': 'Da bat dau cap nhat gallery khuon mat trong nen.',
+        'pesan': 'Đã bắt đầu cập nhật gallery khuôn mặt trong nền.',
         'data': {'build_id': build_id, 'state': 'running'}
     })
 
@@ -1904,12 +1909,12 @@ def api_training_status():
     if not build_id or build_id != state.get('build_id'):
         return jsonify({
             'status': 'error',
-            'pesan': 'KhÃ´ng tÃ¬m tháº¥y láº§n cáº­p nháº­t gallery nÃ y.',
+            'pesan': 'Không tìm thấy lần cập nhật gallery này.',
             'data': None,
         }), 404
     return jsonify({
         'status': 'ok',
-        'pesan': 'ÄÃ£ láº¥y tráº¡ng thÃ¡i cáº­p nháº­t gallery.',
+        'pesan': 'Đã lấy trạng thái cập nhật gallery.',
         'data': state,
     })
 
@@ -1923,7 +1928,7 @@ def api_search():
         return jsonify({
             'status': 'ok',
             'data': {'mahasiswa': [], 'jadwal': []},
-            'pesan': 'Tá»« khÃ³a tÃ¬m kiáº¿m Ä‘ang Ä‘á»ƒ trá»‘ng.'
+            'pesan': 'Từ khóa tìm kiếm đang để trống.'
         })
 
     try:
@@ -1951,14 +1956,14 @@ def api_search():
                 'mahasiswa': mahasiswa,
                 'jadwal': jadwal
             },
-            'pesan': 'TÃ¬m kiáº¿m thÃ nh cÃ´ng.'
+            'pesan': 'Tìm kiếm thành công.'
         })
     except Exception as e:
         print(f'[API] Search failed: {e}')
         return jsonify({
             'status': 'error',
             'data': {'mahasiswa': [], 'jadwal': []},
-            'pesan': 'KhÃ´ng thá»ƒ thá»±c hiá»‡n tÃ¬m kiáº¿m lÃºc nÃ y.'
+            'pesan': 'Không thể thực hiện tìm kiếm lúc này.'
         }), 500
 
 
@@ -2001,7 +2006,7 @@ def _simpan_snapshot(frame, user_id):
 
 
 def _hapus_snapshot_gagal(snapshot_path):
-    """XÃ³a snapshot cá»§a insert tháº¥t báº¡i, chá»‰ khi file náº±m trong SNAPSHOT_PATH."""
+    """Xóa snapshot của insert thất bại, chỉ khi file nằm trong SNAPSHOT_PATH."""
     if not snapshot_path:
         return
     try:
@@ -2039,16 +2044,16 @@ def _get_nama_hari():
 
 
 def _get_ten_thu_hien_thi(nama_hari):
-    """Ãnh xáº¡ tÃªn ngÃ y ná»™i bá»™ sang tiáº¿ng Viá»‡t chá»‰ táº¡i táº§ng hiá»ƒn thá»‹."""
+    """Ánh xạ tên ngày nội bộ sang tiếng Việt chỉ tại tầng hiển thị."""
     return {
-        'Senin': 'Thá»© Hai', 'Selasa': 'Thá»© Ba', 'Rabu': 'Thá»© TÆ°',
-        'Kamis': 'Thá»© NÄƒm', 'Jumat': 'Thá»© SÃ¡u', 'Sabtu': 'Thá»© Báº£y',
-        'Minggu': 'Chá»§ Nháº­t'
+        'Senin': 'Thứ Hai', 'Selasa': 'Thứ Ba', 'Rabu': 'Thứ Tư',
+        'Kamis': 'Thứ Năm', 'Jumat': 'Thứ Sáu', 'Sabtu': 'Thứ Bảy',
+        'Minggu': 'Chủ Nhật'
     }.get(nama_hari, nama_hari)
 
 
 def _bbox_iou(first_bbox, second_bbox):
-    """TÃ­nh Intersection over Union cá»§a hai bbox `(x, y, w, h)`."""
+    """Tính Intersection over Union của hai bbox `(x, y, w, h)`."""
     if first_bbox is None or second_bbox is None:
         return 0.0
     ax, ay, aw, ah = (int(value) for value in first_bbox)
@@ -2083,7 +2088,7 @@ def _database_unavailable_response(spoof_result=None):
     return {
         'status': 'error',
         'tipe': 'database_unavailable',
-        'pesan': 'KhÃ´ng thá»ƒ Ä‘á»c/ghi cÆ¡ sá»Ÿ dá»¯ liá»‡u lÃºc nÃ y. HÃ£y thá»­ láº¡i sau.',
+        'pesan': 'Không thể đọc/ghi cơ sở dữ liệu lúc này. Hãy thử lại sau.',
         'spoofing': spoof_result or {'is_real': True, 'label': 'DEFERRED', 'score': None}
     }
 
@@ -2098,7 +2103,7 @@ def _select_active_schedule_for_user(user, jadwal_list, spoof_result):
         return None, {
             'status': 'error',
             'tipe': 'no_jadwal',
-            'pesan': f'Hiá»‡n khÃ´ng cÃ³ lá»‹ch há»c cho lá»›p {user.get("nama_kelas", "")}.',
+            'pesan': f'Hiện không có lịch học cho lớp {user.get("nama_kelas", "")}.',
             'data': identity,
             'spoofing': spoof_result
         }
@@ -2115,7 +2120,7 @@ def _select_active_schedule_for_user(user, jadwal_list, spoof_result):
         return None, {
             'status': 'error',
             'tipe': 'multiple_active_schedules',
-            'pesan': 'CÃ³ nhiá»u lá»‹ch há»c Ä‘ang diá»…n ra cho cÃ¹ng lá»›p. Vui lÃ²ng kiá»ƒm tra láº¡i lá»‹ch há»c.',
+            'pesan': 'Có nhiều lịch học đang diễn ra cho cùng lớp. Vui lòng kiểm tra lại lịch học.',
             'data': identity,
             'spoofing': spoof_result
         }
@@ -2124,10 +2129,12 @@ def _select_active_schedule_for_user(user, jadwal_list, spoof_result):
 
 def _make_terminal_duplicate_response(cached):
     data = dict(cached.get('data') or {})
+    nama = data.get('nama')
+    pesan = f'{nama} đã được điểm danh trong ca học này.' if nama else 'Sinh viên đã được điểm danh trong ca học này.'
     return {
         'status': 'error',
         'tipe': 'duplikat',
-        'pesan': cached.get('pesan') or 'Sinh vien da diem danh trong buoi nay.',
+        'pesan': pesan,
         'data': data,
         'spoofing': {'is_real': True, 'label': 'CACHED', 'score': None},
         'cached': True
@@ -2264,7 +2271,7 @@ def _sync_face_trackers(tracker_key, detections):
 
 
 def _sync_consecutive_trackers(tracker_key, detected_uids):
-    """API tÆ°Æ¡ng thÃ­ch cho caller má»™t khuÃ´n máº·t khÃ´ng cung cáº¥p bbox."""
+    """API tương thích cho caller một khuôn mặt không cung cấp bbox."""
     return _sync_face_trackers(
         tracker_key,
         {int(uid): None for uid in detected_uids if uid is not None}
@@ -2272,7 +2279,7 @@ def _sync_consecutive_trackers(tracker_key, detected_uids):
 
 
 def _update_consecutive_tracker(tracker_key, detected_uid=None):
-    """API tÆ°Æ¡ng thÃ­ch cho luá»“ng/test má»™t khuÃ´n máº·t."""
+    """API tương thích cho luồng/test một khuôn mặt."""
     counts = _sync_consecutive_trackers(
         tracker_key, [] if detected_uid is None else [detected_uid]
     )
@@ -2282,7 +2289,7 @@ def _update_consecutive_tracker(tracker_key, detected_uid=None):
 
 
 def _reset_consecutive_tracker(tracker_key, user_id=None, remove=False):
-    """XÃ³a bá»™ Ä‘áº¿m cá»§a má»™t ngÆ°á»i hoáº·c toÃ n bá»™ camera/client."""
+    """Xóa bộ đếm của một người hoặc toàn bộ camera/client."""
     camera_key = str(tracker_key)
     with _consecutive_lock:
         keys = [
@@ -2344,7 +2351,7 @@ def _proses_recognition_single(frame, tracker_key='default'):
 
     Alur lengkap sesuai context.md bagian 5.4:
     1. Cek anti-spoofing
-    2. Predict wajah báº±ng gallery ArcFace
+    2. Predict wajah bằng gallery ArcFace
     3. Cari jadwal aktif hari ini
     4. Cek duplikasi absensi
     5. Tentukan status (hadir/terlambat)
@@ -2361,14 +2368,14 @@ def _proses_recognition_single(frame, tracker_key='default'):
     spoof_result = spoofing_check(frame)
 
     if not spoof_result['is_real']:
-        # Spoofing terdeteksi â€” simpan bukti ke spoofing_log
+        # Spoofing terdeteksi — simpan bukti ke spoofing_log
         snapshot = _simpan_snapshot(frame, 'spoofing')
         db.catat_spoofing(snapshot, spoof_result['score'])
         return {
             'status': 'error',
             'tipe': 'spoofing',
             'score': spoof_result['score'],
-            'pesan': 'PhÃ¡t hiá»‡n hÃ nh vi giáº£ máº¡o! Vui lÃ²ng sá»­ dá»¥ng khuÃ´n máº·t tháº­t.',
+            'pesan': 'Phát hiện hành vi giả mạo! Vui lòng sử dụng khuôn mặt thật.',
             'spoofing': spoof_result
         }
 
@@ -2376,18 +2383,18 @@ def _proses_recognition_single(frame, tracker_key='default'):
         return {
             'status': 'skip',
             'tipe': 'no_face',
-            'pesan': 'KhÃ´ng phÃ¡t hiá»‡n tháº¥y khuÃ´n máº·t.',
+            'pesan': 'Không phát hiện thấy khuôn mặt.',
             'spoofing': spoof_result
         }
 
-    # â”€â”€ 2. Predict wajah báº±ng gallery ArcFace â”€â”€
+    # â”€â”€ 2. Predict wajah bằng gallery ArcFace â”€â”€
     result = predict_single(frame)
 
     if result is None:
         return {
             'status': 'skip',
             'tipe': 'no_face',
-            'pesan': 'KhÃ´ng phÃ¡t hiá»‡n tháº¥y khuÃ´n máº·t Ä‘á»ƒ nháº­n diá»‡n.',
+            'pesan': 'Không phát hiện thấy khuôn mặt để nhận diện.',
             'spoofing': spoof_result
         }
 
@@ -2402,7 +2409,7 @@ def _proses_recognition_single(frame, tracker_key='default'):
             'status': 'error',
             'tipe': 'unknown',
             'confidence': result['confidence'],
-            'pesan': f'KhÃ´ng nháº­n diá»‡n Ä‘Æ°á»£c khuÃ´n máº·t (Ä‘á»™ tin cáº­y: {result["confidence"]}).',
+            'pesan': f'Không nhận diện được khuôn mặt (độ tin cậy: {result["confidence"]}).',
             'spoofing': spoof_result
         }
 
@@ -2414,7 +2421,7 @@ def _proses_recognition_single(frame, tracker_key='default'):
         return {
             'status': 'skip',
             'tipe': 'verifying',
-            'pesan': f'Äang xÃ¡c minh khuÃ´n máº·t... ({verification_count}/{required})',
+            'pesan': f'Đang xác minh khuôn mặt... ({verification_count}/{required})',
             'spoofing': spoof_result
         }
 
@@ -2430,7 +2437,7 @@ def _proses_recognition_single(frame, tracker_key='default'):
         return {
             'status': 'error',
             'tipe': 'user_not_found',
-            'pesan': f'KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng cÃ³ ID {user_id} trong cÆ¡ sá»Ÿ dá»¯ liá»‡u.',
+            'pesan': f'Không tìm thấy người dùng có ID {user_id} trong cơ sở dữ liệu.',
             'spoofing': spoof_result
         }
 
@@ -2443,7 +2450,7 @@ def _proses_recognition_single(frame, tracker_key='default'):
         return {
             'status': 'error',
             'tipe': 'no_jadwal',
-            'pesan': f'Hiá»‡n khÃ´ng cÃ³ lá»‹ch há»c nÃ o Ä‘ang diá»…n ra ({_get_ten_thu_hien_thi(hari)} {waktu_sekarang}).',
+            'pesan': f'Hiện không có lịch học nào đang diễn ra ({_get_ten_thu_hien_thi(hari)} {waktu_sekarang}).',
             'data': {'nama': user['nama'], 'nim': user['nim']},
             'spoofing': spoof_result
         }
@@ -2466,7 +2473,7 @@ def _proses_recognition_single(frame, tracker_key='default'):
         return {
             'status': 'error',
             'tipe': 'duplikat',
-            'pesan': f'{user["nama"]} Ä‘Ã£ Ä‘iá»ƒm danh mÃ´n {jadwal["nama_mk"]} hÃ´m nay.',
+            'pesan': f'{user["nama"]} đã điểm danh môn {jadwal["nama_mk"]} hôm nay.',
             'data': {
                 'nama': user['nama'], 'nim': user['nim'],
                 'status_absensi': sudah['status'],
@@ -2528,7 +2535,7 @@ def _proses_recognition_single(frame, tracker_key='default'):
             return {
                 'status': 'error',
                 'tipe': 'duplikat',
-                'pesan': f'{user["nama"]} Ä‘Ã£ Ä‘iá»ƒm danh mÃ´n {jadwal["nama_mk"]} hÃ´m nay.',
+                'pesan': f'{user["nama"]} đã điểm danh môn {jadwal["nama_mk"]} hôm nay.',
                 'data': {
                     'nama': user['nama'], 'nim': user['nim'],
                     'status_absensi': sudah_setelah_insert['status'],
@@ -2539,7 +2546,7 @@ def _proses_recognition_single(frame, tracker_key='default'):
         return {
             'status': 'error',
             'tipe': 'db_error',
-            'pesan': 'KhÃ´ng thá»ƒ lÆ°u dá»¯ liá»‡u Ä‘iá»ƒm danh vÃ o cÆ¡ sá»Ÿ dá»¯ liá»‡u.',
+            'pesan': 'Không thể lưu dữ liệu điểm danh vào cơ sở dữ liệu.',
             'spoofing': spoof_result
         }
 
@@ -2589,7 +2596,7 @@ def _process_verified_prediction(
     frame, prediction, spoof_result, hari, waktu_sekarang,
     tanggal_hari_ini, jadwal_list
 ):
-    """Ghi Ä‘iá»ƒm danh cho má»™t danh tÃ­nh Ä‘Ã£ Ä‘á»§ sá»‘ frame xÃ¡c nháº­n."""
+    """Ghi điểm danh cho một danh tính đã đủ số frame xác nhận."""
     user_id = int(prediction['user_id'])
     confidence = prediction['confidence']
     user = _db_call_strict(db.get_user_by_id, user_id)
@@ -2597,7 +2604,7 @@ def _process_verified_prediction(
         return {
             'status': 'error',
             'tipe': 'user_not_found',
-            'pesan': f'KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng cÃ³ ID {user_id} trong cÆ¡ sá»Ÿ dá»¯ liá»‡u.',
+            'pesan': f'Không tìm thấy người dùng có ID {user_id} trong cơ sở dữ liệu.',
             'spoofing': spoof_result
         }
 
@@ -2605,7 +2612,7 @@ def _process_verified_prediction(
         return {
             'status': 'error',
             'tipe': 'no_jadwal',
-            'pesan': f'Hiá»‡n khÃ´ng cÃ³ lá»‹ch há»c nÃ o Ä‘ang diá»…n ra ({_get_ten_thu_hien_thi(hari)} {waktu_sekarang}).',
+            'pesan': f'Hiện không có lịch học nào đang diễn ra ({_get_ten_thu_hien_thi(hari)} {waktu_sekarang}).',
             'data': {'nama': user['nama'], 'nim': user['nim']},
             'spoofing': spoof_result
         }
@@ -2624,7 +2631,7 @@ def _process_verified_prediction(
         return {
             'status': 'error',
             'tipe': 'duplikat',
-            'pesan': f'{user["nama"]} Ä‘Ã£ Ä‘iá»ƒm danh mÃ´n {jadwal["nama_mk"]} hÃ´m nay.',
+            'pesan': f'{user["nama"]} đã điểm danh môn {jadwal["nama_mk"]} hôm nay.',
             'data': {
                 'nama': user['nama'],
                 'nim': user['nim'],
@@ -2684,7 +2691,7 @@ def _process_verified_prediction(
             return {
                 'status': 'error',
                 'tipe': 'duplikat',
-                'pesan': f'{user["nama"]} Ä‘Ã£ Ä‘iá»ƒm danh mÃ´n {jadwal["nama_mk"]} hÃ´m nay.',
+                'pesan': f'{user["nama"]} đã điểm danh môn {jadwal["nama_mk"]} hôm nay.',
                 'data': {
                     'nama': user['nama'],
                     'nim': user['nim'],
@@ -2696,7 +2703,7 @@ def _process_verified_prediction(
         return {
             'status': 'error',
             'tipe': 'db_error',
-            'pesan': 'KhÃ´ng thá»ƒ lÆ°u dá»¯ liá»‡u Ä‘iá»ƒm danh vÃ o cÆ¡ sá»Ÿ dá»¯ liá»‡u.',
+            'pesan': 'Không thể lưu dữ liệu điểm danh vào cơ sở dữ liệu.',
             'spoofing': spoof_result
         }
 
@@ -2736,7 +2743,7 @@ def _process_verified_prediction(
 
 
 def _attach_face_metadata(response, prediction, face_index):
-    """Gáº¯n metadata bbox vÃ o má»™t káº¿t quáº£ nhÆ°ng khÃ´ng lÃ m thay Ä‘á»•i object gá»‘c."""
+    """Gắn metadata bbox vào một kết quả nhưng không làm thay đổi object gốc."""
     enriched = dict(response)
     enriched['face_index'] = face_index
     enriched['bbox'] = [int(value) for value in prediction.get('bbox', (0, 0, 0, 0))]
@@ -2798,14 +2805,14 @@ def _attach_face_metadata(response, prediction, face_index):
     if tipe == 'multiple_active_schedules':
         label = 'Lịch học bị trùng'
     elif tipe == 'database_unavailable':
-        label = 'CSDL chua san sang'
+        label = 'CSDL chưa sẵn sàng'
     enriched['display_status'] = display_status
     enriched['display_label'] = label
     return enriched
 
 
 def _aggregate_face_results(face_results, tanggal_hari_ini):
-    """Táº¡o response tÆ°Æ¡ng thÃ­ch API cÅ© vÃ  bá»• sung danh sÃ¡ch káº¿t quáº£ nhiá»u máº·t."""
+    """Tạo response tương thích API cũ và bổ sung danh sách kết quả nhiều mặt."""
     successes = [item for item in face_results if item.get('status') == 'ok']
     verifying = [
         item for item in face_results
@@ -2849,12 +2856,12 @@ def _aggregate_face_results(face_results, tanggal_hari_ini):
             'alpha': stats.get('alpha_hari_ini', 0)
         }
         if len(successes) > 1:
-            response['pesan'] = f'ÄÃ£ ghi Ä‘iá»ƒm danh cho {len(successes)} sinh viÃªn.'
+            response['pesan'] = f'Đã ghi điểm danh cho {len(successes)} sinh viên.'
     return response
 
 
 def _successful_face_results(result):
-    """Láº¥y má»i káº¿t quáº£ vá»«a ghi thÃ nh cÃ´ng, ká»ƒ cáº£ response má»™t khuÃ´n máº·t cÅ©."""
+    """Lấy mọi kết quả vừa ghi thành công, kể cả response một khuôn mặt cũ."""
     successes = [
         item for item in result.get('results', [])
         if item.get('status') == 'ok' and item.get('data')
@@ -2865,7 +2872,7 @@ def _successful_face_results(result):
 
 
 def _broadcast_absensi_updates(result, skip_sid=None):
-    """Broadcast tá»«ng lÆ°á»£t Ä‘iá»ƒm danh, dÃ¹ng chung cho WebSocket vÃ  HTTP fallback."""
+    """Broadcast từng lượt điểm danh, dùng chung cho WebSocket và HTTP fallback."""
     emit_options = {'skip_sid': skip_sid} if skip_sid else {}
     stats = result.get('stats')
     if not stats:
@@ -2884,7 +2891,7 @@ def _broadcast_absensi_updates(result, skip_sid=None):
 
 
 def _proses_recognition(frame, tracker_key='default'):
-    """Nháº­n diá»‡n vÃ  xá»­ lÃ½ Ä‘iá»ƒm danh cho táº¥t cáº£ khuÃ´n máº·t trong má»™t frame."""
+    """Nhận diện và xử lý điểm danh cho tất cả khuôn mặt trong một frame."""
     from face.anti_spoofing import check_face
     from face.recognition import predict
 
@@ -2894,7 +2901,7 @@ def _proses_recognition(frame, tracker_key='default'):
         return {
             'status': 'skip',
             'tipe': 'no_face',
-            'pesan': 'KhÃ´ng phÃ¡t hiá»‡n tháº¥y khuÃ´n máº·t.',
+            'pesan': 'Không phát hiện thấy khuôn mặt.',
             'results': [],
             'summary': {
                 'total_faces': 0, 'recorded': 0, 'verifying': 0,
@@ -2903,15 +2910,15 @@ def _proses_recognition(frame, tracker_key='default'):
             }
         }
 
-    # Anti-spoofing pháº£i cháº¡y theo tá»«ng bbox, khÃ´ng dÃ¹ng káº¿t quáº£ cá»§a máº·t lá»›n nháº¥t
-    # cho toÃ n bá»™ nhÃ³m ngÆ°á»i trong frame.
+    # Anti-spoofing phải chạy theo từng bbox, không dùng kết quả của mặt lớn nhất
+    # cho toàn bộ nhóm người trong frame.
     # Liveness runs only when a recognized track reaches confirmation, not on
     # every detected face. This keeps detector boxes responsive.
     prepared = [(face_index, prediction, None)
                 for face_index, prediction in enumerate(predictions)]
 
-    # Náº¿u nhiá»u bbox cÃ¹ng bá»‹ gÃ¡n má»™t user_id thÃ¬ khÃ´ng bbox nÃ o Ä‘Æ°á»£c phÃ©p ghi
-    # Ä‘iá»ƒm danh: Ä‘Ã¢y lÃ  xung Ä‘á»™t danh tÃ­nh, khÃ´ng pháº£i cÄƒn cá»© Ä‘á»ƒ chá»n má»™t máº·t.
+    # Nếu nhiều bbox cùng bị gán một user_id thì không bbox nào được phép ghi
+    # điểm danh: đây là xung đột danh tính, không phải căn cứ để chọn một mặt.
     candidates_by_user = {}
     for face_index, prediction, spoof_result in prepared:
         if not prediction.get('dikenali'):
@@ -2966,7 +2973,7 @@ def _proses_recognition(frame, tracker_key='default'):
         if prediction.get('recognition_status') == 'low_quality':
             response = {
                 'status': 'error', 'tipe': 'low_quality',
-                'pesan': 'Chat luong khuon mat chua dat; hay dieu chinh theo huong dan tren khung.',
+                'pesan': 'Chất lượng khuôn mặt chưa đạt. Vui lòng điều chỉnh theo hướng dẫn trên khung hình.',
                 'quality_reason': prediction.get('quality_reason'),
             }
         elif not spoof_result.get('is_real'):
@@ -2979,8 +2986,8 @@ def _proses_recognition(frame, tracker_key='default'):
                 'tipe': tipe,
                 'score': spoof_result.get('score', 0.0),
                 'pesan': (
-                    'KhuÃ´n máº·t khÃ´ng náº±m Ä‘á»§ trong vÃ¹ng áº£nh Ä‘á»ƒ kiá»ƒm tra.' if tipe == 'no_face'
-                    else 'PhÃ¡t hiá»‡n hÃ nh vi giáº£ máº¡o! Vui lÃ²ng sá»­ dá»¥ng khuÃ´n máº·t tháº­t.'
+                    'Khuôn mặt không nằm đủ trong vùng ảnh để kiểm tra.' if tipe == 'no_face'
+                    else 'Phát hiện hành vi giả mạo! Vui lòng sử dụng khuôn mặt thật.'
                 ),
                 'spoofing': spoof_result
             }
@@ -2989,7 +2996,7 @@ def _proses_recognition(frame, tracker_key='default'):
                 'status': 'skip',
                 'tipe': 'needs_calibration',
                 'match_score': prediction.get('match_score'),
-                'pesan': 'Cáº§n hiá»‡u chuáº©n ngÆ°á»¡ng cosine similarity trÆ°á»›c khi tá»± Ä‘á»™ng Ä‘iá»ƒm danh.',
+                'pesan': 'Cần hiệu chuẩn ngưỡng cosine similarity trước khi tự động điểm danh.',
                 'spoofing': spoof_result
             }
         elif not prediction.get('dikenali'):
@@ -2998,7 +3005,7 @@ def _proses_recognition(frame, tracker_key='default'):
                 'tipe': 'unknown',
                 'confidence': prediction.get('confidence'),
                 'match_score': prediction.get('match_score'),
-                'pesan': f'KhÃ´ng nháº­n diá»‡n Ä‘Æ°á»£c khuÃ´n máº·t (Ä‘á»™ tin cáº­y: {prediction.get("confidence")}).',
+                'pesan': f'Không nhận diện được khuôn mặt (độ tin cậy: {prediction.get("confidence")}).',
                 'spoofing': spoof_result
             }
         elif int(prediction['user_id']) in conflicted_user_ids:
@@ -3006,7 +3013,7 @@ def _proses_recognition(frame, tracker_key='default'):
                 'status': 'error',
                 'tipe': 'identity_conflict',
                 'confidence': prediction.get('confidence'),
-                'pesan': 'Nhiá»u khuÃ´n máº·t bá»‹ gÃ¡n cÃ¹ng má»™t mÃ£ sinh viÃªn; khÃ´ng ghi Ä‘iá»ƒm danh cho danh tÃ­nh nÃ y.',
+                'pesan': 'Nhiều khuôn mặt bị gán cùng một mã sinh viên; không ghi điểm danh cho danh tính này.',
                 'spoofing': spoof_result
             }
         else:
@@ -3027,7 +3034,7 @@ def _proses_recognition(frame, tracker_key='default'):
                     'status': 'skip',
                     'tipe': 'verifying',
                     'pesan': (
-                        f'Äang xÃ¡c minh khuÃ´n máº·t... '
+                        f'Đang xác minh khuôn mặt... '
                         f'({verification_count}/{RECOGNITION_REQUIRED_FRAMES})'
                     ),
                     'verification_count': verification_count,
@@ -3045,7 +3052,7 @@ def _proses_recognition(frame, tracker_key='default'):
                     response = {
                         'status': 'error', 'tipe': 'spoofing',
                         'score': spoof_result.get('score', 0.0),
-                        'pesan': 'PhÃ¡t hiá»‡n hÃ nh vi giáº£ máº¡o! Vui lÃ²ng sá»­ dá»¥ng khuÃ´n máº·t tháº­t.',
+                        'pesan': 'Phát hiện hành vi giả mạo! Vui lòng sử dụng khuôn mặt thật.',
                         'spoofing': spoof_result,
                     }
                 else:
@@ -3093,16 +3100,16 @@ def api_absensi_proses():
     """
     data = request.get_json()
     if not data or 'frame' not in data:
-        return jsonify({'status': 'error', 'pesan': 'KhÃ´ng tÃ¬m tháº¥y khung hÃ¬nh.', 'data': None}), 400
+        return jsonify({'status': 'error', 'pesan': 'Không tìm thấy khung hình.', 'data': None}), 400
 
     frame = _decode_frame(data['frame'])
     if frame is None:
-        return jsonify({'status': 'error', 'pesan': 'KhÃ´ng thá»ƒ giáº£i mÃ£ khung hÃ¬nh.', 'data': None}), 400
+        return jsonify({'status': 'error', 'pesan': 'Không thể giải mã khung hình.', 'data': None}), 400
 
     client_id = str(data.get('client_id', '')).strip()
     if not _valid_camera_client_id(client_id):
         return jsonify({
-            'status': 'error', 'pesan': 'ID á»©ng dá»¥ng camera khÃ´ng há»£p lá»‡.', 'data': None
+            'status': 'error', 'pesan': 'ID ứng dụng camera không hợp lệ.', 'data': None
         }), 400
     tracker_key = _scanner_tracker_key(client_id)
     try:
@@ -3129,7 +3136,7 @@ def api_camera_toggle():
     if not isinstance(data, dict) or not isinstance(data.get('active'), bool):
         return jsonify({
             'status': 'error', 'data': None,
-            'pesan': 'Tráº¡ng thÃ¡i mÃ¡y áº£nh pháº£i lÃ  giÃ¡ trá»‹ boolean.'
+            'pesan': 'Trạng thái máy ảnh phải là giá trị boolean.'
         }), 400
 
     active = data['active']
@@ -3140,13 +3147,13 @@ def api_camera_toggle():
         _reset_consecutive_tracker(_scanner_tracker_key(client_id), remove=True)
     return jsonify({
         'status': 'ok',
-        'pesan': f'MÃ¡y áº£nh Ä‘Ã£ {"báº­t" if active else "táº¯t"}.',
+        'pesan': f'Máy ảnh đã {"bật" if active else "tắt"}.',
         'data': {'camera_active': active}
     })
 
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-# SERVE SNAPSHOT â€” Menyajikan foto bukti absensi
+# SERVE SNAPSHOT — Menyajikan foto bukti absensi
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 @app.route('/snapshots/<path:filename>')
@@ -3229,19 +3236,19 @@ def handle_process_frame(data):
 
     try:
         if 'frame' not in data:
-            emit('recognition_result', {'status': 'error', 'pesan': 'Khung hÃ¬nh trá»‘ng.'})
+            emit('recognition_result', {'status': 'error', 'pesan': 'Khung hình trống.'})
             return
 
         frame = _decode_frame(data['frame'])
         if frame is None:
-            emit('recognition_result', {'status': 'error', 'pesan': 'KhÃ´ng thá»ƒ giáº£i mÃ£ khung hÃ¬nh.'})
+            emit('recognition_result', {'status': 'error', 'pesan': 'Không thể giải mã khung hình.'})
             return
 
         client_id = str(data.get('client_id', '')).strip()
         if not _valid_camera_client_id(client_id):
             emit('recognition_result', {
                 'status': 'error', 'tipe': 'invalid_client_id',
-                'pesan': 'ID á»©ng dá»¥ng camera khÃ´ng há»£p lá»‡.', 'results': []
+                'pesan': 'ID ứng dụng camera không hợp lệ.', 'results': []
             })
             return
         tracker_key = _scanner_tracker_key(client_id)
@@ -3264,7 +3271,7 @@ def handle_process_frame(data):
         print(f'[SOCKET ERROR] process_frame exception: {e}')
         import traceback
         traceback.print_exc()
-        emit('recognition_result', {'status': 'error', 'pesan': f'Lá»—i mÃ¡y chá»§: {str(e)}'})
+        emit('recognition_result', {'status': 'error', 'pesan': f'Lỗi máy chủ: {str(e)}'})
 
 
 
@@ -3333,7 +3340,7 @@ if __name__ == '__main__':
     _start_background_tasks_once()
 
     print("=" * 50)
-    print("   FLASK + SOCKETIO â€” SISTEM ABSENSI")
+    print("   FLASK + SOCKETIO — SISTEM ABSENSI")
     print("=" * 50)
     print(f"\n[INFO] Dashboard  : http://127.0.0.1:{FLASK_PORT}")
     print(f"[INFO] Login      : http://127.0.0.1:{FLASK_PORT}/login")

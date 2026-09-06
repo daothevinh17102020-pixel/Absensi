@@ -342,7 +342,7 @@ const CameraManager = {
                 DashboardUI.showSpoofingWarning(data);
             } else if (data.tipe === 'duplikat') {
                 if (indicatorSpan) indicatorSpan.textContent = '✓ Đã điểm danh';
-                this._throttledToast('info', 'Đã điểm danh', data.pesan || 'Sinh viên đã điểm danh hôm nay.');
+                this._throttledToast('info', 'Đã điểm danh', data.pesan || 'Sinh viên đã được điểm danh trong ca học này.');
                 releaseLockNow = true;
             } else if (data.tipe === 'unknown') {
                 if (indicatorSpan) indicatorSpan.textContent = '? Không nhận diện được khuôn mặt';
@@ -363,7 +363,7 @@ const CameraManager = {
                 if (indicatorSpan) indicatorSpan.textContent = 'Mô hình chưa sẵn sàng';
                 this._throttledToast(
                     'warning', 'Mô hình chưa sẵn sàng',
-                    data.pesan || 'Hãy chạy test_setup.py một lần để tải mô hình InsightFace.'
+                    data.pesan || 'Hãy cập nhật gallery khuôn mặt trước khi mở camera.'
                 );
             } else {
                 if (indicatorSpan) indicatorSpan.textContent = 'Đang xử lý...';

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Checklist Preview</title>
+  <!-- Self-contained: KHÔNG CDN cho CSS/layout (mở file:// offline vẫn đẹp). SheetJS chỉ nạp khi bấm Export. -->
+  <!-- Data loaded từ sibling file. Re-run /test-checklist để refresh data.js. -->
+  <script src="data.js"></script>
+  <style>
+    :root {
+      --accent: #4a6cf7; --accent-soft: #eef2ff;
+      --bg: #f4f6fb; --panel: #ffffff; --ink: #1e2430; --ink-soft: #5a6373;
+      --line: #e3e7ef; --line-strong: #cdd4e0;
+      --p1: #e5484d; --p2: #f5820b; --p3: #eab308; --p4: #8a94a6;
+      --ok: #17a06a; --muted: #9aa3b2;
+      --shadow: 0 1px 2px rgba(20,30,60,.06), 0 8px 24px rgba(20,30,60,.06);
+      --radius: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --accent: #7d97ff; --accent-soft: #232b45;
+        --bg: #0e1220; --panel: #161b2c; --ink: #e7ebf5; --ink-soft: #9aa3b8;
+        --line: #262d42; --line-strong: #333c56; --p3: #d6a516; --muted: #667089;
+        --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+      }
+    }
+    :root[data-theme="dark"] {
+      --accent: #7d97ff; --accent-soft: #232b45;
+      --bg: #0e1220; --panel: #161b2c; --ink: #e7ebf5; --ink-soft: #9aa3b8;
+      --line: #262d42; --line-strong: #333c56; --p3: #d6a516; --muted: #667089;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    }
+    :root[data-theme="light"] {
+      --accent: #4a6cf7; --accent-soft: #eef2ff;
+      --bg: #f4f6fb; --panel: #ffffff; --ink: #1e2430; --ink-soft: #5a6373;
+      --line: #e3e7ef; --line-strong: #cdd4e0; --p3: #eab308; --muted: #9aa3b2;
+      --shadow: 0 1px 2px rgba(20,30,60,.06), 0 8px 24px rgba(20,30,60,.06);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 24px 20px 60px;
+      font-family: 'Inter', 'Segoe UI', Tahoma, system-ui, sans-serif;
+      background: var(--bg); color: var(--ink); line-height: 1.5; -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 1300px; margin: 0 auto; }
+    header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+    h1 { font-size: 22px; font-weight: 700; margin: 0 0 4px; letter-spacing: -.01em; }
+    .meta { color: var(--ink-soft); font-size: 13px; }
+    .theme-toggle { background: var(--panel); border: 1px solid var(--line); color: var(--ink-soft); border-radius: 8px; padding: 7px 12px; cursor: pointer; font-size: 13px; font-weight: 500; }
+    .theme-toggle:hover { border-color: var(--line-strong); }
+
+    .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .pill { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; display: flex; flex-direction: column; gap: 1px; min-width: 74px; box-shadow: var(--shadow); }
+    .pill .k { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; }
+    .pill .v { font-size: 18px; font-weight: 700; }
+    .pill.p1 .v { color: var(--p1); } .pill.p2 .v { color: var(--p2); }
+    .pill.p3 .v { color: var(--p3); } .pill.p4 .v { color: var(--p4); }
+
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); padding: 12px; border-radius: var(--radius); margin-bottom: 18px; }
+    .toolbar input, .toolbar select { padding: 8px 11px; border: 1px solid var(--line-strong); border-radius: 8px; font-size: 13px; background: var(--panel); color: var(--ink); font-family: inherit; }
+    .toolbar input:focus, .toolbar select:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+    .toolbar input[type="search"] { flex: 1; min-width: 200px; max-width: 340px; }
+    .toolbar select { min-width: 128px; cursor: pointer; }
+    .toolbar .spacer { flex: 1; }
+    .btn { border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-ok { background: var(--ok); color: #fff; }
+    .btn-ghost { background: transparent; border: 1px solid var(--line-strong); color: var(--ink-soft); }
+    .btn:hover { filter: brightness(1.05); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    .commentbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--accent-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 18px; font-size: 13px; }
+    .commentbar .count { font-weight: 600; color: var(--accent); }
+    .commentbar .spacer { flex: 1; }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    th, td { padding: 11px 13px; text-align: left; border-bottom: 1px solid var(--line); font-size: 13.5px; vertical-align: top; }
+    th { background: var(--bg); font-weight: 600; color: var(--ink-soft); position: sticky; top: 0; z-index: 2; white-space: nowrap; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+    tbody tr:last-child td { border-bottom: none; }
+    tr.has-comment td { background: var(--accent-soft); }
+    tr:hover td { background: var(--accent-soft); }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #fff; }
+    .badge-p1 { background: var(--p1); } .badge-p2 { background: var(--p2); }
+    .badge-p3 { background: var(--p3); color: #3a2e00; } .badge-p4 { background: var(--p4); }
+    .badge-auto-yes { background: var(--ok); color: #fff; }
+    .badge-auto-no { background: var(--muted); color: #fff; }
+    .id-cell { font-family: ui-monospace, SFMono-Regular, monospace; font-weight: 600; color: var(--accent); white-space: nowrap; width: 150px; }
+    .scope-cell { width: 74px; color: var(--ink-soft); }
+    .cat-cell { min-width: 150px; color: var(--ink-soft); }
+    .ref-cell { font-family: ui-monospace, monospace; font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
+    .cmt-cell { width: 46px; text-align: center; }
+    .cbtn { background: transparent; border: 1px solid var(--line-strong); border-radius: 7px; width: 30px; height: 30px; cursor: pointer; font-size: 13px; line-height: 1; color: var(--ink-soft); }
+    .cbtn:hover { border-color: var(--accent); color: var(--accent); }
+    .cbtn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .item-cell { min-width: 260px; }
+    .cmt-saved { margin-top: 6px; font-size: 12.5px; color: var(--accent); background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; white-space: pre-wrap; }
+    tr.editor-row td { padding: 0 13px 12px; border-bottom: 1px solid var(--line); background: var(--accent-soft); }
+    tr.editor-row textarea { width: 100%; min-height: 60px; resize: vertical; padding: 9px 11px; font-size: 13px; border: 1px solid var(--accent); border-radius: 8px; background: var(--panel); color: var(--ink); font-family: inherit; }
+    tr.editor-row textarea:focus { outline: 2px solid var(--accent-soft); }
+    .empty { text-align: center; padding: 50px; color: var(--muted); font-style: italic; }
+
+    .pagination { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-top: 18px; color: var(--ink-soft); font-size: 13px; }
+    .pagination-controls { display: flex; gap: 5px; }
+    .pagination-controls button { background: var(--panel); color: var(--ink); border: 1px solid var(--line-strong); min-width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+    .pagination-controls button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .pagination-controls button:disabled { opacity: .4; cursor: not-allowed; }
+
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--panel); padding: 11px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none; transition: all .25s; z-index: 99; box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .modal-bg { position: fixed; inset: 0; background: rgba(10,14,26,.55); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+    .modal-bg.show { display: flex; }
+    .modal { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); width: 100%; max-width: 640px; max-height: 85vh; display: flex; flex-direction: column; }
+    .modal h3 { margin: 0; padding: 16px 18px; border-bottom: 1px solid var(--line); font-size: 15px; }
+    .modal textarea { flex: 1; min-height: 60vh; margin: 0; border: none; padding: 14px 18px; font-family: ui-monospace, monospace; font-size: 12.5px; resize: vertical; background: var(--bg); color: var(--ink); line-height: 1.55; }
+    .modal-foot { display: flex; gap: 8px; justify-content: flex-end; padding: 12px 18px; border-top: 1px solid var(--line); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1 id="title">Test Checklist</h1>
+        <div class="meta" id="meta"></div>
+      </div>
+      <button class="theme-toggle" id="themeToggle">🌓 Theme</button>
+    </header>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="🔍 Tìm checklist...">
+      <select id="filterFile"><option value="">Mọi file</option></select>
+      <select id="filterScope"><option value="">Mọi scope</option></select>
+      <select id="filterCategory"><option value="">Mọi category</option></select>
+      <select id="filterPriority">
+        <option value="">Mọi priority</option>
+        <option value="1">P1 — Critical</option>
+        <option value="2">P2 — High</option>
+        <option value="3">P3 — Medium</option>
+        <option value="4">P4 — Low</option>
+      </select>
+      <select id="filterAuto">
+        <option value="">Auto: All</option>
+        <option value="Yes">Auto: Yes</option>
+        <option value="No">Auto: No</option>
+      </select>
+      <select id="filterComment">
+        <option value="">Comment: All</option>
+        <option value="yes">Chỉ có comment</option>
+        <option value="no">Chưa comment</option>
+      </select>
+      <div class="spacer"></div>
+      <select id="pageSize">
+        <option value="25" selected>25 / trang</option>
+        <option value="50">50 / trang</option>
+        <option value="100">100 / trang</option>
+        <option value="9999">Tất cả</option>
+      </select>
+      <button class="btn btn-ok" id="exportXlsx">📥 Excel</button>
+    </div>
+
+    <div class="commentbar">
+      💬 <span class="count" id="commentCount">0</span> comment đang lưu (trong trình duyệt, không đụng file).
+      <div class="spacer"></div>
+      <button class="btn btn-accent" id="copyComments">📋 Copy toàn bộ comment</button>
+      <button class="btn btn-ghost" id="clearComments">🗑 Xoá hết</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="cmt-cell">💬</th>
+            <th class="id-cell">ID</th>
+            <th class="scope-cell">Scope</th>
+            <th class="cat-cell">Category</th>
+            <th>Ref</th>
+            <th>P</th>
+            <th>Auto</th>
+            <th class="item-cell">Checklist Item</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <div id="pageInfo">Trang 1 / 1</div>
+      <div class="pagination-controls" id="pageControls"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="modal-bg" id="copyModal">
+    <div class="modal">
+      <h3>📋 Comment để gửi vào chat</h3>
+      <textarea id="copyText" readonly></textarea>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" id="copyClose">Đóng</button>
+        <button class="btn btn-accent" id="copyDo">Copy vào clipboard</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const FEATURE = window.FEATURE || "(unknown feature)";
+    const UPDATED = window.UPDATED || "(unknown)";
+    const CHECKLISTS = window.CHECKLISTS_DATA || [];
+
+    if (!window.CHECKLISTS_DATA) {
+      document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#e5484d;"><h2>⚠️ Không load được data.js</h2><p>Chạy lại <code>/test-checklist &lt;feature&gt;</code> để regen data.js cạnh file HTML này.</p></div>';
+      throw new Error('CHECKLISTS_DATA missing');
+    }
+
+    const ALL_ITEMS = CHECKLISTS.flatMap(cl =>
+      cl.items.map(it => ({ ...it, scope: cl.scope, target: cl.target, file: cl.file }))
+    );
+
+    // ---- Comment store ----
+    const CKEY = `chk-comments::${FEATURE}`;
+    let comments = {};
+    try { comments = JSON.parse(localStorage.getItem(CKEY) || '{}'); } catch (e) { comments = {}; }
+    function saveComments() { localStorage.setItem(CKEY, JSON.stringify(comments)); }
+    function commentKey(it) { return `${it.file}#${it.chk || it.num}`; }
+
+    let filtered = [...ALL_ITEMS];
+    let currentPage = 1;
+    let pageSize = 25;
+    let openEditors = new Set();
+
+    document.getElementById('title').textContent = `Test Checklist — ${FEATURE}`;
+    document.getElementById('meta').textContent = `Cập nhật: ${UPDATED} • ${CHECKLISTS.length} file • ${ALL_ITEMS.length} item`;
+
+    (function initTheme(){
+      // Mặc định LIGHT (không theo prefers-color-scheme của OS); user tự đổi thì nhớ lựa chọn.
+      const saved = localStorage.getItem('tc-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+      document.getElementById('themeToggle').onclick = () => {
+        const cur = document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('tc-theme', next);
+      };
+    })();
+
+    function uniqueSorted(arr) { return [...new Set(arr.filter(Boolean))].sort(); }
+    uniqueSorted(CHECKLISTS.map(c => c.file)).forEach(f => document.getElementById('filterFile').insertAdjacentHTML('beforeend', `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`));
+    uniqueSorted(ALL_ITEMS.map(i => i.scope)).forEach(s => document.getElementById('filterScope').insertAdjacentHTML('beforeend', `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`));
+    uniqueSorted(ALL_ITEMS.map(i => i.category)).forEach(c => document.getElementById('filterCategory').insertAdjacentHTML('beforeend', `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`));
+
+    function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function fmtRef(ref) { return Array.isArray(ref) ? (ref.length ? ref.join(', ') : '—') : (ref || '—'); }
+    function idOf(it) { return it.chk || String(it.num || ''); }
+    function cssEsc(s){ return String(s).replace(/["\\]/g, '\\$&'); }
+
+    function applyFilters() {
+      const q = document.getElementById('search').value.toLowerCase().trim();
+      const fFile = document.getElementById('filterFile').value;
+      const fScope = document.getElementById('filterScope').value;
+      const fCat = document.getElementById('filterCategory').value;
+      const fPrio = document.getElementById('filterPriority').value;
+      const fAuto = document.getElementById('filterAuto').value;
+      const fCmt = document.getElementById('filterComment').value;
+
+      filtered = ALL_ITEMS.filter(it => {
+        if (fFile && it.file !== fFile) return false;
+        if (fScope && it.scope !== fScope) return false;
+        if (fCat && it.category !== fCat) return false;
+        if (fPrio && String(it.priority) !== fPrio) return false;
+        if (fAuto && it.auto !== fAuto) return false;
+        if (fCmt === 'yes' && !comments[commentKey(it)]) return false;
+        if (fCmt === 'no' && comments[commentKey(it)]) return false;
+        if (q) {
+          const hay = `${idOf(it)} ${it.text} ${it.category} ${it.subcategory} ${it.scope} ${it.target}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+      currentPage = 1;
+      render();
+    }
+
+    function render() {
+      const tbody = document.getElementById('tbody');
+      const start = (currentPage - 1) * pageSize;
+      const rows = filtered.slice(start, start + pageSize);
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="empty">Không có item nào khớp filter.</td></tr>`;
+      } else {
+        tbody.innerHTML = rows.map(it => rowHtml(it)).join('');
+        wireRows();
+      }
+      updateStats();
+      updatePagination();
+      updateCommentCount();
+    }
+
+    function rowHtml(it) {
+      const key = commentKey(it);
+      const hasCmt = !!comments[key];
+      const open = openEditors.has(key);
+      const savedBlock = (hasCmt && !open) ? `<div class="cmt-saved">💬 ${escapeHtml(comments[key])}</div>` : '';
+      const editorRow = open ? `
+        <tr class="editor-row" data-editrow="${escapeHtml(key)}">
+          <td colspan="8"><textarea placeholder="Ghi chú / góp ý cho item này...">${escapeHtml(comments[key] || '')}</textarea></td>
+        </tr>` : '';
+      return `
+      <tr class="${hasCmt ? 'has-comment' : ''}" data-key="${escapeHtml(key)}">
+        <td class="cmt-cell"><button class="cbtn ${open || hasCmt ? 'active' : ''}" data-cmt="${escapeHtml(key)}" title="Comment item này">💬</button></td>
+        <td class="id-cell">${escapeHtml(idOf(it))}</td>
+        <td class="scope-cell">${escapeHtml(it.scope)}</td>
+        <td class="cat-cell">${escapeHtml(it.category)}${it.subcategory ? '<br><span style="font-size:12px;opacity:.8">· ' + escapeHtml(it.subcategory) + '</span>' : ''}</td>
+        <td class="ref-cell">${escapeHtml(fmtRef(it.ref))}</td>
+        <td><span class="badge badge-p${it.priority}">P${it.priority}</span></td>
+        <td><span class="badge badge-auto-${(it.auto||'no').toLowerCase()}">${escapeHtml(it.auto)}</span></td>
+        <td class="item-cell">${escapeHtml(it.text)}${savedBlock}</td>
+      </tr>${editorRow}`;
+    }
+
+    function wireRows() {
+      document.querySelectorAll('[data-cmt]').forEach(btn => {
+        // mousedown fire TRƯỚC blur của textarea đang mở → click 💬 không bị nuốt 1 lần.
+        btn.onmousedown = (e) => {
+          e.preventDefault();
+          const key = btn.getAttribute('data-cmt');
+          if (openEditors.has(key)) openEditors.delete(key); else openEditors.add(key);
+          render();
+          if (openEditors.has(key)) {
+            const ta = document.querySelector(`[data-editrow="${cssEsc(key)}"] textarea`);
+            if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+          }
+        };
+      });
+      document.querySelectorAll('[data-editrow] textarea').forEach(ta => {
+        const key = ta.closest('[data-editrow]').getAttribute('data-editrow');
+        ta.oninput = () => {
+          const v = ta.value.trim();
+          if (v) comments[key] = v; else delete comments[key];
+          saveComments(); updateCommentCount();
+        };
+        ta.onblur = () => { openEditors.delete(key); setTimeout(render, 0); };
+      });
+    }
+
+    function updateStats() {
+      const byP = [1,2,3,4].map(p => filtered.filter(i => i.priority === p).length);
+      const autoY = filtered.filter(i => i.auto === 'Yes').length;
+      const autoN = filtered.filter(i => i.auto === 'No').length;
+      document.getElementById('stats').innerHTML = `
+        <div class="pill"><span class="k">Item</span><span class="v">${filtered.length}<span style="font-size:12px;color:var(--ink-soft);font-weight:500"> / ${ALL_ITEMS.length}</span></span></div>
+        <div class="pill p1"><span class="k">P1</span><span class="v">${byP[0]}</span></div>
+        <div class="pill p2"><span class="k">P2</span><span class="v">${byP[1]}</span></div>
+        <div class="pill p3"><span class="k">P3</span><span class="v">${byP[2]}</span></div>
+        <div class="pill p4"><span class="k">P4</span><span class="v">${byP[3]}</span></div>
+        <div class="pill"><span class="k">Auto Y / N</span><span class="v" style="color:var(--ok)">${autoY}<span style="color:var(--ink-soft)"> / ${autoN}</span></span></div>`;
+    }
+
+    function updateCommentCount() { document.getElementById('commentCount').textContent = Object.keys(comments).length; }
+
+    function updatePagination() {
+      const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const ctrls = document.getElementById('pageControls');
+      ctrls.innerHTML = '';
+      const mk = (label, enabled, onClick, active) => {
+        const b = document.createElement('button');
+        b.innerHTML = label; b.disabled = !enabled;
+        if (active) b.classList.add('active');
+        if (onClick) b.onclick = onClick;
+        ctrls.appendChild(b);
+      };
+      mk('←', currentPage > 1, () => { currentPage--; render(); window.scrollTo(0,0); });
+      const maxShow = 5;
+      let start = Math.max(1, currentPage - 2);
+      let end = Math.min(totalPages, start + maxShow - 1);
+      if (end - start + 1 < maxShow) start = Math.max(1, end - maxShow + 1);
+      for (let i = start; i <= end; i++) mk(String(i), true, () => { currentPage = i; render(); window.scrollTo(0,0); }, i === currentPage);
+      mk('→', currentPage < totalPages, () => { currentPage++; render(); window.scrollTo(0,0); });
+      document.getElementById('pageInfo').textContent = `Trang ${currentPage} / ${totalPages} • ${filtered.length} item`;
+    }
+
+    // ---- Copy comments ----
+    // Sinh block feedback tự-hành: [A] preamble hướng dẫn AI + [B] header định danh + [C] N dòng neo CHK-ID.
+    function buildCommentText() {
+      const today = new Date().toISOString().slice(0,10);
+      const preamble = [
+        `[HƯỚNG DẪN CHO AI — feedback thu từ preview để cập nhật CHECKLIST/TESTCASE, KHÔNG phải yêu cầu mới]`,
+        ``,
+        `Nhiệm vụ: áp feedback dưới đây vào tài liệu nguồn của feature ${FEATURE}.`,
+        `1. Sửa file .md trong docs/${FEATURE}/test/checklist/ — định vị item bằng CHK-ID bền.`,
+        `   TUYỆT ĐỐI KHÔNG sửa preview.html/data.js tay — data.js do /test-checklist tự regen từ .md.`,
+        `2. Phân loại MỖI feedback rồi REPORT bảng cho user xem TRƯỚC, KHÔNG auto-apply:`,
+        `   (A) apply thẳng (wording/priority/auto 1 item) · (B) thêm/xóa/tách/gộp item → cấp CHK-ID mới từ next_chk_id`,
+        `       hoặc retire vào ## Retired CHK-IDs (KHÔNG renumber, KHÔNG reuse ID); đổi checklist → nhắc regen testcase 1:1`,
+        `   (C) LỆCH nghiệp vụ (mâu thuẫn ref FR/BR/NFR/Error Matrix) → mở docs/${FEATURE}/srs/${FEATURE}-spec.md`,
+        `       tại ref đó, CẢNH BÁO + trích điều khoản + route /cr, KHÔNG tự sửa · (D) vượt phạm vi → route skill khác`,
+        `   (E) mơ hồ → hỏi lại · (F) CHK không tồn tại/retired/stale → bỏ qua, nêu lý do.`,
+        `3. Ghi file qua approval gate: L1 plan + L2 diff. Không ghi thẳng.`,
+        `4. Xong nhắc user chạy lại /test-checklist (và /test-cases nếu số case đổi) để regen data.js + preview.`,
+        ``,
+        `Feedback:`,
+        ``,
+        `### FEEDBACK-PREVIEW · checklist · feature=${FEATURE} · ${today} · updated=${UPDATED}`,
+        `# Nguồn: docs/${FEATURE}/test/checklist/`,
+        `# Mỗi dòng: - [CHK-ID | ref=<FR/BR> | file=<md>] "<trích>" → <comment>`,
+        ``,
+      ];
+      const lines = [];
+      const seen = new Set();
+      [...filtered, ...ALL_ITEMS].forEach(it => {
+        const key = commentKey(it);
+        if (seen.has(key) || !comments[key]) return;
+        seen.add(key);
+        const meta = [`ref=${fmtRef(it.ref)}`, `file=${it.file}`].join(' | ');
+        const excerpt = (it.text || '').slice(0, 70) + ((it.text||'').length > 70 ? '…' : '');
+        lines.push(`- [${idOf(it)} | ${meta}] "${excerpt}" → ${comments[key]}`);
+      });
+      if (lines.length === 0) return '(chưa có comment nào)';
+      return preamble.join('\n') + lines.join('\n');
+    }
+    document.getElementById('copyComments').onclick = () => {
+      if (Object.keys(comments).length === 0) { toast('Chưa có comment nào'); return; }
+      document.getElementById('copyText').value = buildCommentText();
+      document.getElementById('copyModal').classList.add('show');
+    };
+    document.getElementById('copyClose').onclick = () => document.getElementById('copyModal').classList.remove('show');
+    document.getElementById('copyModal').onclick = (e) => { if (e.target.id === 'copyModal') document.getElementById('copyModal').classList.remove('show'); };
+    document.getElementById('copyDo').onclick = async () => {
+      const txt = document.getElementById('copyText').value;
+      try { await navigator.clipboard.writeText(txt); toast('✅ Đã copy vào clipboard'); }
+      catch (e) { const ta = document.getElementById('copyText'); ta.select(); document.execCommand('copy'); toast('✅ Đã copy'); }
+      document.getElementById('copyModal').classList.remove('show');
+    };
+    document.getElementById('clearComments').onclick = () => {
+      if (Object.keys(comments).length === 0) { toast('Không có gì để xoá'); return; }
+      if (confirm('Xoá toàn bộ comment đang lưu trong trình duyệt?')) {
+        comments = {}; saveComments(); openEditors.clear(); render(); toast('Đã xoá hết comment');
+      }
+    };
+
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    // ---- Excel export (SheetJS lazy) ----
+    function withXLSX(cb) {
+      if (window.XLSX) return cb();
+      const s = document.createElement('script');
+      s.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+      s.onload = cb; s.onerror = () => toast('⚠️ Cần mạng để tải thư viện Excel');
+      document.head.appendChild(s);
+    }
+    function exportXlsx() {
+      withXLSX(() => {
+        const rows = filtered.map(it => ({
+          ID: idOf(it), Scope: it.scope, Target: it.target || '', Category: it.category, 'Sub-Category': it.subcategory,
+          Ref: fmtRef(it.ref), Priority: it.priority, Auto: it.auto, 'Checklist Item': it.text,
+          Comment: comments[commentKey(it)] || '',
+        }));
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Checklist');
+        XLSX.writeFile(wb, `checklist-${FEATURE}.xlsx`);
+      });
+    }
+
+    ['search','filterFile','filterScope','filterCategory','filterPriority','filterAuto','filterComment'].forEach(id => {
+      document.getElementById(id).addEventListener('input', applyFilters);
+      document.getElementById(id).addEventListener('change', applyFilters);
+    });
+    document.getElementById('pageSize').addEventListener('change', e => { pageSize = parseInt(e.target.value); currentPage = 1; render(); });
+    document.getElementById('exportXlsx').addEventListener('click', exportXlsx);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('copyModal').classList.remove('show'); });
+
+    render();
+  </script>
+</body>
+</html>

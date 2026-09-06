@@ -405,13 +405,39 @@
     var MAX_FLASH = 3;
 
     /**
-     * BỘ CHUẨN HÓA TIẾNG VIỆT UTF-8 TOÀN CỤC (GLOBAL HYBRID AUTO-CLEANER)
-     * Tự động giải mã các thông báo Mojibake từ Flask Backend sang tiếng Việt chuẩn UTF-8.
+     * BỘ CHUẨN HÓA TIẾNG VIỆT UTF-8 TOÀN CỤC (GLOBAL AUTO-DECODER)
+     * Tự động khôi phục chuỗi bị mã hóa kép (UTF-8 bytes đọc nhầm qua Latin-1/CP1252)
+     * thành tiếng Việt chuẩn UTF-8.
+     *
+     * Kỹ thuật: escape(text) chuyển mỗi ký tự Latin-1 thành %XX,
+     * decodeURIComponent giải mã chuỗi %XX thành UTF-8 gốc.
+     * Nếu text đã chuẩn UTF-8 sẵn thì trả về nguyên bản (không ảnh hưởng).
      */
     function cleanVietnameseMojibake(text) {
         if (!text || typeof text !== 'string') return text;
 
-        // 1. Bảng ánh xạ các thông báo nguyên văn từ Backend Flask (Exact Match Dictionary)
+        // Phát hiện nhanh: nếu chuỗi chứa dấu hiệu double-encoding Latin-1
+        // (ký tự trong dải U+00C0–U+00FF thường gặp ở mojibake tiếng Việt)
+        var hasMojibake = /[\u00C0-\u00FF]/.test(text);
+        if (!hasMojibake) return text;
+
+        try {
+            // escape() chuyển mỗi codepoint > 0x7F thành %XX (Latin-1 byte value)
+            // decodeURIComponent() giải mã chuỗi %XX đó theo UTF-8
+            var decoded = decodeURIComponent(escape(text));
+            // Kiểm tra kết quả có hợp lệ (chứa ký tự tiếng Việt thực sự)
+            if (decoded && decoded.length > 0 && decoded !== text) {
+                return decoded;
+            }
+        } catch (e) {
+            // Nếu chuỗi không phải double-encoding hợp lệ, giữ nguyên bản
+        }
+
+        return text;
+    }
+    window.cleanVietnameseMojibake = cleanVietnameseMojibake;
+
+ Bảng ánh xạ các thông báo nguyên văn từ Backend Flask (Exact Match Dictionary)
         var dict = {
             'Vui lÃ²ng Ä‘Äƒng nháº­p trÆ°á»›c.': 'Vui lòng đăng nhập trước.',
             'Vui lÃ²ng Ä‘Äƒng nháº°p trÆ°á»›c.': 'Vui lòng đăng nhập trước.',
@@ -496,6 +522,7 @@
 
         return cleaned;
     }
+    window.cleanVietnameseMojibake = cleanVietnameseMojibake;
 
     // Hàm nhận diện CHÍNH XÁC các thông báo auth cần triệt tiêu (tránh nuốt nhầm thông báo nghiệp vụ)
     function isSuppressedAuthMessage(text) {

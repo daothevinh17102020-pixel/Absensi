@@ -396,13 +396,18 @@ const DashboardUI = {
             info: 'info'
         };
 
+        const cleanTitle = (typeof window !== 'undefined' && typeof window.cleanVietnameseMojibake === 'function')
+            ? window.cleanVietnameseMojibake(title) : (title || '');
+        const cleanMessage = (typeof window !== 'undefined' && typeof window.cleanVietnameseMojibake === 'function')
+            ? window.cleanVietnameseMojibake(message) : (message || '');
+
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
         toast.innerHTML = `
             <span class="material-symbols-outlined toast-icon">${icons[type] || 'info'}</span>
             <div class="toast-body">
-                <div class="toast-title">${this._escapeHtml(title)}</div>
-                <div class="toast-message">${this._escapeHtml(message)}</div>
+                <div class="toast-title">${this._escapeHtml(cleanTitle)}</div>
+                <div class="toast-message">${this._escapeHtml(cleanMessage)}</div>
             </div>
         `;
 

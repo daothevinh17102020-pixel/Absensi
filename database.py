@@ -215,6 +215,8 @@ def get_semua_matakuliah():
 
 def get_matakuliah_by_kelas(kelas_id):
     """Lấy danh sách môn học thuộc về một lớp cụ thể."""
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -222,11 +224,14 @@ def get_matakuliah_by_kelas(kelas_id):
             "SELECT * FROM matakuliah WHERE kelas_id = %s ORDER BY nama_mk",
             (kelas_id,)
         )
-        hasil = cursor.fetchall()
-        cursor.close(); conn.close()
-        return hasil
+        return cursor.fetchall()
     except Exception:
         return []
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 def get_matakuliah_by_id(mk_id):
@@ -244,6 +249,8 @@ def get_matakuliah_by_id(mk_id):
 
 def tambah_matakuliah(nama_mk, kode_mk, kelas_id, sks=2):
     """Lưu môn học mới. Trả về id hoặc None."""
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -252,11 +259,16 @@ def tambah_matakuliah(nama_mk, kode_mk, kelas_id, sks=2):
             (nama_mk, kode_mk, kelas_id, sks)
         )
         conn.commit()
-        mk_id = cursor.lastrowid
-        cursor.close(); conn.close()
-        return mk_id
+        return cursor.lastrowid
     except Exception:
+        if conn:
+            conn.rollback()
         return None
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 def update_matakuliah(mk_id, nama_mk, kode_mk, kelas_id, sks):
@@ -310,6 +322,86 @@ def hapus_matakuliah(mk_id):
         return True
     except Exception:
         return False
+
+
+def jadwal_memiliki_absensi(jadwal_id):
+    """Kiểm tra xem lịch học đã phát sinh ít nhất 1 bản ghi điểm danh hay chưa."""
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM absensi WHERE jadwal_id = %s LIMIT 1", (jadwal_id,))
+        row = cursor.fetchone()
+        return row is not None
+    except Exception:
+        return False
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
+
+def sync_matakuliah_ten_lop(kelas_id, ten_lop_moi):
+    """Đồng bộ tên môn học khi tên lớp thay đổi (chuẩn TMU 1 Lớp = 1 Môn)."""
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE matakuliah SET nama_mk = %s WHERE kelas_id = %s", (ten_lop_moi, kelas_id))
+        conn.commit()
+        return True
+    except Exception:
+        if conn:
+            conn.rollback()
+        return False
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
+
+def ensure_matakuliah_cho_kelas(kelas_id):
+    """
+    Đảm bảo lớp học phần luôn có ít nhất 1 bản ghi môn học tương ứng (chuẩn TMU: 1 Lớp = 1 Môn).
+    Nếu lớp đã có môn học: trả về id môn học đầu tiên.
+    Nếu chưa có: tự động tạo mới môn học mặc định gắn với lớp học này.
+    Trả về id môn học (mk_id) hoặc None nếu lỗi.
+    """
+    if not kelas_id:
+        return None
+    try:
+        mks = get_matakuliah_by_kelas(kelas_id)
+        if mks:
+            return mks[0]['id']
+
+        kelas = get_kelas_by_id(kelas_id)
+        if not kelas:
+            return None
+
+        nama_mk = str(kelas.get('nama_kelas', '')).strip() or f"Lớp {kelas_id}"
+        clean_name = "".join(c for c in nama_mk if c.isalnum()).upper()
+        if not clean_name:
+            clean_name = "MK"
+        kode_mk = f"{clean_name[:8]}_{kelas_id}"[:20]
+
+        # Thử tạo mới môn học cho lớp này
+        mk_id = tambah_matakuliah(nama_mk, kode_mk, kelas_id, sks=2)
+        if not mk_id:
+            # Kiểm tra lại tránh race condition 2 request đồng thời
+            mks = get_matakuliah_by_kelas(kelas_id)
+            if mks:
+                return mks[0]['id']
+            import time
+            kode_fallback = f"MK{kelas_id}_{int(time.time()) % 10000}"[:20]
+            mk_id = tambah_matakuliah(nama_mk, kode_fallback, kelas_id, sks=2)
+        return mk_id
+    except Exception as e:
+        print(f"[DB] Lỗi khi ensure_matakuliah_cho_kelas({kelas_id}): {e}")
+        return None
 
 
 # ══════════════════════════════════════════════════════════════
@@ -434,6 +526,24 @@ def tambah_jadwal(matakuliah_id, hari, jam_mulai, jam_selesai, batas_terlambat=N
         if conn:
             conn.rollback()
         return None
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
+
+def jadwal_memiliki_absensi(jadwal_id):
+    """Kiểm tra lịch học đã có dữ liệu điểm danh hay chưa (GAP-08). Trả về True/False."""
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM absensi WHERE jadwal_id = %s LIMIT 1", (jadwal_id,))
+        return cursor.fetchone() is not None
+    except Exception:
+        return False
     finally:
         if cursor:
             cursor.close()

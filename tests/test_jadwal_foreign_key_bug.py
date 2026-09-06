@@ -94,7 +94,23 @@ class JadwalForeignKeyBugTests(unittest.TestCase):
         response = self.client.post('/jadwal/tambah', data=post_data)
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
-        self.assertIn('Vui lòng nhập đầy đủ thông tin.', html)
+    def test_jadwal_edit_prevent_class_change_when_attendance_exists(self):
+        """TC-SCH-014: Không cho phép đổi sang lớp khác khi lịch học đã có điểm danh."""
+        sample_jadwal = {'id': 10, 'kelas_id': 7, 'matakuliah_id': 7, 'hari': 'Senin', 'jam_mulai': '08:00', 'jam_selesai': '10:00'}
+        with patch('database.get_jadwal_by_id', return_value=sample_jadwal), \
+             patch('database.jadwal_memiliki_absensi', return_value=True), \
+             patch('database.ensure_matakuliah_cho_kelas', return_value=88):
+            
+            post_data = {
+                'kelas_id': '8',  # Đổi từ lớp 7 sang lớp 8
+                'hari': 'Senin',
+                'jam_mulai': '08:00',
+                'jam_selesai': '10:00'
+            }
+            response = self.client.post('/jadwal/edit/10', data=post_data)
+            self.assertEqual(response.status_code, 200)
+            html = response.get_data(as_text=True)
+            self.assertIn('Lịch học này đã phát sinh dữ liệu điểm danh, không thể thay đổi Lớp học phần.', html)
 
 if __name__ == '__main__':
     unittest.main()

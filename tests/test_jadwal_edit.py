@@ -188,14 +188,28 @@ class ScheduleEditTests(unittest.TestCase):
         html = response.get_data(as_text=True)
         self.assertIn('Thêm lịch học thành công!', html)
 
+    @patch('database.jadwal_memiliki_absensi')
     @patch('database.hapus_jadwal')
-    def test_jadwal_hapus_post_success(self, mock_hapus_jadwal):
+    def test_jadwal_hapus_post_success(self, mock_hapus_jadwal, mock_memiliki_absensi):
+        mock_memiliki_absensi.return_value = False
         mock_hapus_jadwal.return_value = True
         response = self.client.post('/jadwal/hapus/10', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
+        mock_memiliki_absensi.assert_called_once_with(10)
         mock_hapus_jadwal.assert_called_once_with(10)
         html = response.get_data(as_text=True)
         self.assertIn('Xóa lịch học thành công.', html)
+
+    @patch('database.jadwal_memiliki_absensi')
+    @patch('database.hapus_jadwal')
+    def test_jadwal_hapus_post_blocked_when_has_attendance(self, mock_hapus_jadwal, mock_memiliki_absensi):
+        mock_memiliki_absensi.return_value = True
+        response = self.client.post('/jadwal/hapus/10', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        mock_memiliki_absensi.assert_called_once_with(10)
+        mock_hapus_jadwal.assert_not_called()
+        html = response.get_data(as_text=True)
+        self.assertIn('Không thể xóa lịch học đã có dữ liệu điểm danh', html)
 
     @patch('database.get_connection')
     def test_database_update_jadwal_helper(self, mock_get_conn):
