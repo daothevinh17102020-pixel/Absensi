@@ -49,7 +49,7 @@
             <select class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-container transition-all outline-none font-body-md"
                     id="hari" name="hari" required>
                 <option value="">-- Chọn thứ --</option>
-                {% for h in ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] %}
+                {% for h in ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'] %}
                 <option value="{{ h }}" {% if selected_hari == h %}selected{% endif %}>{{ {'Senin': 'Thứ Hai', 'Selasa': 'Thứ Ba', 'Rabu': 'Thứ Tư', 'Kamis': 'Thứ Năm', 'Jumat': 'Thứ Sáu', 'Sabtu': 'Thứ Bảy', 'Minggu': 'Chủ Nhật'}[h] }}</option>
                 {% endfor %}
             </select>

@@ -254,8 +254,8 @@ const CameraManager = {
         // Gambar video ke canvas
         this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
 
-        // Konversi ke base64 JPEG (kompresi 70%)
-        const frameData = this.canvas.toDataURL('image/jpeg', 0.7);
+        // Konversi ke base64 JPEG (kompresi 85% để bảo toàn chi tiết khuôn mặt ở cự ly xa)
+        const frameData = this.canvas.toDataURL('image/jpeg', 0.85);
 
         // Kirim via SocketIO (lebih cepat dari HTTP)
         if (this.socket && this.socket.connected) {
@@ -385,7 +385,10 @@ const CameraManager = {
             };
             DashboardUI.showToast('success', 'Đã ghi nhận điểm danh',
                 `${data.data.nama} — ${statusLabels[data.data.status_absensi] || data.data.status_absensi}`);
-            // Refresh tabel absensi
+            // Refresh tabel absensi & stats
+            if (data.stats) {
+                DashboardUI.updateStats(data.stats);
+            }
             DashboardUI.refreshAbsensiTable();
             // Tahan sebentar setelah berhasil absen sebelum scan lagi
             releaseLockNow = true;
@@ -415,6 +418,9 @@ const CameraManager = {
             const names = successes.map(item => item.data.nama).join(', ');
             if (indicatorSpan) indicatorSpan.textContent = `✓ Đã điểm danh ${successes.length} người`;
             DashboardUI.showToast('success', `Đã ghi ${successes.length} lượt điểm danh`, names);
+            if (data.stats) {
+                DashboardUI.updateStats(data.stats);
+            }
             DashboardUI.refreshAbsensiTable();
         } else if (verifying.length > 0) {
             if (indicatorSpan) indicatorSpan.textContent = `🔍 Đang xác minh ${verifying.length} khuôn mặt...`;

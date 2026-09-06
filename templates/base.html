@@ -19,7 +19,9 @@
     <title>{% block title %}GRIT.AI — Hệ thống điểm danh sinh trắc học{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo_grit_ai_icon.svg') }}"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script id="tailwind-config">
         tailwind.config = {
@@ -89,13 +91,15 @@
                         "gutter": "16px"
                     },
                     "fontFamily": {
-                        "title-sm": ["Plus Jakarta Sans"],
-                        "headline-md": ["Plus Jakarta Sans"],
-                        "label-caps": ["Plus Jakarta Sans"],
-                        "body-md": ["Plus Jakarta Sans"],
-                        "display-lg": ["Plus Jakarta Sans"],
-                        "body-sm": ["Plus Jakarta Sans"],
-                        "display-lg-mobile": ["Plus Jakarta Sans"]
+                        "sans": ["'Open Sans'", "sans-serif"],
+                        "mono": ["'Open Sans'", "sans-serif"],
+                        "title-sm": ["'Open Sans'", "sans-serif"],
+                        "headline-md": ["'Open Sans'", "sans-serif"],
+                        "label-caps": ["'Open Sans'", "sans-serif"],
+                        "body-md": ["'Open Sans'", "sans-serif"],
+                        "display-lg": ["'Open Sans'", "sans-serif"],
+                        "body-sm": ["'Open Sans'", "sans-serif"],
+                        "display-lg-mobile": ["'Open Sans'", "sans-serif"]
                     },
                     "fontSize": {
                         "title-sm": ["18px", {"lineHeight": "28px", "fontWeight": "600"}],
@@ -111,13 +115,20 @@
         }
     </script>
     <style>
+        body, button, input, select, textarea, table, th, td, h1, h2, h3, h4, h5, h6, p, span, a, label {
+            font-family: 'Open Sans', sans-serif;
+        }
         body {
             background-color: #0a0a0a;
             background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
             background-size: 40px 40px;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Open Sans', sans-serif;
+        }
+        .font-mono {
+            font-family: 'Open Sans', sans-serif !important;
         }
         .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined' !important;
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
         .glass-effect {
@@ -267,7 +278,11 @@
             from { transform: translateY(-20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
-        /* Hiệu ứng chữ GRIT cam bóng ánh sáng chiếu */
+        /* Hiệu ứng chữ GRIT cam bóng ánh sáng chiếu (giữ nguyên font thương hiệu Plus Jakarta Sans) */
+        .grit-text-gloss,
+        .grit-text-gloss + span {
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+        }
         .grit-text-gloss {
             background: linear-gradient(135deg, #fff2e6 0%, #ffc694 14%, #ff731a 38%, #ff5500 66%, #d43b00 86%, #ff8533 100%);
             -webkit-background-clip: text;
@@ -1112,61 +1127,79 @@ document.addEventListener('DOMContentLoaded', function() {
             <button type="button" onclick="closeBuoiHocModal()" class="w-7 h-7 rounded-md bg-[#1b2230] border border-[#2b364d] text-[#94a3b8] hover:text-[#ff5500] hover:border-[#ff5500] flex items-center justify-center transition-colors text-sm font-semibold" title="Đóng popup">✕</button>
         </div>
 
-        <!-- Body Popup: Chỉ Tiêu Đề và Nội Dung (Đã loại bỏ toàn bộ hint) -->
+        <!-- Body Popup: 4 thông tin tự động gen từ Quản lý lịch học và cho phép sửa thủ công -->
         <div class="p-5 flex flex-col gap-3.5">
             
-            <!-- Mục 1: Thứ & Ngày -->
-            <div class="grid grid-cols-[110px_1fr] gap-3">
+            <!-- Mục 1: Thứ & Ngày (Cho phép sửa thủ công) -->
+            <div class="grid grid-cols-[125px_1fr] gap-3">
                 <div>
-                    <label class="block text-[11.5px] font-bold text-[#94a3b8] mb-1">Thứ</label>
-                    <input type="text" id="buoihoc-input-thu" value="Thứ Sáu" readonly class="w-full bg-[#0d1117] border border-[#232c3f] rounded-md px-3 py-2 text-[13px] font-bold text-[#f8fafc] outline-none cursor-default" />
+                    <label class="block text-[12px] font-bold text-[#94a3b8] mb-1.5">Thứ</label>
+                    <select id="buoihoc-select-thu" onchange="onBuoiHocThuManualChange(this.value)" class="w-full bg-[#0d1117] border border-[#232c3f] rounded-md px-3 py-2 text-[13px] font-bold text-[#f8fafc] outline-none focus:border-[#ff5500] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                        <option value="Thứ Hai">Thứ Hai</option>
+                        <option value="Thứ Ba">Thứ Ba</option>
+                        <option value="Thứ Tư">Thứ Tư</option>
+                        <option value="Thứ Năm">Thứ Năm</option>
+                        <option value="Thứ Sáu">Thứ Sáu</option>
+                        <option value="Thứ Bảy">Thứ Bảy</option>
+                        <option value="Chủ Nhật">Chủ Nhật</option>
+                    </select>
                 </div>
                 <div>
-                    <label class="block text-[11.5px] font-bold text-[#94a3b8] mb-1">Ngày</label>
-                    <input type="date" id="buoihoc-input-date" onchange="onBuoiHocDateChange(this.value)" class="w-full bg-[#0d1117] border border-[#232c3f] rounded-md px-3 py-2 text-[13px] font-bold text-[#f8fafc] outline-none focus:border-[#ff5500] transition-colors cursor-pointer" />
+                    <label class="block text-[12px] font-bold text-[#94a3b8] mb-1.5">Ngày</label>
+                    <input type="date" id="buoihoc-input-date" onchange="onBuoiHocDateChange(this.value)" class="w-full bg-[#0d1117] border border-[#232c3f] rounded-md px-3 py-2 text-[13px] font-bold text-[#f8fafc] outline-none focus:border-[#ff5500] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" />
                 </div>
             </div>
 
-            <!-- Mục 2: Lớp học phần -->
+            <!-- Mục 2: Lớp học phần là DROP LIST gồm các lớp có lịch học trong hệ thống (Cho phép sửa thủ công) -->
             <div>
-                <label class="block text-[11.5px] font-bold text-[#94a3b8] mb-1">Lớp học phần</label>
-                <input type="text" id="buoihoc-input-lop" value="Đang tải..." readonly class="w-full bg-[#0d1117] border border-[#232c3f] rounded-md px-3 py-2 text-[13px] font-bold text-[#f8fafc] outline-none cursor-default truncate" />
+                <label class="block text-[12px] font-bold text-[#94a3b8] mb-1.5">Lớp học phần</label>
+                <div class="relative">
+                    <select id="buoihoc-select-lop" onchange="onBuoiHocLopChange(this.value)" class="w-full bg-[#0d1117] border border-[#232c3f] rounded-md px-3 py-2 text-[13px] font-bold text-[#f8fafc] outline-none focus:border-[#ff5500] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed appearance-none pr-8 truncate">
+                        <option value="">-- Chưa có lịch học trong hệ thống --</option>
+                    </select>
+                    <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none text-[18px]">expand_more</span>
+                </div>
             </div>
 
-            <!-- Mục 3: Giờ bắt đầu & Giờ kết thúc -->
+            <!-- Mục 3: Giờ bắt đầu & Giờ kết thúc (Không sửa thủ công được -> Màu xám nhạt thể hiện disable) -->
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-[11.5px] font-bold text-[#94a3b8] mb-1">Giờ bắt đầu</label>
-                    <input type="text" id="buoihoc-input-start" value="06:30" readonly class="w-full bg-[#0d1117] border border-[#232c3f] rounded-md px-3 py-2 text-[13px] font-bold text-[#f8fafc] outline-none cursor-default font-mono" />
+                    <label class="block text-[12px] font-bold text-[#94a3b8] mb-1.5">Giờ bắt đầu</label>
+                    <input type="text" id="buoihoc-input-start" value="" placeholder="--:--" readonly tabindex="-1" class="w-full bg-[#090c12] border border-[#1e2535] rounded-md px-3 py-2 text-[13px] font-bold text-[#64748b] outline-none cursor-not-allowed font-mono select-none" />
                 </div>
                 <div>
-                    <label class="block text-[11.5px] font-bold text-[#94a3b8] mb-1">Giờ kết thúc</label>
-                    <input type="text" id="buoihoc-input-end" value="11:30" readonly class="w-full bg-[#0d1117] border border-[#232c3f] rounded-md px-3 py-2 text-[13px] font-bold text-[#f8fafc] outline-none cursor-default font-mono" />
+                    <label class="block text-[12px] font-bold text-[#94a3b8] mb-1.5">Giờ kết thúc</label>
+                    <input type="text" id="buoihoc-input-end" value="" placeholder="--:--" readonly tabindex="-1" class="w-full bg-[#090c12] border border-[#1e2535] rounded-md px-3 py-2 text-[13px] font-bold text-[#64748b] outline-none cursor-not-allowed font-mono select-none" />
                 </div>
             </div>
 
-            <!-- Mục 4: Hạn đi muộn -->
+            <!-- Mục 4: Hạn đi muộn (Không sửa thủ công được -> Màu xám nhạt thể hiện disable) -->
             <div>
-                <label class="block text-[11.5px] font-bold text-[#94a3b8] mb-1">Hạn đi muộn</label>
-                <input type="text" id="buoihoc-input-hanmuon" value="Không có hạn đi muộn" readonly class="w-full bg-[#0d1117] border border-[#232c3f] rounded-md px-3 py-2 text-[13px] font-bold text-[#10b981] outline-none cursor-default" />
+                <label class="block text-[12px] font-bold text-[#94a3b8] mb-1.5">Hạn đi muộn</label>
+                <input type="text" id="buoihoc-input-hanmuon" value="" placeholder="---" readonly tabindex="-1" class="w-full bg-[#090c12] border border-[#1e2535] rounded-md px-3 py-2 text-[13px] font-bold text-[#64748b] outline-none cursor-not-allowed select-none" />
             </div>
 
-            <!-- Mục 5: Buổi -->
+            <!-- Mục 5: Buổi (Cho phép sửa thủ công) -->
             <div>
-                <label class="block text-[11.5px] font-bold text-[#94a3b8] mb-1">Buổi</label>
+                <label class="block text-[12px] font-bold text-[#94a3b8] mb-1.5">Buổi</label>
                 <div class="flex items-center gap-2 max-w-[150px]">
-                    <button type="button" onclick="adjustBuoiModal(-1)" class="w-8 h-8 rounded-md bg-[#1b2230] border border-[#232c3f] text-[#f8fafc] hover:border-[#ff5500] flex items-center justify-center text-base font-bold transition-colors cursor-pointer">-</button>
-                    <input type="number" id="buoihoc-input-buoi" value="1" min="1" max="60" class="w-14 h-8 bg-[#0d1117] border border-[#232c3f] rounded-md text-center text-[13.5px] font-bold text-[#ff5500] font-mono outline-none focus:border-[#ff5500]" />
-                    <button type="button" onclick="adjustBuoiModal(1)" class="w-8 h-8 rounded-md bg-[#1b2230] border border-[#232c3f] text-[#f8fafc] hover:border-[#ff5500] flex items-center justify-center text-base font-bold transition-colors cursor-pointer">+</button>
+                    <button type="button" id="btn-buoihoc-minus" onclick="adjustBuoiModal(-1)" class="w-8 h-8 rounded-md bg-[#1b2230] border border-[#232c3f] text-[#f8fafc] hover:border-[#ff5500] flex items-center justify-center text-base font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">-</button>
+                    <input type="number" id="buoihoc-input-buoi" value="" placeholder="-" min="1" max="60" class="w-14 h-8 bg-[#0d1117] border border-[#232c3f] rounded-md text-center text-[13.5px] font-bold text-[#ff5500] font-mono outline-none focus:border-[#ff5500] disabled:opacity-40 disabled:cursor-not-allowed" />
+                    <button type="button" id="btn-buoihoc-plus" onclick="adjustBuoiModal(1)" class="w-8 h-8 rounded-md bg-[#1b2230] border border-[#232c3f] text-[#f8fafc] hover:border-[#ff5500] flex items-center justify-center text-base font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">+</button>
                 </div>
             </div>
 
         </div>
 
-        <!-- Footer Popup: Đóng & Lưu thay đổi -->
-        <div class="bg-[#141724] border-t border-[#232c3f] px-5 py-3 flex items-center justify-end gap-2.5">
-            <button type="button" onclick="closeBuoiHocModal()" class="px-4 py-2 rounded-md border border-[#2b364d] text-[#94a3b8] hover:text-white text-[12.5px] font-semibold transition-colors cursor-pointer bg-transparent">Đóng</button>
-            <button type="button" id="btn-save-buoihoc-modal" onclick="saveBuoiHocModal()" class="px-5 py-2 rounded-md bg-[#ff5500] hover:bg-[#ff6a20] text-white text-[12.5px] font-bold shadow-lg shadow-[#ff5500]/25 transition-all cursor-pointer">Lưu thay đổi</button>
+        <!-- Footer Popup: Đóng, Tự động & Lưu thay đổi -->
+        <div class="bg-[#141724] border-t border-[#232c3f] px-5 py-3 flex items-center justify-between">
+            <button type="button" id="btn-reset-buoihoc-auto" onclick="resetBuoiHocModal()" class="text-[12px] font-semibold text-[#ff5500] hover:text-[#ff7733] hover:underline flex items-center gap-1.5 bg-transparent border-0 cursor-pointer p-0" title="Đặt lại về tính toán tự động theo lịch học">
+                <span class="material-symbols-outlined text-[16px] leading-none">restart_alt</span> Tự động tính buổi
+            </button>
+            <div class="flex items-center gap-2.5">
+                <button type="button" onclick="closeBuoiHocModal()" class="px-4 py-2 rounded-md border border-[#2b364d] text-[#94a3b8] hover:text-white text-[12.5px] font-semibold transition-colors cursor-pointer bg-transparent">Đóng</button>
+                <button type="button" id="btn-save-buoihoc-modal" onclick="saveBuoiHocModal()" class="px-5 py-2 rounded-md bg-[#ff5500] hover:bg-[#ff6a20] text-white text-[12.5px] font-bold shadow-lg shadow-[#ff5500]/25 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">Lưu thay đổi</button>
+            </div>
         </div>
 
     </div>
@@ -1174,38 +1207,171 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 // =========================================================
-// CONTROLLER CHO POPUP THÔNG TIN BUỔI HỌC
+// CONTROLLER CHO POPUP THÔNG TIN BUỔI HỌC (GRIT.AI / TMU)
 // =========================================================
-function openBuoiHocModal() {
-    var overlay = document.getElementById('modal-buoihoc-overlay');
-    if (!overlay) return;
-    overlay.classList.remove('hidden');
-    overlay.classList.add('flex');
+var currentDanhSachLop = [];
+var currentSelectedJadwalId = null;
 
-    // Gọi API lấy dữ liệu ca học mới nhất
-    fetch('/api/buoi-hoc/info')
+function loadBuoiHocData(targetJadwalId) {
+    var url = '/api/buoi-hoc/info' + (targetJadwalId ? '?jadwal_id=' + targetJadwalId : '');
+
+    fetch(url)
         .then(function(res) { return res.json(); })
         .then(function(res) {
             if (res.status === 'ok' && res.data) {
                 var d = res.data;
-                var thuEl = document.getElementById('buoihoc-input-thu');
+                currentDanhSachLop = d.danh_sach_lop || [];
+                currentSelectedJadwalId = d.jadwal_id;
+
+                var thuSelect = document.getElementById('buoihoc-select-thu');
                 var dateEl = document.getElementById('buoihoc-input-date');
-                var lopEl = document.getElementById('buoihoc-input-lop');
+                var lopSelect = document.getElementById('buoihoc-select-lop');
                 var startEl = document.getElementById('buoihoc-input-start');
                 var endEl = document.getElementById('buoihoc-input-end');
                 var buoiEl = document.getElementById('buoihoc-input-buoi');
+                var hanmuonEl = document.getElementById('buoihoc-input-hanmuon');
+                var saveBtn = document.getElementById('btn-save-buoihoc-modal');
+                var btnMinus = document.getElementById('btn-buoihoc-minus');
+                var btnPlus = document.getElementById('btn-buoihoc-plus');
+                var resetBtn = document.getElementById('btn-reset-buoihoc-auto');
 
-                if (thuEl) thuEl.value = d.thu || 'Thứ Sáu';
-                if (dateEl) dateEl.value = d.tanggal || '';
-                if (lopEl) lopEl.value = d.lop_hoc_phan || 'ML - 02 — Máy học ứng dụng';
-                if (startEl) startEl.value = d.jam_mulai || '06:30';
-                if (endEl) endEl.value = d.jam_selesai || '11:30';
-                if (buoiEl) buoiEl.value = d.buoi_so || 1;
+                // 1. Cập nhật Drop list Lớp học phần
+                if (lopSelect) {
+                    lopSelect.innerHTML = '';
+                    if (currentDanhSachLop.length > 0) {
+                        currentDanhSachLop.forEach(function(item) {
+                            var opt = document.createElement('option');
+                            opt.value = item.jadwal_id;
+                            opt.textContent = item.ten_hien_thi;
+                            if (item.jadwal_id === d.jadwal_id) {
+                                opt.selected = true;
+                            }
+                            lopSelect.appendChild(opt);
+                        });
+                        lopSelect.disabled = false;
+                    } else {
+                        var optEmpty = document.createElement('option');
+                        optEmpty.value = '';
+                        optEmpty.textContent = '-- Chưa có lịch học trong hệ thống --';
+                        lopSelect.appendChild(optEmpty);
+                        lopSelect.disabled = true;
+                    }
+                }
+
+                if (d.has_jadwal) {
+                    // 2. Điền thông tin ca học gần nhất của lớp đó
+                    if (thuSelect) {
+                        thuSelect.value = d.thu || 'Thứ Hai';
+                        thuSelect.disabled = false;
+                    }
+                    if (dateEl) {
+                        dateEl.value = d.tanggal || '';
+                        dateEl.disabled = false;
+                    }
+                    if (startEl) startEl.value = d.jam_mulai || '';
+                    if (endEl) endEl.value = d.jam_selesai || '';
+                    if (hanmuonEl) hanmuonEl.value = d.han_di_muon || 'Không có hạn đi muộn';
+
+                    if (buoiEl) {
+                        buoiEl.value = (d.buoi_so !== undefined && d.buoi_so !== null && d.buoi_so !== '') ? d.buoi_so : 1;
+                        buoiEl.disabled = false;
+                    }
+                    if (btnMinus) btnMinus.disabled = false;
+                    if (btnPlus) btnPlus.disabled = false;
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.title = 'Lưu thay đổi thông tin buổi học';
+                    }
+                    if (resetBtn) resetBtn.style.display = 'inline-flex';
+                } else {
+                    // Quy tắc: Không có lịch học nào thì để rỗng
+                    if (thuSelect) {
+                        thuSelect.value = 'Thứ Hai';
+                        thuSelect.disabled = true;
+                    }
+                    if (dateEl) {
+                        dateEl.value = '';
+                        dateEl.disabled = true;
+                    }
+                    if (startEl) startEl.value = '';
+                    if (endEl) endEl.value = '';
+                    if (hanmuonEl) hanmuonEl.value = '';
+                    if (buoiEl) {
+                        buoiEl.value = '';
+                        buoiEl.disabled = true;
+                    }
+                    if (btnMinus) btnMinus.disabled = true;
+                    if (btnPlus) btnPlus.disabled = true;
+                    if (saveBtn) {
+                        saveBtn.disabled = true;
+                        saveBtn.title = 'Chưa có lịch học nào trong hệ thống để lưu thay đổi';
+                    }
+                    if (resetBtn) resetBtn.style.display = 'none';
+                }
             }
         })
         .catch(function(err) {
             console.error('Lỗi khi tải thông tin buổi học:', err);
         });
+}
+
+function openBuoiHocModal(targetJadwalId) {
+    var overlay = document.getElementById('modal-buoihoc-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('hidden');
+    overlay.classList.add('flex');
+
+    loadBuoiHocData(targetJadwalId);
+}
+
+// Xử lý khi người dùng chọn lớp khác từ Drop list -> lập tức nạp lịch gần nhất của lớp đó!
+function onBuoiHocLopChange(jadwalId) {
+    if (!jadwalId) return;
+    currentSelectedJadwalId = parseInt(jadwalId, 10);
+    var item = currentDanhSachLop.find(function(it) {
+        return it.jadwal_id === currentSelectedJadwalId;
+    });
+
+    if (item) {
+        var thuSelect = document.getElementById('buoihoc-select-thu');
+        var dateEl = document.getElementById('buoihoc-input-date');
+        var startEl = document.getElementById('buoihoc-input-start');
+        var endEl = document.getElementById('buoihoc-input-end');
+        var buoiEl = document.getElementById('buoihoc-input-buoi');
+        var hanmuonEl = document.getElementById('buoihoc-input-hanmuon');
+        var badgeHanMuon = document.getElementById('buoihoc-badge-hanmuon');
+
+        if (thuSelect) thuSelect.value = item.thu || 'Thứ Hai';
+        if (dateEl) dateEl.value = item.tanggal || '';
+        if (startEl) startEl.value = item.jam_mulai || '';
+        if (endEl) endEl.value = item.jam_selesai || '';
+        if (buoiEl) buoiEl.value = item.buoi_so || item.buoi_bat_dau || 1;
+
+        if (startEl) startEl.style.color = '#64748b';
+        if (endEl) endEl.style.color = '#64748b';
+        if (hanmuonEl) {
+            hanmuonEl.value = item.han_di_muon || 'Không có hạn đi muộn';
+            hanmuonEl.style.color = '#64748b';
+        }
+    } else {
+        openBuoiHocModal(currentSelectedJadwalId);
+    }
+}
+
+// Khi người dùng đổi ngày thủ công -> tự động đồng bộ sang Thứ tương ứng
+function onBuoiHocDateChange(val) {
+    if (!val) return;
+    try {
+        var d = new Date(val + 'T00:00:00');
+        var dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+        var thuSelect = document.getElementById('buoihoc-select-thu');
+        if (thuSelect) thuSelect.value = dayNames[d.getDay()] || 'Thứ Hai';
+    } catch(e) {}
+}
+
+// Khi người dùng đổi thứ thủ công
+function onBuoiHocThuManualChange(val) {
+    // Giữ nguyên ngày hoặc cho phép người dùng tự điều chỉnh ngày
 }
 
 function closeBuoiHocModal() {
@@ -1230,23 +1396,17 @@ function adjustBuoiModal(delta) {
     inp.value = val;
 }
 
-function onBuoiHocDateChange(val) {
-    if (!val) return;
-    try {
-        var d = new Date(val + 'T00:00:00');
-        var dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-        var thuEl = document.getElementById('buoihoc-input-thu');
-        if (thuEl) thuEl.value = dayNames[d.getDay()] || 'Thứ Hai';
-    } catch(e) {}
-}
-
 function saveBuoiHocModal() {
+    var lopSelect = document.getElementById('buoihoc-select-lop');
+    var thuSelect = document.getElementById('buoihoc-select-thu');
     var buoiEl = document.getElementById('buoihoc-input-buoi');
     var dateEl = document.getElementById('buoihoc-input-date');
     var btn = document.getElementById('btn-save-buoihoc-modal');
 
+    var jadwalId = lopSelect ? parseInt(lopSelect.value, 10) : currentSelectedJadwalId;
     var buoiVal = parseInt(buoiEl ? buoiEl.value : '1', 10) || 1;
     var dateVal = dateEl ? dateEl.value : '';
+    var thuVal = thuSelect ? thuSelect.value : '';
 
     if (btn) {
         btn.disabled = true;
@@ -1256,7 +1416,12 @@ function saveBuoiHocModal() {
     fetch('/api/buoi-hoc/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ buoi_so: buoiVal, tanggal: dateVal })
+        body: JSON.stringify({
+            jadwal_id: jadwalId,
+            buoi_so: buoiVal,
+            tanggal: dateVal,
+            thu: thuVal
+        })
     })
     .then(function(res) { return res.json(); })
     .then(function(res) {
@@ -1279,6 +1444,26 @@ function saveBuoiHocModal() {
             btn.textContent = 'Lưu thay đổi';
         }
         alert('Lỗi kết nối tới máy chủ khi lưu buổi học.');
+    });
+}
+
+function resetBuoiHocModal() {
+    fetch('/api/buoi-hoc/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reset: true })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(res) {
+        if (res.status === 'ok') {
+            openBuoiHocModal();
+            if (window.showFlash) {
+                window.showFlash(res.pesan || 'Đã đặt lại về chế độ tự động tính theo lịch học!', 'success');
+            }
+        }
+    })
+    .catch(function(err) {
+        console.error('Lỗi khi reset buổi học:', err);
     });
 }
 

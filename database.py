@@ -748,10 +748,10 @@ def cap_nhat_absensi_buoi(user_id, jadwal_id, buoi_so, status, alasan=None):
             conn.close()
 
 
-def catat_absensi_manual(user_id, jadwal_id, tanggal, status, alasan=None):
-    """Absen manual oleh admin: insert baru atau update jika sudah ada.
-    Berguna untuk izin/sakit atau koreksi status.
-    Return dict {'aksi': 'insert'/'update', 'id': absensi_id} atau None.
+def catat_absensi_manual(user_id, jadwal_id, tanggal, status, alasan=None, buoi_so=None):
+    """Absen manual oleh admin: insert baru hoặc update jika sudah có.
+    Berguna untuk izin/sakit hoặc koreksi status.
+    Return dict {'aksi': 'insert'/'update', 'id': absensi_id} hoặc None.
     """
     conn = None
     cursor = None
@@ -759,7 +759,7 @@ def catat_absensi_manual(user_id, jadwal_id, tanggal, status, alasan=None):
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Cek apakah sudah ada record absensi
+        # Cek apakah sudah có record absensi
         cursor.execute(
             "SELECT id, status FROM absensi WHERE user_id=%s AND jadwal_id=%s AND tanggal=%s",
             (user_id, jadwal_id, tanggal)
@@ -769,21 +769,21 @@ def catat_absensi_manual(user_id, jadwal_id, tanggal, status, alasan=None):
         waktu_now = _now_app().strftime('%H:%M:%S')
 
         if existing:
-            # Update record yang sudah ada
+            # Update record yang sudah có
             cursor.execute(
-                """UPDATE absensi SET status=%s, alasan=%s, dibuat_manual=TRUE,
-                   waktu_absen=%s WHERE id=%s""",
-                (status, alasan, waktu_now, existing['id'])
+                """UPDATE absensi SET status=%s, alasan=%s, buoi_so=COALESCE(%s, buoi_so),
+                   dibuat_manual=TRUE, waktu_absen=%s WHERE id=%s""",
+                (status, alasan, buoi_so, waktu_now, existing['id'])
             )
             conn.commit()
             return {'aksi': 'update', 'id': existing['id'], 'status_lama': existing['status']}
         else:
-            # Insert baru
+            # Insert mới
             cursor.execute(
                 """INSERT INTO absensi
-                   (user_id, jadwal_id, tanggal, waktu_absen, status, alasan, dibuat_manual)
-                   VALUES (%s, %s, %s, %s, %s, %s, TRUE)""",
-                (user_id, jadwal_id, tanggal, waktu_now, status, alasan)
+                   (user_id, jadwal_id, tanggal, waktu_absen, status, alasan, buoi_so, dibuat_manual)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE)""",
+                (user_id, jadwal_id, tanggal, waktu_now, status, alasan, buoi_so)
             )
             conn.commit()
             absensi_id = cursor.lastrowid
@@ -1215,8 +1215,16 @@ def get_statistik_dashboard(tanggal=None):
                 """, (hari_ini, waktu_sekarang))
                 jadwal_da_ket_thuc = cursor.fetchall()
 
-            # Đối chiếu sinh viên vắng trong các ca đã kết thúc
+            # Đối chiếu sinh viên vắng: sinh viên đã có bản ghi alpha và sinh viên vắng trong ca đã kết thúc
             user_alpha_set = set()
+            cursor.execute(f"""
+                SELECT DISTINCT user_id
+                FROM absensi
+                WHERE tanggal = %s AND jadwal_id IN ({format_jadwal}) AND status = 'alpha'
+            """, (tanggal, *jadwal_ids))
+            for r in cursor.fetchall():
+                user_alpha_set.add(r['user_id'])
+
             for j in jadwal_da_ket_thuc:
                 k_id = j['kelas_id']
                 j_id = j['jadwal_id']
@@ -1449,7 +1457,12 @@ def get_buoi_hoc_hien_tai_cua_lop(jadwal_id, kelas_id=None, ngay_kiem_tra=None):
         if row_today and row_today.get('buoi_so'):
             return int(row_today['buoi_so'])
 
-        # 2. Đếm số ngày thực tế trong quá khứ đã từng diễn ra điểm danh hợp lệ
+        # 2. Lấy buoi_bat_dau đã cấu hình trong lịch học (tab Quản lý lịch học)
+        cursor.execute("SELECT buoi_bat_dau FROM jadwal WHERE id = %s", (jadwal_id,))
+        row_jadwal = cursor.fetchone()
+        buoi_goc = (row_jadwal.get('buoi_bat_dau') if row_jadwal else None) or 1
+
+        # 3. Đếm số ngày thực tế trong quá khứ đã từng diễn ra điểm danh hợp lệ
         cursor.execute("""
             SELECT COUNT(DISTINCT tanggal) as so_ngay_da_hoc
             FROM absensi
@@ -1460,8 +1473,8 @@ def get_buoi_hoc_hien_tai_cua_lop(jadwal_id, kelas_id=None, ngay_kiem_tra=None):
         row_past = cursor.fetchone()
         so_ngay_da_hoc = row_past['so_ngay_da_hoc'] if row_past else 0
 
-        # Số buổi tiếp theo = số ngày thực tế đã học có điểm danh + 1
-        buoi_tiep_theo = (so_ngay_da_hoc or 0) + 1
+        # Số buổi tiếp theo = Buổi bắt đầu gốc + số ngày thực tế đã học có điểm danh
+        buoi_tiep_theo = int(buoi_goc) + (so_ngay_da_hoc or 0)
         return max(1, min(60, buoi_tiep_theo))
     except Exception as e:
         print(f"[DB] Lỗi khi tính số buổi học hiện tại: {e}")
@@ -1473,125 +1486,219 @@ def get_buoi_hoc_hien_tai_cua_lop(jadwal_id, kelas_id=None, ngay_kiem_tra=None):
             conn.close()
 
 
-def get_thong_tin_buoi_hoc_hom_nay(ngay_kiem_tra=None):
-    """Lấy thông tin chi tiết ca học hôm nay để hiển thị trên Popup Topbar.
-    Liên kết trực tiếp từ tab Quản lý lịch học (/jadwal) đối với lịch học tương ứng.
-    Bao gồm: Thứ, Ngày, Lớp học phần, Giờ bắt đầu, Giờ kết thúc, Cột Buổi, và Hạn đi muộn (Không áp dụng).
+def get_thong_tin_buoi_hoc_hom_nay(ngay_kiem_tra=None, jadwal_id_filter=None, kelas_id_filter=None, gio_kiem_tra=None):
+    """Lấy thông tin chi tiết ca học gần nhất để hiển thị trên Popup Topbar.
+    Liên kết trực tiếp 100% từ tab Quản lý lịch học (/jadwal).
+    Quy tắc nghiệp vụ:
+    1. Không có lịch học nào trong hệ thống: để rỗng toàn bộ các trường.
+    2. Có nhiều lịch học: tự động lấy ca học gần nhất tính từ thời điểm hiện tại.
+    3. Nếu 1 lớp có nhiều buổi trong tuần: tự động lấy buổi sắp tới gần nhất của lớp đó.
+    4. Nếu có 2 lớp cùng ngày khác khung giờ: tự động hiện lớp có khung giờ sớm hơn trước;
+       khi kết thúc khung sớm thì tự động chuyển sang hiện lớp có khung muộn hơn sau.
+    5. Nếu ca học trong tuần đã qua: tự động tính sang tuần sau.
+    6. Trả về danh_sach_lop chứa các lớp đại diện bằng buổi sắp tới gần nhất để hiển thị Drop list.
     """
     conn = None
     cursor = None
     try:
-        ngay_kiem_tra = ngay_kiem_tra or _now_app().date()
-        hari_map = {
-            0: 'Senin', 1: 'Selasa', 2: 'Rabu',
-            3: 'Kamis', 4: 'Jumat', 5: 'Sabtu', 6: 'Minggu'
-        }
-        hari_db = hari_map.get(ngay_kiem_tra.weekday(), 'Senin')
-        thu_tieng_viet_map = {
-            'Senin': 'Thứ Hai', 'Selasa': 'Thứ Ba', 'Rabu': 'Thứ Tư',
-            'Kamis': 'Thứ Năm', 'Jumat': 'Thứ Sáu', 'Sabtu': 'Thứ Bảy', 'Minggu': 'Chủ Nhật'
-        }
-        thu_vn = thu_tieng_viet_map.get(hari_db, 'Thứ Hai')
+        ref_now = _now_app()
+        ref_today = ngay_kiem_tra or ref_now.date()
+        current_time_str = str(gio_kiem_tra).strip()[:5] if gio_kiem_tra else ref_now.strftime('%H:%M:%S')[:5]
 
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # 1. Tìm ca học của ngày hôm nay
-        waktu_sekarang = _now_app().strftime('%H:%M:%S')
+        # 1. Truy vấn toàn bộ danh sách lịch học đang có trong hệ thống
         cursor.execute("""
             SELECT j.*, m.nama_mk, m.kode_mk, m.kelas_id, k.nama_kelas, k.angkatan
             FROM jadwal j
             JOIN matakuliah m ON j.matakuliah_id = m.id
             JOIN kelas k ON m.kelas_id = k.id
-            WHERE j.hari = %s
-            ORDER BY
-                CASE WHEN %s BETWEEN j.jam_mulai AND j.jam_selesai THEN 0
-                     WHEN j.jam_mulai > %s THEN 1
-                     ELSE 2 END,
-                j.jam_mulai ASC
-            LIMIT 1
-        """, (hari_db, waktu_sekarang, waktu_sekarang))
-        jadwal = cursor.fetchone()
+        """)
+        danh_sach_jadwal = cursor.fetchall()
 
-        # Nếu ngày hôm nay không có lịch, lấy lịch học đầu tiên trong hệ thống làm ca tham chiếu
-        if not jadwal:
-            cursor.execute("""
-                SELECT j.*, m.nama_mk, m.kode_mk, m.kelas_id, k.nama_kelas, k.angkatan
-                FROM jadwal j
-                JOIN matakuliah m ON j.matakuliah_id = m.id
-                JOIN kelas k ON m.kelas_id = k.id
-                ORDER BY j.id ASC LIMIT 1
-            """)
-            jadwal = cursor.fetchone()
-
-        if not jadwal:
+        # Quy tắc 1: Nếu không có lịch học nào thì để rỗng
+        if not danh_sach_jadwal:
             return {
                 'has_jadwal': False,
-                'thu': thu_vn,
-                'tanggal': ngay_kiem_tra.strftime('%Y-%m-%d'),
-                'tanggal_vn': ngay_kiem_tra.strftime('%d/%m/%Y'),
-                'nama_kelas': 'Chưa có lớp học',
-                'lop_hoc_phan': 'Chưa có lớp học phần',
-                'jam_mulai': '06:30',
-                'jam_selesai': '11:30',
-                'han_di_muon': 'Không có hạn đi muộn',
-                'buoi_so': 1,
+                'thu': '',
+                'tanggal': '',
+                'tanggal_vn': '',
+                'nama_kelas': '',
+                'nama_mk': '',
+                'lop_hoc_phan': '',
+                'jam_mulai': '',
+                'jam_selesai': '',
+                'han_di_muon': '',
+                'buoi_so': '',
                 'jadwal_id': None,
-                'kelas_id': None
+                'kelas_id': None,
+                'danh_sach_lop': []
             }
 
-        # Định dạng thời gian bắt đầu và kết thúc
+        # Ánh xạ thứ sang chỉ số ngày trong tuần (0: Thứ Hai ... 6: Chủ Nhật)
+        hari_to_weekday = {
+            'Senin': 0, 'Selasa': 1, 'Rabu': 2,
+            'Kamis': 3, 'Jumat': 4, 'Sabtu': 5, 'Minggu': 6
+        }
+        weekday_to_vn = {
+            0: 'Thứ Hai', 1: 'Thứ Ba', 2: 'Thứ Tư',
+            3: 'Thứ Năm', 4: 'Thứ Sáu', 5: 'Thứ Bảy', 6: 'Chủ Nhật'
+        }
+
         def _fmt_time(val):
             if isinstance(val, timedelta):
                 sec = int(val.total_seconds())
                 return f"{sec // 3600:02d}:{(sec % 3600) // 60:02d}"
-            s = str(val or '')
+            s = str(val or '').strip()
             return s[:5] if len(s) >= 5 else s
 
-        jam_mulai_str = _fmt_time(jadwal['jam_mulai'])
-        jam_selesai_str = _fmt_time(jadwal['jam_selesai'])
+        current_w = ref_today.weekday()
+        scored = []
+        danh_sach_lop = []
 
-        # Tính số buổi học hiện tại theo quy tắc không có ai điểm danh = buổi đó nghỉ
-        buoi_so = get_buoi_hoc_hien_tai_cua_lop(jadwal['id'], jadwal.get('kelas_id'), ngay_kiem_tra)
+        # Quy tắc 2 & 3: Tính toán thời điểm diễn ra tiếp theo của từng ca học
+        for idx, j in enumerate(danh_sach_jadwal):
+            target_w = hari_to_weekday.get(j.get('hari'), 0)
+            mulai_str = _fmt_time(j.get('jam_mulai', '00:00'))
+            selesai_str = _fmt_time(j.get('jam_selesai', '23:59'))
 
-        lop_display = f"{jadwal.get('nama_kelas', '')} — {jadwal.get('nama_mk', '')}"
-        if jadwal.get('kode_mk'):
-            lop_display += f" ({jadwal.get('kode_mk')})"
+            if target_w == current_w:
+                if current_time_str <= selesai_str:
+                    days_ahead = 0
+                    is_ongoing = (mulai_str <= current_time_str <= selesai_str)
+                else:
+                    # Ca học của ngày hôm nay đã kết thúc -> lấy ca đó vào tuần sau
+                    days_ahead = 7
+                    is_ongoing = False
+            elif target_w > current_w:
+                days_ahead = target_w - current_w
+                is_ongoing = False
+            else:
+                # Ca học của thứ trong tuần này đã qua (ví dụ hôm nay thứ 7, lịch thứ 4) -> tuần sau
+                days_ahead = target_w - current_w + 7
+                is_ongoing = False
+
+            occ_date = ref_today + timedelta(days=days_ahead)
+            buoi_so = get_buoi_hoc_hien_tai_cua_lop(j['id'], j.get('kelas_id'), occ_date)
+
+            lop_display = f"{j.get('nama_kelas', '')} — {j.get('nama_mk', '')}"
+            if j.get('kode_mk'):
+                lop_display += f" ({j.get('kode_mk')})"
+
+            batas_raw = j.get('batas_terlambat')
+            if batas_raw and str(batas_raw).strip() not in ('', '00:00:00', '00:00', 'None'):
+                han_di_muon_str = _fmt_time(batas_raw)
+            else:
+                han_di_muon_str = 'Không có hạn đi muộn'
+
+            item_info = {
+                'jadwal_id': j['id'],
+                'kelas_id': j.get('kelas_id'),
+                'ten_hien_thi': lop_display,
+                'nama_kelas': j.get('nama_kelas', ''),
+                'nama_mk': j.get('nama_mk', ''),
+                'kode_mk': j.get('kode_mk', ''),
+                'hari': j.get('hari', ''),
+                'thu': weekday_to_vn.get(occ_date.weekday(), 'Thứ Hai'),
+                'tanggal': occ_date.strftime('%Y-%m-%d'),
+                'tanggal_vn': occ_date.strftime('%d/%m/%Y'),
+                'jam_mulai': mulai_str,
+                'jam_selesai': selesai_str,
+                'han_di_muon': han_di_muon_str,
+                'buoi_so': buoi_so,
+                'buoi_bat_dau': j.get('buoi_bat_dau') or 1,
+                'days_ahead': days_ahead,
+                'is_ongoing': is_ongoing
+            }
+            danh_sach_lop.append(item_info)
+
+            # Tiêu chí sắp xếp để lấy ca học gần nhất:
+            # 1. Đang diễn ra (is_ongoing) có độ ưu tiên 0, sắp tới độ ưu tiên 1
+            # 2. Khoảng cách ngày gần nhất (days_ahead: 0, 1, 2, ... 7)
+            # 3. Giờ bắt đầu sớm hơn trong ngày
+            # 4. ID ca học
+            priority = (
+                0 if is_ongoing else 1,
+                days_ahead,
+                mulai_str,
+                j.get('id', idx)
+            )
+            scored.append((priority, item_info))
+
+        # Sắp xếp scored theo độ ưu tiên:
+        # 1. Đang diễn ra (is_ongoing)
+        # 2. Ngày gần nhất (days_ahead: 0, 1, 2... 7)
+        # 3. Khung giờ sớm hơn trong ngày (mulai_str)
+        # 4. ID ca học
+        scored.sort(key=lambda x: x[0])
+
+        selected_item = None
+        # Quy tắc 1: Nếu lọc theo lớp (kelas_id_filter) và lớp có nhiều buổi -> tự động lấy buổi sắp tới gần nhất của lớp đó
+        if kelas_id_filter:
+            for p, it in scored:
+                if it.get('kelas_id') == int(kelas_id_filter):
+                    selected_item = it
+                    break
+
+        # Quy tắc 2: Nếu người dùng chỉ định jadwal_id cụ thể (chọn từ Drop list)
+        if not selected_item and jadwal_id_filter:
+            for it in danh_sach_lop:
+                if it['jadwal_id'] == int(jadwal_id_filter):
+                    selected_item = it
+                    break
+
+        # Quy tắc 3: Tự động toàn hệ thống -> lấy ca học có độ ưu tiên cao nhất (gần nhất)
+        if not selected_item:
+            selected_item = scored[0][1]
+
+        # Xây dựng Drop list đại diện: nếu 1 lớp có nhiều ca học trong tuần,
+        # mỗi lớp chỉ xuất hiện 1 lần và đại diện bởi BUỔI SẮP TỚI GẦN NHẤT của lớp đó
+        lop_unique_map = {}
+        for p, it in scored:
+            kid = it.get('kelas_id')
+            if kid not in lop_unique_map:
+                lop_unique_map[kid] = it
+        danh_sach_lop_dropdown = list(lop_unique_map.values())
 
         return {
             'has_jadwal': True,
-            'thu': thu_vn,
-            'tanggal': ngay_kiem_tra.strftime('%Y-%m-%d'),
-            'tanggal_vn': ngay_kiem_tra.strftime('%d/%m/%Y'),
-            'nama_kelas': jadwal.get('nama_kelas', ''),
-            'nama_mk': jadwal.get('nama_mk', ''),
-            'lop_hoc_phan': lop_display,
-            'jam_mulai': jam_mulai_str,
-            'jam_selesai': jam_selesai_str,
-            'han_di_muon': 'Không có hạn đi muộn',
-            'buoi_so': buoi_so,
-            'jadwal_id': jadwal['id'],
-            'kelas_id': jadwal.get('kelas_id')
+            'thu': selected_item['thu'],
+            'tanggal': selected_item['tanggal'],
+            'tanggal_vn': selected_item['tanggal_vn'],
+            'nama_kelas': selected_item['nama_kelas'],
+            'nama_mk': selected_item['nama_mk'],
+            'lop_hoc_phan': selected_item['ten_hien_thi'],
+            'jam_mulai': selected_item['jam_mulai'],
+            'jam_selesai': selected_item['jam_selesai'],
+            'han_di_muon': selected_item['han_di_muon'],
+            'buoi_so': selected_item['buoi_so'],
+            'jadwal_id': selected_item['jadwal_id'],
+            'kelas_id': selected_item['kelas_id'],
+            'is_ongoing': selected_item['is_ongoing'],
+            'danh_sach_lop': danh_sach_lop_dropdown,
+            'danh_sach_tat_ca_ca': danh_sach_lop
         }
     except Exception as e:
         print(f"[DB] Lỗi get_thong_tin_buoi_hoc_hom_nay: {e}")
         return {
             'has_jadwal': False,
-            'thu': 'Thứ Sáu',
-            'tanggal': ngay_kiem_tra.strftime('%Y-%m-%d') if ngay_kiem_tra else '2026-09-06',
-            'tanggal_vn': ngay_kiem_tra.strftime('%d/%m/%Y') if ngay_kiem_tra else '06/09/2026',
-            'nama_kelas': 'ML - 02',
-            'lop_hoc_phan': 'ML - 02 — Máy học ứng dụng',
-            'jam_mulai': '06:30',
-            'jam_selesai': '11:30',
-            'han_di_muon': 'Không có hạn đi muộn',
-            'buoi_so': 1,
+            'thu': '',
+            'tanggal': '',
+            'tanggal_vn': '',
+            'nama_kelas': '',
+            'nama_mk': '',
+            'lop_hoc_phan': '',
+            'jam_mulai': '',
+            'jam_selesai': '',
+            'han_di_muon': '',
+            'buoi_so': '',
             'jadwal_id': None,
-            'kelas_id': None
+            'kelas_id': None,
+            'danh_sach_lop': []
         }
     finally:
         if cursor:
             cursor.close()
         if conn and conn.is_connected():
             conn.close()
-

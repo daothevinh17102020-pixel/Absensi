@@ -210,5 +210,107 @@ class ScheduleEditTests(unittest.TestCase):
         mock_conn.commit.assert_called_once()
 
 
+    @patch('database.get_semua_matakuliah')
+    @patch('database.get_semua_kelas')
+    def test_jadwal_form_renders_sunday_option(self, mock_kelas, mock_mk):
+        mock_kelas.return_value = self.sample_kelas
+        mock_mk.return_value = self.sample_mk
+        response = self.client.get('/jadwal/tambah')
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn('value="Minggu"', html)
+        self.assertIn('Chủ Nhật', html)
+
+    @patch('database.get_semua_matakuliah')
+    @patch('database.get_semua_kelas')
+    @patch('database.get_jadwal_by_id')
+    def test_jadwal_edit_renders_sunday_selected(self, mock_get_jadwal, mock_kelas, mock_mk):
+        sunday_jadwal = dict(self.sample_jadwal)
+        sunday_jadwal['hari'] = 'Minggu'
+        mock_get_jadwal.return_value = sunday_jadwal
+        mock_kelas.return_value = self.sample_kelas
+        mock_mk.return_value = self.sample_mk
+
+        response = self.client.get('/jadwal/edit/10')
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn('value="Minggu" selected', html)
+        self.assertIn('Chủ Nhật', html)
+
+    @patch('database.tambah_jadwal')
+    def test_jadwal_tambah_post_sunday_success(self, mock_tambah_jadwal):
+        mock_tambah_jadwal.return_value = 99
+        post_data = {
+            'kelas_id': '1',
+            'matakuliah_id': '2',
+            'hari': 'Minggu',
+            'jam_mulai': '08:00',
+            'jam_selesai': '11:00',
+        }
+        response = self.client.post('/jadwal/tambah', data=post_data, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        mock_tambah_jadwal.assert_called_once_with(2, 'Minggu', '08:00', '11:00')
+        html = response.get_data(as_text=True)
+        self.assertIn('Thêm lịch học thành công!', html)
+
+    @patch('database.update_jadwal')
+    @patch('database.get_jadwal_by_id')
+    def test_jadwal_edit_post_sunday_success(self, mock_get_jadwal, mock_update_jadwal):
+        mock_get_jadwal.return_value = self.sample_jadwal
+        mock_update_jadwal.return_value = True
+        post_data = {
+            'kelas_id': '1',
+            'matakuliah_id': '2',
+            'hari': 'Minggu',
+            'jam_mulai': '08:30',
+            'jam_selesai': '11:30',
+            'batas_terlambat': '08:45'
+        }
+        response = self.client.post('/jadwal/edit/10', data=post_data, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        mock_update_jadwal.assert_called_once_with(10, 2, 'Minggu', '08:30', '11:30', '08:45')
+        html = response.get_data(as_text=True)
+    @patch('database.get_matakuliah_by_kelas')
+    @patch('database.update_jadwal')
+    @patch('database.get_jadwal_by_id')
+    def test_jadwal_edit_post_with_only_kelas_id(self, mock_get_jadwal, mock_update_jadwal, mock_get_mk_by_kelas):
+        mock_get_jadwal.return_value = self.sample_jadwal
+        mock_update_jadwal.return_value = True
+        mock_get_mk_by_kelas.return_value = [{'id': 2, 'nama_mk': 'Pemrograman Web'}]
+        # Giả lập đúng payload gửi từ form HTML (chỉ có kelas_id, không có matakuliah_id)
+        post_data = {
+            'kelas_id': '1',
+            'hari': 'Selasa',
+            'jam_mulai': '06:00',
+            'jam_selesai': '23:00',
+            'batas_terlambat': '06:45',
+            'buoi_bat_dau': '1'
+        }
+        response = self.client.post('/jadwal/edit/10', data=post_data, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        mock_update_jadwal.assert_called_once_with(10, 2, 'Selasa', '06:00', '23:00', '06:45', buoi_bat_dau=1)
+        html = response.get_data(as_text=True)
+        self.assertIn('Cập nhật lịch học thành công!', html)
+
+    @patch('database.get_matakuliah_by_kelas')
+    @patch('database.tambah_jadwal')
+    def test_jadwal_tambah_post_with_only_kelas_id(self, mock_tambah_jadwal, mock_get_mk_by_kelas):
+        mock_tambah_jadwal.return_value = 100
+        mock_get_mk_by_kelas.return_value = [{'id': 5, 'nama_mk': 'Machine Learning'}]
+        post_data = {
+            'kelas_id': '6',
+            'hari': 'Minggu',
+            'jam_mulai': '08:00',
+            'jam_selesai': '11:00',
+            'buoi_bat_dau': '1'
+        }
+        response = self.client.post('/jadwal/tambah', data=post_data, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        mock_tambah_jadwal.assert_called_once_with(5, 'Minggu', '08:00', '11:00', buoi_bat_dau=1)
+        html = response.get_data(as_text=True)
+        self.assertIn('Thêm lịch học thành công!', html)
+
+
 if __name__ == '__main__':
     unittest.main()
+

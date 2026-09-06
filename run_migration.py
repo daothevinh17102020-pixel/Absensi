@@ -66,7 +66,7 @@ def _upgrade_users_schema(cursor, database_name):
 
 
 def _upgrade_jadwal_schema(cursor, database_name):
-    """Pastikan kolom buoi_bat_dau tersedia pada tabel jadwal."""
+    """Pastikan kolom buoi_bat_dau và giá trị Minggu trong ENUM hari khả dụng."""
     cursor.execute("""
         SELECT COUNT(*)
         FROM information_schema.COLUMNS
@@ -79,6 +79,19 @@ def _upgrade_jadwal_schema(cursor, database_name):
             ADD COLUMN buoi_bat_dau INT NOT NULL DEFAULT 1 AFTER batas_terlambat
         """)
         print("  [OK] Upgrade: jadwal.buoi_bat_dau ditambahkan")
+
+    cursor.execute("""
+        SELECT COLUMN_TYPE
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA=%s AND TABLE_NAME='jadwal' AND COLUMN_NAME='hari'
+    """, (database_name,))
+    row = cursor.fetchone()
+    if row and "'Minggu'" not in row[0]:
+        cursor.execute("""
+            ALTER TABLE jadwal
+            MODIFY COLUMN hari ENUM('Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu') NOT NULL
+        """)
+        print("  [OK] Upgrade: jadwal.hari ditambahkan 'Minggu' (Chu Nhat)")
 
 
 def _upgrade_admin_schema(cursor, database_name):

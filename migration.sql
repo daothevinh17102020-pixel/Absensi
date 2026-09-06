@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS matakuliah (
 CREATE TABLE IF NOT EXISTS jadwal (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     matakuliah_id   INT NOT NULL,
-    hari            ENUM('Senin','Selasa','Rabu','Kamis','Jumat','Sabtu') NOT NULL,
+    hari            ENUM('Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu') NOT NULL,
     jam_mulai       TIME NOT NULL,
     jam_selesai     TIME NOT NULL,
     batas_terlambat TIME NOT NULL,

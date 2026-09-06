@@ -22,6 +22,7 @@ echo De dung app, nhan Ctrl+C trong cua so nay.
 if "%CONFIDENCE_THRESHOLD%"=="" set "CONFIDENCE_THRESHOLD=45"
 if "%RECOGNITION_REQUIRED_FRAMES%"=="" set "RECOGNITION_REQUIRED_FRAMES=3"
 if "%FACE_MATCH_THRESHOLD%"=="" set "FACE_MATCH_THRESHOLD=0.51"
+if "%FACE_MIN_SIZE%"=="" set "FACE_MIN_SIZE=36"
 echo ArcFace can duoc hieu chuan bang FACE_MATCH_THRESHOLD truoc khi tu dong diem danh.
 echo.
 

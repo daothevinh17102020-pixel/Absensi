@@ -2,7 +2,7 @@
 # Komentar dalam Bahasa Indonesia sesuai konvensi (context.md bagian 12)
 
 from flask import (Flask, request, jsonify, render_template,
-                   redirect, url_for, session, flash)
+                   redirect, url_for, session, flash, has_request_context)
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -19,6 +19,7 @@ def now_wib():
     """Dapatkan waktu sekarang dalam timezone WIB."""
     return datetime.now(WIB)
 import os
+os.environ.setdefault('FACE_MIN_SIZE', '36')
 import base64
 import binascii
 import json
@@ -994,7 +995,14 @@ def api_absensi_hari_ini():
                     row[key] = f'{hours:02d}:{minutes:02d}:{seconds:02d}'
                 elif isinstance(val, (date,)):
                     row[key] = val.isoformat()
-        return jsonify({'status': 'ok', 'data': data, 'pesan': None})
+        db_stats = db.get_statistik_dashboard(now_wib().date())
+        stats = {
+            'hadir': db_stats.get('hadir_hari_ini', 0),
+            'terlambat': db_stats.get('terlambat_hari_ini', 0),
+            'alpha': db_stats.get('alpha_hari_ini', 0),
+            'total': db_stats.get('total_mahasiswa', 0)
+        }
+        return jsonify({'status': 'ok', 'data': data, 'stats': stats, 'pesan': None})
     except Exception as e:
         print(f'[API] Failed to load today attendance: {e}')
         return jsonify({
@@ -2056,6 +2064,45 @@ def _reset_consecutive_tracker(tracker_key, user_id=None, remove=False):
         reset_tracker(camera_key)
 
 
+def _tinh_status_absensi(jadwal, waktu_sekarang):
+    """Xác định trạng thái điểm danh theo quy chế TMU:
+    - Đúng giờ (hadir): waktu_sekarang <= batas_terlambat (ví dụ <= 6h15)
+    - Đi muộn (terlambat): batas_terlambat < waktu_sekarang <= batas_terlambat + 50 phút (ví dụ 6h15 - 7h05)
+    - Vắng không phép (alpha): sau batas_terlambat + 50 phút (ví dụ sau 7h05 là vắng luôn)
+    """
+    def _to_seconds(val):
+        if val is None:
+            return None
+        if isinstance(val, (int, float)):
+            return int(val)
+        if isinstance(val, timedelta):
+            return int(val.total_seconds())
+        if hasattr(val, 'hour') and hasattr(val, 'minute'):
+            return val.hour * 3600 + val.minute * 60 + getattr(val, 'second', 0)
+        s = str(val).strip()
+        parts = [int(p) for p in s.split(':')]
+        if len(parts) == 2:
+            return parts[0] * 3600 + parts[1] * 60
+        if len(parts) >= 3:
+            return parts[0] * 3600 + parts[1] * 60 + parts[2]
+        return None
+
+    cur_sec = _to_seconds(waktu_sekarang) or 0
+    batas_sec = _to_seconds(jadwal.get('batas_terlambat'))
+    if batas_sec is None:
+        mulai_sec = _to_seconds(jadwal.get('jam_mulai')) or 0
+        batas_sec = mulai_sec + 15 * 60
+
+    khung_muon_sec = batas_sec + 50 * 60  # Hạn đi muộn + 50 phút (3000 giây)
+
+    if cur_sec <= batas_sec:
+        return 'hadir'
+    elif cur_sec <= khung_muon_sec:
+        return 'terlambat'
+    else:
+        return 'alpha'
+
+
 def _proses_recognition_single(frame, tracker_key='default'):
     """Proses satu frame: anti-spoofing â†’ recognition â†’ absensi.
 
@@ -2193,7 +2240,8 @@ def _proses_recognition_single(frame, tracker_key='default'):
         }
 
     # ── 6. Xác định Buổi và Ngày áp dụng cho ca học ──
-    override_buoi = session.get('custom_buoi_so')
+    has_ctx = has_request_context()
+    override_buoi = session.get('custom_buoi_so') if has_ctx else None
     if override_buoi is not None:
         try:
             buoi_so_ghi = int(override_buoi)
@@ -2202,7 +2250,7 @@ def _proses_recognition_single(frame, tracker_key='default'):
     else:
         buoi_so_ghi = db.get_buoi_hoc_hien_tai_cua_lop(jadwal['id'], jadwal.get('kelas_id'), tanggal_hari_ini)
 
-    override_ngay = session.get('custom_tanggal')
+    override_ngay = session.get('custom_tanggal') if has_ctx else None
     if override_ngay:
         try:
             tanggal_ghi = datetime.strptime(override_ngay, '%Y-%m-%d').date()
@@ -2212,7 +2260,8 @@ def _proses_recognition_single(frame, tracker_key='default'):
         tanggal_ghi = tanggal_hari_ini
 
     # Quy tắc nghiệp vụ: Không có hạn đi muộn -> Mọi sinh viên quét hợp lệ đều được ghi nhận Có mặt (hadir)
-    status_absensi = 'hadir'
+    # Xác định trạng thái điểm danh: đúng giờ (<= batas), đi muộn (+50p), vắng luôn (>50p)
+    status_absensi = _tinh_status_absensi(jadwal, waktu_sekarang)
 
     # ── 7. Simpan snapshot bukti absensi ──
     snapshot_path = _simpan_snapshot(frame, user_id)
@@ -2276,17 +2325,25 @@ def _proses_recognition_single(frame, tracker_key='default'):
         'status': status_absensi
     }
 
-    # Ambil statistik terbaru untuk update dashboard
-    stats = db.get_statistik_dashboard(tanggal_hari_ini)
+    # Ambil statistik terbaru cho ngày ghi nhận
+    stats = db.get_statistik_dashboard(tanggal_ghi)
+
+    if status_absensi == 'alpha':
+        pesan_absen = f'{user["nama"]} quét mặt lúc {waktu_sekarang} đã quá hạn đi muộn (+50p), ghi nhận Vắng không phép.'
+    elif status_absensi == 'terlambat':
+        pesan_absen = f'Điểm danh thành công cho {user["nama"]} lúc {waktu_sekarang} (Đi muộn).'
+    else:
+        pesan_absen = f'Điểm danh thành công cho {user["nama"]} lúc {waktu_sekarang} (Có mặt).'
 
     return {
         'status': 'ok',
-        'pesan': f'Äiá»ƒm danh cho {user["nama"]} thÃ nh cÃ´ng.',
+        'pesan': pesan_absen,
         'data': data_response,
         'stats': {
             'hadir': stats.get('hadir_hari_ini', 0),
             'terlambat': stats.get('terlambat_hari_ini', 0),
-            'alpha': stats.get('alpha_hari_ini', 0)
+            'alpha': stats.get('alpha_hari_ini', 0),
+            'total': stats.get('total_mahasiswa', 0)
         },
         'spoofing': spoof_result
     }
@@ -2342,7 +2399,8 @@ def _process_verified_prediction(
         }
 
     # ── Xác định Buổi và Ngày áp dụng cho ca học ──
-    override_buoi = session.get('custom_buoi_so')
+    has_ctx = has_request_context()
+    override_buoi = session.get('custom_buoi_so') if has_ctx else None
     if override_buoi is not None:
         try:
             buoi_so_ghi = int(override_buoi)
@@ -2351,7 +2409,7 @@ def _process_verified_prediction(
     else:
         buoi_so_ghi = db.get_buoi_hoc_hien_tai_cua_lop(jadwal['id'], jadwal.get('kelas_id'), tanggal_hari_ini)
 
-    override_ngay = session.get('custom_tanggal')
+    override_ngay = session.get('custom_tanggal') if has_ctx else None
     if override_ngay:
         try:
             tanggal_ghi = datetime.strptime(override_ngay, '%Y-%m-%d').date()
@@ -2361,7 +2419,8 @@ def _process_verified_prediction(
         tanggal_ghi = tanggal_hari_ini
 
     # Quy tắc nghiệp vụ: Không có hạn đi muộn -> Ghi nhận Có mặt (hadir)
-    status_absensi = 'hadir'
+    # Xác định trạng thái điểm danh: đúng giờ (<= batas), đi muộn (+50p), vắng luôn (>50p)
+    status_absensi = _tinh_status_absensi(jadwal, waktu_sekarang)
 
     snapshot_path = _simpan_snapshot(frame, user_id)
     try:
@@ -2406,9 +2465,18 @@ def _process_verified_prediction(
         }
 
     _kirim_ke_esp32(user['nama'], user['nim'], 'berhasil')
+    stats = db.get_statistik_dashboard(tanggal_ghi)
+
+    if status_absensi == 'alpha':
+        pesan_absen = f'{user["nama"]} quét mặt lúc {waktu_sekarang} đã quá hạn đi muộn (+50p), ghi nhận Vắng không phép.'
+    elif status_absensi == 'terlambat':
+        pesan_absen = f'Điểm danh thành công cho {user["nama"]} lúc {waktu_sekarang} (Đi muộn).'
+    else:
+        pesan_absen = f'Điểm danh thành công cho {user["nama"]} lúc {waktu_sekarang} (Có mặt).'
+
     return {
         'status': 'ok',
-        'pesan': f'Äiá»ƒm danh cho {user["nama"]} thÃ nh cÃ´ng.',
+        'pesan': pesan_absen,
         'data': {
             'nama': user['nama'],
             'nim': user['nim'],
@@ -2420,6 +2488,12 @@ def _process_verified_prediction(
             'waktu_absen': waktu_sekarang,
             'absensi_id': absensi_id,
             'status': status_absensi
+        },
+        'stats': {
+            'hadir': stats.get('hadir_hari_ini', 0),
+            'terlambat': stats.get('terlambat_hari_ini', 0),
+            'alpha': stats.get('alpha_hari_ini', 0),
+            'total': stats.get('total_mahasiswa', 0)
         },
         'spoofing': spoof_result
     }
@@ -2557,10 +2631,19 @@ def _successful_face_results(result):
 def _broadcast_absensi_updates(result, skip_sid=None):
     """Broadcast tá»«ng lÆ°á»£t Ä‘iá»ƒm danh, dÃ¹ng chung cho WebSocket vÃ  HTTP fallback."""
     emit_options = {'skip_sid': skip_sid} if skip_sid else {}
+    stats = result.get('stats')
+    if not stats:
+        db_stats = db.get_statistik_dashboard()
+        stats = {
+            'hadir': db_stats.get('hadir_hari_ini', 0),
+            'terlambat': db_stats.get('terlambat_hari_ini', 0),
+            'alpha': db_stats.get('alpha_hari_ini', 0),
+            'total': db_stats.get('total_mahasiswa', 0)
+        }
     for item in _successful_face_results(result):
         socketio.emit('absensi_update', {
             **item['data'],
-            'stats': result.get('stats')
+            'stats': stats
         }, **emit_options)
 
 

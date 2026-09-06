@@ -31,7 +31,8 @@ const DashboardUI = {
             btnOff.addEventListener('click', () => CameraManager.stop());
         }
 
-        // Auto-refresh absensi hari ini setiap 30 detik
+        // Tải dữ liệu ban đầu và auto-refresh absensi ngày hôm nay mỗi 30 giây
+        this.refreshAbsensiTable();
         setInterval(() => this.refreshAbsensiTable(), 30000);
 
         console.log('[DASHBOARD] UI berhasil diinisialisasi.');
@@ -334,10 +335,12 @@ const DashboardUI = {
         const hadirEl = document.getElementById('stat-hadir');
         const terlambatEl = document.getElementById('stat-terlambat');
         const alphaEl = document.getElementById('stat-alpha');
+        const totalEl = document.getElementById('stat-total');
 
         if (hadirEl && stats.hadir !== undefined) hadirEl.textContent = stats.hadir;
         if (terlambatEl && stats.terlambat !== undefined) terlambatEl.textContent = stats.terlambat;
         if (alphaEl && stats.alpha !== undefined) alphaEl.textContent = stats.alpha;
+        if (totalEl && stats.total !== undefined) totalEl.textContent = stats.total;
     },
 
     /**
@@ -349,6 +352,9 @@ const DashboardUI = {
             const result = await response.json();
 
             if (result.status === 'ok' && result.data) {
+                if (result.stats) {
+                    this.updateStats(result.stats);
+                }
                 const tbody = document.getElementById('absensi-tbody');
                 if (!tbody) return;
 
