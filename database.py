@@ -1447,10 +1447,19 @@ def ada_mahasiswa_hadir_jadwal(jadwal_id, tanggal):
             conn.close()
 
 
-def bulk_catat_alpha(jadwal_id, user_ids, tanggal):
-    """Insert batch record alpha untuk mahasiswa yang tidak hadir."""
+def bulk_catat_alpha(jadwal_id, user_ids, tanggal, buoi_so=None):
+    """Insert batch record alpha untuk mahasiswa yang tidak hadir kèm số buổi học."""
     if not user_ids:
         return 0
+    
+    # Fallback tự động tính buoi_so nếu caller không truyền
+    if buoi_so is None:
+        try:
+            buoi_so = get_buoi_hoc_hien_tai_cua_lop(jadwal_id, ngay_kiem_tra=tanggal)
+        except Exception:
+            buoi_so = 1
+    buoi_so = max(1, int(buoi_so or 1))
+
     conn = None
     cursor = None
     try:
@@ -1460,9 +1469,9 @@ def bulk_catat_alpha(jadwal_id, user_ids, tanggal):
         for uid in user_ids:
             cursor.execute("""
                 INSERT IGNORE INTO absensi
-                    (user_id, jadwal_id, tanggal, waktu_absen, status)
-                VALUES (%s, %s, %s, '00:00:00', 'alpha')
-            """, (uid, jadwal_id, tanggal))
+                    (user_id, jadwal_id, tanggal, waktu_absen, status, buoi_so)
+                VALUES (%s, %s, %s, '00:00:00', 'alpha', %s)
+            """, (uid, jadwal_id, tanggal, buoi_so))
             count += cursor.rowcount
         conn.commit()
         return count

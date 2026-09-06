@@ -107,6 +107,71 @@ def _get_gallery_build_state():
         return dict(_gallery_build_state)
 
 
+# ── Cấu hình & In-Memory Cache cho Persistent Buổi Học Override (GAP-14) ──
+os.makedirs(app.instance_path, exist_ok=True)
+BUOI_HOC_OVERRIDE_FILE = os.path.join(app.instance_path, 'buoi_hoc_override.json')
+_buoi_hoc_lock = threading.Lock()
+_buoi_hoc_cache = None
+
+def _load_buoi_hoc_override():
+    """Tải cấu hình override từ file JSON vào bộ nhớ đệm RAM (chỉ đọc file 1 lần)."""
+    global _buoi_hoc_cache
+    with _buoi_hoc_lock:
+        if _buoi_hoc_cache is not None:
+            return _buoi_hoc_cache
+        if os.path.exists(BUOI_HOC_OVERRIDE_FILE):
+            try:
+                with open(BUOI_HOC_OVERRIDE_FILE, 'r', encoding='utf-8') as f:
+                    _buoi_hoc_cache = json.load(f)
+                    return _buoi_hoc_cache
+            except Exception as e:
+                print(f"[BuoiHoc] Lỗi đọc {BUOI_HOC_OVERRIDE_FILE}: {e}")
+        _buoi_hoc_cache = {}
+        return _buoi_hoc_cache
+
+def _save_buoi_hoc_override(buoi_so, tanggal, jadwal_id=None):
+    """Ghi đè cấu hình vào RAM cache và lưu bền vững vào file JSON."""
+    global _buoi_hoc_cache
+    data = {
+        'buoi_so': buoi_so,
+        'tanggal': tanggal,
+        'jadwal_id': jadwal_id,
+        'updated_at': now_wib().isoformat()
+    }
+    with _buoi_hoc_lock:
+        _buoi_hoc_cache = data
+        try:
+            with open(BUOI_HOC_OVERRIDE_FILE, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"[BuoiHoc] Lỗi ghi file {BUOI_HOC_OVERRIDE_FILE}: {e}")
+
+def _clear_buoi_hoc_override():
+    """Xóa bỏ trạng thái override (khôi phục tính tự động)."""
+    global _buoi_hoc_cache
+    with _buoi_hoc_lock:
+        _buoi_hoc_cache = {}
+        try:
+            if os.path.exists(BUOI_HOC_OVERRIDE_FILE):
+                os.remove(BUOI_HOC_OVERRIDE_FILE)
+        except Exception as e:
+            print(f"[BuoiHoc] Lỗi xóa file {BUOI_HOC_OVERRIDE_FILE}: {e}")
+
+def _get_effective_buoi_hoc_override():
+    """Lấy giá trị override hiệu lực: ưu tiên Flask session, fallback sang Persistent RAM Cache."""
+    if has_request_context():
+        c_buoi = session.get('custom_buoi_so')
+        c_ngay = session.get('custom_tanggal')
+        if c_buoi is not None:
+            return {'buoi_so': c_buoi, 'tanggal': c_ngay}
+
+    # Fallback sang Persistent cache (O(1) trong RAM, không tốn I/O đĩa)
+    cached = _load_buoi_hoc_override()
+    if cached and cached.get('buoi_so') is not None:
+        return {'buoi_so': cached.get('buoi_so'), 'tanggal': cached.get('tanggal')}
+    return None
+
+
 # â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
 # DECORATOR: login_required & admin_required
 # â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
@@ -407,9 +472,19 @@ def matakuliah_edit(id):
 @app.route('/matakuliah/hapus/<int:id>', methods=['POST'])
 @admin_required
 def matakuliah_hapus(id):
-    """Hapus matakuliah (CASCADE ke jadwal)."""
+    """Xóa môn học — Bảo toàn lịch sử dữ liệu điểm danh (GAP-16)."""
     mk = db.get_matakuliah_by_id(id)
-    kelas_id = mk['kelas_id'] if mk else None
+    if not mk:
+        flash('Không tìm thấy môn học.', 'error')
+        return redirect(url_for('kelas_index'))
+
+    kelas_id = mk.get('kelas_id')
+
+    # GAP-16: Chặn xóa môn học nếu đã có dữ liệu điểm danh liên quan
+    if db.matakuliah_memiliki_absensi(id):
+        flash('Không thể xóa môn học đã có dữ liệu điểm danh liên quan để bảo toàn lịch sử dữ liệu.', 'error')
+        return redirect(url_for('kelas_detail', id=kelas_id) if kelas_id else url_for('kelas_index'))
+
     if db.hapus_matakuliah(id):
         flash('Xóa môn học thành công.', 'success')
     else:
@@ -450,8 +525,10 @@ def jadwal_tambah():
             error = 'Vui lòng nhập đầy đủ thông tin.'
         elif not mk_id:
             error = 'Lớp học phần không hợp lệ hoặc không thể khởi tạo môn học.'
-        elif jam_mulai >= jam_selesai:
+        elif jam_mulai[:5] >= jam_selesai[:5]:
             error = 'Giờ kết thúc phải sau giờ bắt đầu.'
+        elif batas_terlambat and (batas_terlambat[:5] < jam_mulai[:5] or batas_terlambat[:5] > jam_selesai[:5]):
+            error = 'Giờ giới hạn đi muộn phải nằm trong khoảng giờ bắt đầu và giờ kết thúc.'
         else:
             kwargs = {}
             if buoi_bat_dau is not None:
@@ -498,8 +575,10 @@ def jadwal_edit(id):
             error = 'Lớp học phần không hợp lệ hoặc không thể khởi tạo môn học.'
         elif kelas_id and kelas_id != jadwal.get('kelas_id') and db.jadwal_memiliki_absensi(id):
             error = 'Lịch học này đã phát sinh dữ liệu điểm danh, không thể thay đổi Lớp học phần.'
-        elif jam_mulai >= jam_selesai:
+        elif jam_mulai[:5] >= jam_selesai[:5]:
             error = 'Giờ kết thúc phải sau giờ bắt đầu.'
+        elif batas_terlambat and (batas_terlambat[:5] < jam_mulai[:5] or batas_terlambat[:5] > jam_selesai[:5]):
+            error = 'Giờ giới hạn đi muộn phải nằm trong khoảng giờ bắt đầu và giờ kết thúc.'
         else:
             kwargs = {}
             if buoi_bat_dau is not None:
@@ -1295,36 +1374,39 @@ def api_absensi_hapus(absensi_id):
 @login_required
 def api_buoi_hoc_info():
     """Lấy thông tin chi tiết ca học hôm nay cho Popup Topbar.
-    Hỗ trợ đọc giá trị override từ session nếu giảng viên đã sửa thủ công.
+    Hỗ trợ đọc giá trị override từ session/persistent cache nếu giảng viên đã sửa thủ công.
     """
     try:
         ngay_hien_tai = now_wib().date()
-        info = db.get_thong_tin_buoi_hoc_hom_nay(ngay_hien_tai)
+        target_jadwal_id = request.args.get('jadwal_id', type=int)
+        info = db.get_thong_tin_buoi_hoc_hom_nay(ngay_hien_tai, jadwal_id_filter=target_jadwal_id)
 
-        # Kiểm tra xem có cấu hình override trong session của admin không
-        custom_buoi = session.get('custom_buoi_so')
-        custom_ngay = session.get('custom_tanggal')
+        # Kiểm tra xem có cấu hình override (ưu tiên session -> fallback persistent cache) (GAP-14)
+        override = _get_effective_buoi_hoc_override()
+        if override:
+            custom_buoi = override.get('buoi_so')
+            custom_ngay = override.get('tanggal')
 
-        if custom_buoi is not None:
-            try:
-                info['buoi_so'] = int(custom_buoi)
-                info['has_override_buoi'] = True
-            except Exception:
-                pass
+            if custom_buoi is not None:
+                try:
+                    info['buoi_so'] = int(custom_buoi)
+                    info['has_override_buoi'] = True
+                except Exception:
+                    pass
 
-        if custom_ngay:
-            info['tanggal'] = custom_ngay
-            try:
-                dt_obj = datetime.strptime(custom_ngay, '%Y-%m-%d')
-                info['tanggal_vn'] = dt_obj.strftime('%d/%m/%Y')
-                thu_map = {
-                    0: 'Thứ Hai', 1: 'Thứ Ba', 2: 'Thứ Tư',
-                    3: 'Thứ Năm', 4: 'Thứ Sáu', 5: 'Thứ Bảy', 6: 'Chủ Nhật'
-                }
-                info['thu'] = thu_map.get(dt_obj.weekday(), info['thu'])
-                info['has_override_ngay'] = True
-            except Exception:
-                pass
+            if custom_ngay:
+                info['tanggal'] = custom_ngay
+                try:
+                    dt_obj = datetime.strptime(custom_ngay, '%Y-%m-%d')
+                    info['tanggal_vn'] = dt_obj.strftime('%d/%m/%Y')
+                    thu_map = {
+                        0: 'Thứ Hai', 1: 'Thứ Ba', 2: 'Thứ Tư',
+                        3: 'Thứ Năm', 4: 'Thứ Sáu', 5: 'Thứ Bảy', 6: 'Chủ Nhật'
+                    }
+                    info['thu'] = thu_map.get(dt_obj.weekday(), info['thu'])
+                    info['has_override_ngay'] = True
+                except Exception:
+                    pass
 
         return jsonify({'status': 'ok', 'data': info})
     except Exception as e:
@@ -1336,12 +1418,23 @@ def api_buoi_hoc_info():
 @admin_required
 def api_buoi_hoc_update():
     """Lưu chỉnh sửa thủ công Cột Buổi và Ngày từ Popup.
-    - Lưu vào session để áp dụng trực tiếp cho các lượt quét điểm danh tiếp theo.
+    - Hỗ trợ lưu persistent (bền vững qua restart server) và session (GAP-14).
+    - Hỗ trợ cờ reset về tự động.
     - Hoàn toàn KHÔNG sửa đổi bảng jadwal trong Quản lý lịch học.
     """
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
         return jsonify({'status': 'error', 'pesan': 'Dữ liệu không hợp lệ.'}), 400
+
+    # Xử lý nút Đặt lại tự động từ giao diện popup
+    if data.get('reset'):
+        session.pop('custom_buoi_so', None)
+        session.pop('custom_tanggal', None)
+        _clear_buoi_hoc_override()
+        return jsonify({
+            'status': 'ok',
+            'pesan': 'Đã đặt lại về chế độ tự động tính theo lịch học!'
+        })
 
     buoi_so = data.get('buoi_so')
     tanggal = data.get('tanggal', '').strip()
@@ -1361,6 +1454,7 @@ def api_buoi_hoc_update():
 
     session['custom_buoi_so'] = buoi_so_int
     session['custom_tanggal'] = tanggal
+    _save_buoi_hoc_override(buoi_so_int, tanggal)
 
     return jsonify({
         'status': 'ok',
@@ -1467,19 +1561,26 @@ def api_absensi_cap_nhat_buoi():
     if not user:
         return jsonify({'status': 'error', 'pesan': 'Không tìm thấy sinh viên.'}), 404
 
-    # Tự động gán jadwal_id nếu client chưa truyền
-    if not jadwal_id:
-        if user.get('kelas_id'):
-            schedules = db.get_semua_jadwal()
-            for s in schedules:
-                if s.get('kelas_id') == user['kelas_id']:
-                    jadwal_id = s['id']
-                    break
-            if not jadwal_id and schedules:
-                jadwal_id = schedules[0]['id']
+    # Tự động gán và xác thực jadwal_id (GAP-11)
+    if jadwal_id:
+        jadwal = db.get_jadwal_by_id(jadwal_id)
+        if not jadwal:
+            return jsonify({'status': 'error', 'pesan': f'Lịch học với ID {jadwal_id} không tồn tại.'}), 400
+        if user.get('kelas_id') and str(jadwal.get('kelas_id')) != str(user['kelas_id']):
+            return jsonify({'status': 'error', 'pesan': 'Lịch học không thuộc về lớp của sinh viên này.'}), 400
+    else:
+        user_kelas_id = user.get('kelas_id')
+        if not user_kelas_id:
+            return jsonify({'status': 'error', 'pesan': 'Sinh viên chưa được gán lớp nên không thể xác định lịch học.'}), 400
 
-    if not jadwal_id:
-        return jsonify({'status': 'error', 'pesan': 'Không tìm thấy lịch học cho sinh viên này.'}), 400
+        schedules = db.get_semua_jadwal()
+        for s in schedules:
+            if str(s.get('kelas_id')) == str(user_kelas_id):
+                jadwal_id = s['id']
+                break
+
+        if not jadwal_id:
+            return jsonify({'status': 'error', 'pesan': 'Không tìm thấy lịch học thuộc lớp của sinh viên này.'}), 400
 
     status = str(status).strip()
     if status and status not in ('hadir', 'terlambat', 'alpha', 'izin', 'sakit'):
@@ -2482,18 +2583,17 @@ def _proses_recognition_single(frame, tracker_key='default'):
             'spoofing': spoof_result
         }
 
-    # ── 6. Xác định Buổi và Ngày áp dụng cho ca học ──
-    has_ctx = has_request_context()
-    override_buoi = session.get('custom_buoi_so') if has_ctx else None
-    if override_buoi is not None:
+    # ── 6. Xác định Buổi và Ngày áp dụng cho ca học (hỗ trợ Persistent Override - GAP-14) ──
+    override_data = _get_effective_buoi_hoc_override()
+    if override_data and override_data.get('buoi_so') is not None:
         try:
-            buoi_so_ghi = int(override_buoi)
+            buoi_so_ghi = int(override_data['buoi_so'])
         except Exception:
             buoi_so_ghi = None
     else:
         buoi_so_ghi = db.get_buoi_hoc_hien_tai_cua_lop(jadwal['id'], jadwal.get('kelas_id'), tanggal_hari_ini)
 
-    override_ngay = session.get('custom_tanggal') if has_ctx else None
+    override_ngay = override_data.get('tanggal') if override_data else None
     if override_ngay:
         try:
             tanggal_ghi = datetime.strptime(override_ngay, '%Y-%m-%d').date()
@@ -2641,18 +2741,17 @@ def _process_verified_prediction(
             'spoofing': spoof_result
         }
 
-    # ── Xác định Buổi và Ngày áp dụng cho ca học ──
-    has_ctx = has_request_context()
-    override_buoi = session.get('custom_buoi_so') if has_ctx else None
-    if override_buoi is not None:
+    # ── Xác định Buổi và Ngày áp dụng cho ca học (hỗ trợ Persistent Override - GAP-14) ──
+    override_data = _get_effective_buoi_hoc_override()
+    if override_data and override_data.get('buoi_so') is not None:
         try:
-            buoi_so_ghi = int(override_buoi)
+            buoi_so_ghi = int(override_data['buoi_so'])
         except Exception:
             buoi_so_ghi = None
     else:
         buoi_so_ghi = db.get_buoi_hoc_hien_tai_cua_lop(jadwal['id'], jadwal.get('kelas_id'), tanggal_hari_ini)
 
-    override_ngay = session.get('custom_tanggal') if has_ctx else None
+    override_ngay = override_data.get('tanggal') if override_data else None
     if override_ngay:
         try:
             tanggal_ghi = datetime.strptime(override_ngay, '%Y-%m-%d').date()
@@ -3156,12 +3255,52 @@ def api_camera_toggle():
 # SERVE SNAPSHOT — Menyajikan foto bukti absensi
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
+# Extension whitelist cho ảnh snapshot hợp lệ (GAP-15)
+ALLOWED_SNAPSHOT_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp'}
+
 @app.route('/snapshots/<path:filename>')
 @login_required
 def serve_snapshot(filename):
-    """Sajikan file gambar snapshot bukti absensi."""
-    from flask import send_from_directory
-    return send_from_directory(SNAPSHOT_PATH, filename)
+    """Phục vụ file ảnh chụp bằng chứng điểm danh (GAP-15 Hardened).
+    
+    Phòng thủ chiều sâu (Defense-in-depth / OWASP Path Traversal & File Disclosure):
+    - Chặn traversal sequence ('..'), path separators ('/', '\\'), null bytes ('\x00'), NTFS ADS (':')
+    - Whitelist đuôi mở rộng ảnh (.jpg, .jpeg, .png, .webp)
+    - Kiểm tra lồng thư mục an toàn qua os.path.realpath và os.path.commonpath
+    """
+    from flask import abort, send_from_directory
+
+    if not filename or not isinstance(filename, str):
+        abort(404)
+
+    filename = filename.strip()
+
+    # 1. Fail-fast: Chặn đứng traversal, dấu phân cách đường dẫn, null byte và NTFS ADS
+    if any(c in filename for c in ('\x00', '..', '/', '\\', ':')):
+        abort(404)
+
+    # 2. Chuẩn hóa tên file: Chỉ lấy basename, từ chối nếu tên file bị sai lệch
+    safe_filename = os.path.basename(filename)
+    if not safe_filename or safe_filename != filename:
+        abort(404)
+
+    # 3. Extension Whitelist: Ngăn chặn đọc file cấu hình, script hoặc mã nguồn
+    ext = os.path.splitext(safe_filename)[1].lower()
+    if ext not in ALLOWED_SNAPSHOT_EXTENSIONS:
+        abort(404)
+
+    # 4. Canonical Path & Commonpath Check: Ngăn chặn bypass Symlink và bảo đảm file tồn tại
+    try:
+        base_dir = os.path.realpath(os.path.abspath(SNAPSHOT_PATH))
+        target_file = os.path.realpath(os.path.abspath(os.path.join(base_dir, safe_filename)))
+
+        if os.path.commonpath([base_dir, target_file]) != base_dir or not os.path.isfile(target_file):
+            abort(404)
+
+        # 5. Phục vụ file an toàn qua send_from_directory
+        return send_from_directory(base_dir, safe_filename)
+    except (ValueError, OSError):
+        abort(404)
 
 
 @app.route('/mahasiswa/<int:user_id>/foto')
@@ -3303,10 +3442,12 @@ def _auto_alpha_checker():
 
                 if belum_absen:
                     user_ids = [m['id'] for m in belum_absen]
-                    count = db.bulk_catat_alpha(jadwal_id, user_ids, tanggal)
+                    # GAP-17: Xác định rõ buoi_so của buổi học hôm nay trước khi ghi nhận alpha
+                    buoi_so = db.get_buoi_hoc_hien_tai_cua_lop(jadwal_id, kelas_id, tanggal)
+                    count = db.bulk_catat_alpha(jadwal_id, user_ids, tanggal, buoi_so=buoi_so)
                     if count > 0:
                         nama_mk = j.get('nama_mk', '?')
-                        print(f'[AUTO-ALPHA] {count} mahasiswa ditandai alpha '
+                        print(f'[AUTO-ALPHA] {count} mahasiswa ditandai alpha (Buổi {buoi_so}) '
                               f'untuk {nama_mk} (jadwal #{jadwal_id})')
 
         except Exception as e:
